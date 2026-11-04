@@ -3,3 +3,6 @@
 .pro-tools{margin:16px 0}.pro-tools label{display:block}.pro-tools select,.pro-tools input{width:100%;margin:8px 0}.note{font-size:.85rem;opacity:.8}#printInfo{line-height:1.6}
 
 .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}.print-grid label{min-width:0}#qualityInfo,#aiStatus{min-height:22px}#aiOutput{margin-top:8px}#exportQuality{accent-color:#16a6bd}@media(max-width:500px){.print-grid{grid-template-columns:1fr}}
+
+/* v1.2.1: mobile layout stability */
+#ai{min-width:0}#ai .form{min-width:0}#ai label,#ai textarea,#ai select,#ai input{min-width:0;max-width:100%}#aiOutput{overflow-wrap:anywhere}#aiStatus{overflow-wrap:anywhere;white-space:pre-wrap}
