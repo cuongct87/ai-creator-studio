@@ -49,3 +49,101 @@ $('download').addEventListener('click',event=>{if($('format').value==='image/png
 // AI Pro: user-owned key, ephemeral in-memory only, no server or simulated AI responses.
 $('runAi').addEventListener('click',async()=>{const key=$('aiKey').value.trim(),idea=$('aiIdea').value.trim(),task=$('aiTask').value,language=$('aiLanguage').selectedOptions[0].textContent,status=$('aiStatus'),button=$('runAi');if(!key||!idea){status.textContent='Enter your Gemini API key and idea / Nhập API key và ý tưởng.';return;}const instruction=task==='storyboard'?`Write a coherent, original 5-scene storyboard for a short video. For each scene include a distinct narrative event, camera framing, image prompt, motion prompt and duration of 6 seconds. Maintain character identity, clear causality, and a beginning/middle/end. Do NOT claim to generate a video. Output language: ${language}. Story: ${idea}`:`Write a detailed, production-ready image generation prompt with subject, scene, lighting, composition, negative constraints, and aspect ratio. No invented brand names or claims that an image was generated. Output language: ${language}. Idea: ${idea}`;button.disabled=true;status.textContent='Calling Gemini API… / Đang gọi Gemini…';$('aiOutput').value='';try{const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),45000);let response;try{response=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent',{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':key},body:JSON.stringify({contents:[{parts:[{text:instruction}]}],generationConfig:{temperature:0.8,maxOutputTokens:3000}}),signal:controller.signal})}finally{clearTimeout(timeout)}const data=await response.json();if(!response.ok)throw Error(data.error?.message||`HTTP ${response.status}`);const result=(data.candidates||[]).flatMap(c=>(c.content?.parts||[]).map(p=>p.text||'')).join('\n').trim();if(!result)throw Error('No text returned. Check safety filters and model availability.');$('aiOutput').value=result;status.textContent='Generated with Gemini / Đã tạo bằng Gemini.'}catch(e){status.textContent='Gemini API error: '+e.message+'. Check key permissions, quota and network.'}finally{button.disabled=false}});
 $('copyAi').addEventListener('click',()=>copy($('aiOutput').value));
+
+
+// v1.3: opt-in real image generation. No provider-owned key or backend.
+(() => {
+  const byId = id => document.getElementById(id);
+  const btn = byId('generateImage');
+  const status = byId('imageAiStatus');
+  const preview = byId('generatedImage');
+  const wrap = byId('generatedImageWrap');
+  const download = byId('downloadAiImage');
+  let currentUrl = null;
+  function clearImage() {
+    wrap.classList.add('hidden');
+    preview.removeAttribute('src');
+    download.removeAttribute('href');
+    if (currentUrl) { URL.revokeObjectURL(currentUrl); currentUrl = null; }
+  }
+  function decodeBase64(data, mime) {
+    // Decode in chunks to avoid an extra giant binary string allocation.
+    const binary = atob(data);
+    const chunks = [];
+    for (let i = 0; i < binary.length; i += 32768) {
+      const segment = binary.slice(i, i + 32768);
+      const bytes = new Uint8Array(segment.length);
+      for (let j = 0; j < segment.length; j++) bytes[j] = segment.charCodeAt(j);
+      chunks.push(bytes);
+    }
+    return new Blob(chunks, { type: mime });
+  }
+  btn.addEventListener('click', async () => {
+    const key = byId('aiKey').value.trim();
+    const usePrompt = byId('imageUsePrompt').checked;
+    const idea = (usePrompt ? byId('aiOutput').value : byId('aiIdea').value).trim();
+    const model = byId('imageModel').value.trim();
+    const ratio = byId('imageRatio').value;
+    if (!key || !idea) { status.textContent = 'Nhập API key và ý tưởng trước. / Enter API key and idea.'; return; }
+    if (!/^[\x21-\x7e]+$/.test(key)) { status.textContent = 'API key có ký tự không hợp lệ. Xóa và dán lại key từ Google AI Studio.'; return; }
+    if (!/^[a-zA-Z0-9._-]+$/.test(model)) { status.textContent = 'Tên model không hợp lệ. / Invalid model name.'; return; }
+    clearImage();
+    btn.disabled = true;
+    status.textContent = 'Đang yêu cầu Google tạo ảnh… Có thể mất một lúc. / Generating image…';
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 120000);
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Generate an original image, not a text-only description. ${idea}` }] }],
+          generationConfig: {
+            responseModalities: ['TEXT', 'IMAGE'],
+            imageConfig: { aspectRatio: ratio }
+          }
+        }),
+        signal: controller.signal
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || `HTTP ${response.status}`);
+      const parts = (data.candidates || []).flatMap(c => c.content?.parts || []);
+      const imagePart = parts.find(p => (p.inlineData || p.inline_data)?.data);
+      if (!imagePart) {
+        const detail = parts.filter(p => p.text).map(p => p.text).join(' ').slice(0, 350);
+        throw new Error('Google did not return an image. ' + (detail || 'Check image model access and quota.'));
+      }
+      const inline = imagePart.inlineData || imagePart.inline_data;
+      const mime = inline.mimeType || inline.mime_type || 'image/png';
+      if (!mime.startsWith('image/')) throw new Error('Response did not contain a supported image.');
+      const blob = decodeBase64(inline.data, mime);
+      currentUrl = URL.createObjectURL(blob);
+      preview.src = currentUrl;
+      download.href = currentUrl;
+      download.download = `ai-creator-studio-generated.${mime === 'image/jpeg' ? 'jpg' : mime === 'image/webp' ? 'webp' : 'png'}`;
+      wrap.classList.remove('hidden');
+      status.textContent = 'Đã nhận ảnh thật từ Gemini! Bấm Tải hình xuống để lưu. / Image generated.';
+    } catch (error) {
+      status.textContent = error.name === 'AbortError'
+        ? 'Quá thời gian chờ (120 giây). Thử lại sau.'
+        : 'Không tạo được ảnh: ' + error.message + ' (Model tạo ảnh có thể không được cấp cho API key miễn phí.)';
+    } finally {
+      clearTimeout(timer);
+      btn.disabled = false;
+    }
+  });
+  window.addEventListener('pagehide', () => { if (currentUrl) URL.revokeObjectURL(currentUrl); });
+})();
+
+/* v1.4 Multi-AI modes: no secret keys are sent to third-party relay servers. */
+(()=>{
+ const el=id=>document.getElementById(id);
+ const providers={chatgpt:{name:'ChatGPT',url:'https://chatgpt.com/'},claude:{name:'Claude',url:'https://claude.ai/'},deepseek:{name:'DeepSeek',url:'https://chat.deepseek.com/'}};
+ const provider=el('aiProvider'),run=el('runAi'),open=el('multiOpen'),help=el('multiProviderHelp');
+ function makePrompt(){const idea=el('aiIdea').value.trim(),task=el('aiTask').value,lang=el('aiLanguage').selectedOptions[0].textContent;if(!idea)return '';return task==='storyboard'?`Hãy viết storyboard chuyên nghiệp bằng ${lang} cho ý tưởng: ${idea}. Chia thành từng cảnh, mô tả nhân vật, bối cảnh, góc máy, chuyển động, thời lượng và âm thanh. Trình bày rõ ràng, nhất quán.`:`Hãy tạo prompt hình ảnh chuyên nghiệp bằng ${lang} từ ý tưởng: ${idea}. Nêu chủ thể, bố cục, phong cách, ánh sáng, màu sắc, bối cảnh và chi tiết quan trọng. Chỉ đưa prompt hoàn chỉnh, không thêm giải thích.`;}
+ function sync(){const v=provider.value,gem=v==='gemini',off=v==='offline',ext=!!providers[v];el('multiKeyLabel').classList.toggle('hidden',!gem);el('multiGeminiImage').classList.toggle('hidden',!gem);open.classList.toggle('hidden',!ext);run.textContent=gem?'Generate with Gemini / Tạo bằng AI thật':off?'Tạo prompt mẫu miễn phí / Free template':'Chuẩn bị prompt để sao chép';help.textContent=gem?'Gemini API: cần key riêng. Quyền truy cập và chi phí phụ thuộc tài khoản Google.':off?'Miễn phí 100%, xử lý trên trình duyệt, KHÔNG gọi AI và không cần API key.':'Không kết nối API trực tiếp: tạo prompt để sao chép vào '+providers[v].name+'. Không nhập API key vào trang này.';if(ext)open.textContent='Mở '+providers[v].name+' (trang chính thức)';}
+ provider.addEventListener('change',sync);sync();
+ run.addEventListener('click',ev=>{if(provider.value==='gemini')return;ev.stopImmediatePropagation();const prompt=makePrompt();if(!prompt){el('aiStatus').textContent='Nhập ý tưởng trước nha má!';return;}el('aiOutput').value=prompt;el('aiStatus').textContent=provider.value==='offline'?'Đã tạo prompt mẫu trên máy — không dùng AI.':'Đã chuẩn bị prompt. Bấm Sao chép, sau đó mở dịch vụ AI.';},true);
+ open.addEventListener('click',()=>{const p=providers[provider.value];if(p)window.open(p.url,'_blank','noopener,noreferrer');});
+})();

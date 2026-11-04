@@ -4,5 +4,7 @@
 
 .print-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}.print-grid label{min-width:0}#qualityInfo,#aiStatus{min-height:22px}#aiOutput{margin-top:8px}#exportQuality{accent-color:#16a6bd}@media(max-width:500px){.print-grid{grid-template-columns:1fr}}
 
-/* v1.2.1: mobile layout stability */
-#ai{min-width:0}#ai .form{min-width:0}#ai label,#ai textarea,#ai select,#ai input{min-width:0;max-width:100%}#aiOutput{overflow-wrap:anywhere}#aiStatus{overflow-wrap:anywhere;white-space:pre-wrap}
+/* v1.3 image generation preview */
+.ai-image-studio{border-top:1px solid #40516c;margin-top:24px;padding-top:18px}.ai-image-studio h3{margin:0 0 8px}.ai-image-studio label{margin:12px 0}.ai-image-studio .check{display:flex;align-items:center;gap:10px}.ai-image-studio .check input{width:auto}.ai-image-studio #generateImage{display:block;margin-top:16px}.ai-image-studio #generatedImageWrap{margin-top:14px}.ai-image-studio #generatedImage{width:100%;height:auto;display:block;border-radius:12px;border:1px solid #40516c}.download-image{display:inline-block;margin-top:12px;background:#16a6bd;color:#061824;text-decoration:none;font-weight:700;padding:12px 16px;border-radius:9px}.ai-image-studio #imageAiStatus{overflow-wrap:anywhere;white-space:pre-wrap}
+
+#multiProviderHelp{margin:0.5rem 0;line-height:1.55}#multiOpen{margin:0.65rem 0}#aiProvider{max-width:100%}
