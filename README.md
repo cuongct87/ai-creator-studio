@@ -24,3 +24,10 @@ Open an issue to suggest features, translations or bug reports. Pull requests ar
 - Increased image canvas safety cap to 40 million pixels; large images may fail on low-memory devices.
 - Storyboard is a template planner, **not** AI narrative understanding.
 - AI upscale and Claude/OpenAI/Gemini API integrations are **not yet implemented**.
+
+
+## v1.1.1
+- Cache-busting script and stylesheet references to prevent old JavaScript from persisting after GitHub Pages deployments.
+- Image selection no longer automatically creates a full-resolution canvas; processing begins when Apply edits is pressed.
+- Pro DPI displays calculated print dimensions in cm. DPI is not embedded in exported image metadata.
+- The 40-megapixel output guard remains; actual support depends on browser memory and canvas limits. This is not AI upscaling.
