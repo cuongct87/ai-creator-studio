@@ -10,6 +10,10 @@ import android.provider.MediaStore;
 import android.content.ContentValues;
 import android.webkit.*;
 import android.widget.Toast;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.graphics.Color;
+import android.content.pm.ApplicationInfo;
 import android.util.Base64;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -17,6 +21,12 @@ import java.io.IOException;
 
 public class MainActivity extends Activity {
     private WebView web;
+    private TextView startupStatus;
+    private boolean isTestBuild;
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
     private ValueCallback<Uri[]> chooser;
     private static final int PICK_FILE = 100;
     private static final String HOME = "https://appassets.androidplatform.net/assets/index.html";
@@ -66,8 +76,29 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        isTestBuild = (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         web = new WebView(this);
-        setContentView(web);
+        if (isTestBuild) {
+            // Native label is independent of HTML and JavaScript. It identifies which APK was opened.
+            LinearLayout shell = new LinearLayout(this);
+            shell.setOrientation(LinearLayout.VERTICAL);
+            startupStatus = new TextView(this);
+            startupStatus.setText("ZUNVA 2.2 TEST · Đang kiểm tra Studio...");
+            startupStatus.setTextSize(11);
+            startupStatus.setTextColor(Color.WHITE);
+            startupStatus.setBackgroundColor(Color.rgb(12, 82, 106));
+            startupStatus.setPadding(dp(12), dp(7), dp(12), dp(7));
+            shell.addView(startupStatus, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            shell.addView(web, new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1));
+            setContentView(shell);
+            // Test builds should never quietly display a cached old page.
+            web.getSettings().setCacheMode(WebSettings.LOAD_NO_CACHE);
+            web.clearCache(true);
+        } else {
+            setContentView(web);
+        }
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setAllowFileAccess(false);
@@ -88,6 +119,23 @@ public class MainActivity extends Activity {
             }
             private WebResourceResponse notFound() {
                 return new WebResourceResponse("text/plain", "UTF-8", 404, "Not Found", null, new java.io.ByteArrayInputStream(new byte[0]));
+            }
+            @Override public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                if (isTestBuild && startupStatus != null && url != null && url.startsWith(HOME)) {
+                    // Verify the actual WebView DOM, not merely that APK files were packaged.
+                    view.evaluateJavascript(
+                        "(function(){return !!(document.getElementById('navZunva') && document.getElementById('zunva') && document.getElementById('z-start-blank'));})()",
+                        result -> {
+                            if ("true".equals(result)) {
+                                startupStatus.setText("ZUNVA 2.2 TEST · Studio đã tải ✓");
+                                startupStatus.setBackgroundColor(Color.rgb(16, 93, 87));
+                            } else {
+                                startupStatus.setText("ZUNVA 2.2 TEST · LỖI: Giao diện Studio không tải");
+                                startupStatus.setBackgroundColor(Color.rgb(147, 42, 37));
+                            }
+                        });
+                }
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 Uri uri = req.getUrl();

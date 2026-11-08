@@ -37,9 +37,232 @@ jobs:
           if [ -z "$SDKMGR" ]; then echo "sdkmanager not found"; exit 1; fi
           "$SDKMGR" "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Syntax-check main Studio scripts
+        run: |
+          node --check script.js
+          node --check studio_v15.js
+          node --check vault_i18n.js
+
+      - name: Smoke-test Studio editor in real headless Chrome
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path('index.html').read_text(encoding='utf-8')
+          test = """<script>
+          window.addEventListener('load', function () {
+            setTimeout(function () {
+              try {
+                var $ = function (id) { return document.getElementById(id); };
+                if (!$('zunva') || $('z-gallery').children.length !== 5) throw Error('gallery missing');
+                if (document.querySelector('#zunva .z-recent').classList.contains('hidden') ||
+                    document.querySelector('#zunva .z-start').classList.contains('hidden'))
+                  throw Error('recent/start sections are unexpectedly hidden');
+                if (!$('z-start-blank') || !$('z-start-template') || !$('z-start-print') || !$('z-start-ai'))
+                  throw Error('start actions missing');
+                if (!$('z-template-search') || !$('z-project-list')) throw Error('search/recent missing');
+                $('language').value='en';
+                $('language').dispatchEvent(new Event('change',{bubbles:true}));
+                if (!$('z-home').textContent.includes('Continue designing') ||
+                    !$('z-home').textContent.includes('Choose how to start') ||
+                    !$('z-home').textContent.includes('Explore templates') ||
+                    !$('z-add').textContent.includes('Add text'))
+                  throw Error('English Studio locale incomplete');
+                $('z-template-search').value='wedding';
+                $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
+                if(Array.from($('z-gallery').children).filter(function(b){return !b.hidden;}).length!==1)
+                  throw Error('English template search failed');
+                $('language').value='es';
+                $('language').dispatchEvent(new Event('change',{bubbles:true}));
+                if (!$('z-home').textContent.includes('Seguir diseñando') ||
+                    !$('z-home').textContent.includes('Elige cómo empezar') ||
+                    !$('z-home').textContent.includes('Explorar plantillas') ||
+                    !$('z-add').textContent.includes('Añadir texto'))
+                  throw Error('Spanish Studio locale incomplete');
+                $('z-template-search').value='boda';
+                $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
+                if(Array.from($('z-gallery').children).filter(function(b){return !b.hidden;}).length!==1)
+                  throw Error('Spanish template search failed');
+                $('language').value='vi';
+                $('language').dispatchEvent(new Event('change',{bubbles:true}));
+                if (!$('z-home').textContent.includes('Tiếp tục thiết kế') ||
+                    !$('z-home').textContent.includes('Chọn cách bắt đầu'))
+                  throw Error('Vietnamese Studio locale lost');
+                $('z-template-search').value='thiệp';
+                $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
+                if (Array.from($('z-gallery').children).filter(function (b) { return !b.hidden; }).length !== 1)
+                  throw Error('template search failed');
+                $('z-template-search').value='';
+                $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
+                // Regression: legacy tab navigation must never hide nested Studio home sections.
+                if (document.querySelectorAll('main > nav [data-tab]').length!==5)
+                  throw Error('Studio tab missing from navigation');
+                var route=[
+                  ['navPrompt','prompt'],['navVideo','video'],['navImage','image'],
+                  ['navAi','ai'],['navZunva','zunva']
+                ];
+                for(var round=0;round<5;round++){
+                  route.forEach(function(pair){
+                    $(pair[0]).click();
+                    var active=Array.from(document.querySelectorAll('main > nav [data-tab].active'));
+                    if(active.length!==1||active[0].id!==pair[0])
+                      throw Error('active tab wrong: '+pair[0]);
+                    var rootPanels=Array.from(document.querySelectorAll('main > section'));
+                    rootPanels.forEach(function(p){
+                      if(p.classList.contains('hidden')===(p.id===pair[1]))
+                        throw Error('root panel visibility wrong: '+pair[1]+' / '+p.id);
+                    });
+                    if(document.querySelector('#zunva .z-recent').classList.contains('hidden')||
+                       document.querySelector('#zunva .z-start').classList.contains('hidden'))
+                      throw Error('nested Studio section hidden after tab switch');
+                    if(pair[1]==='zunva'){
+                      if(getComputedStyle($('zunva')).display==='none'||
+                         getComputedStyle(document.querySelector('#zunva .z-recent')).display==='none'||
+                         getComputedStyle(document.querySelector('#zunva .z-start')).display==='none')
+                        throw Error('Studio home not visually restored');
+                    }
+                  });
+                }
+                $('z-gallery').querySelector('button').click();
+                if ($('z-editor').classList.contains('z-hidden')) throw Error('editor did not open');
+                if ($('z-layers').children.length !== 3) throw Error('template layers missing');
+                $('z-add').click();
+                if ($('z-layers').children.length !== 4) throw Error('add text failed');
+                $('z-undo').click();
+                if ($('z-layers').children.length !== 3) throw Error('undo failed');
+                $('z-redo').click();
+                if ($('z-layers').children.length !== 4) throw Error('redo failed');
+                $('z-text').value='Nội dung kiểm tra';
+                $('z-text').dispatchEvent(new Event('change',{bubbles:true}));
+                if (!Array.from($('z-layers').querySelectorAll('.z-layer-title')).some(function (x) {
+                  return x.textContent === 'Nội dung kiểm tra';
+                })) throw Error('edit text failed');
+                if (!$('z-canvas').toDataURL('image/png').startsWith('data:image/png')) throw Error('canvas missing');
+                $('z-save').click(); $('z-back').click();
+                if (!$('z-project-list').querySelector('.z-project-row')) throw Error('save project failed');
+                $('z-project-list').querySelector('.z-project-row button').click();
+                if ($('z-editor').classList.contains('z-hidden')) throw Error('reopen failed');
+                $('navImage').click();
+                if ($('image').classList.contains('hidden')) throw Error('legacy tabs broken');
+                // Exercise a real local photo upload, resize, save and reopening.
+                $('navZunva').click();
+                var sample=document.createElement('canvas');sample.width=24;sample.height=18;
+                sample.getContext('2d').fillRect(0,0,24,18);
+                sample.toBlob(function(blob){
+                  try {
+                    if(!blob)throw Error('cannot create test photo');
+                    var data=new DataTransfer();
+                    data.items.add(new File([blob],'test-photo.png',{type:'image/png'}));
+                    var picker=$('z-image-upload');if(!picker)throw Error('photo picker missing');
+                    picker.files=data.files;
+                    picker.dispatchEvent(new Event('change',{bubbles:true}));
+                    setTimeout(function(){
+                      try {
+                        if($('z-layers').children.length!==5)throw Error('photo layer missing');
+                        if($('z-image-tools').classList.contains('z-hidden'))throw Error('photo controls missing');
+                        $('z-image-size').value='70';
+                        $('z-image-size').dispatchEvent(new Event('change',{bubbles:true}));
+                        if(!$('z-image-size-label').textContent.includes('70%'))throw Error('photo resize failed');
+                        $('z-save').click();$('z-back').click();
+                        $('z-project-list').querySelector('.z-project-row button').click();
+                        if($('z-layers').children.length!==5)throw Error('saved photo layer not restored');
+                        if(!$('z-canvas').toDataURL('image/png').startsWith('data:image/png'))throw Error('photo PNG canvas broken');
+                        $('z-back').click();
+                        if (!$('z-project-list').querySelector('.z-project-cover img')) throw Error('recent preview missing');
+                        $('z-start-blank').click();
+                        $('z-add').click();
+                        $('z-back').click();
+                        if ($('z-project-list').querySelectorAll('.z-project-row').length < 2)
+                          throw Error('auto-save on return failed');
+                        document.documentElement.dataset.zunvaSmoke='PASS';
+                      } catch(err){document.documentElement.dataset.zunvaSmoke='FAIL: '+err.message;}
+                    },650);
+                  } catch(err){document.documentElement.dataset.zunvaSmoke='FAIL: '+err.message;}
+                },'image/png');
+              } catch(e) {
+                document.documentElement.dataset.zunvaSmoke='FAIL: '+e.message;
+              }
+            }, 350);
+          });
+          </script>"""
+          if '</body>' not in html: raise SystemExit('closing body missing')
+          Path('zunva-smoke.html').write_text(html.replace('</body>',test+'</body>'), encoding='utf-8')
+          PY
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then echo "Chrome not available"; exit 1; fi
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --virtual-time-budget=4000 \
+            --dump-dom "file://$PWD/zunva-smoke.html" > zunva-smoke-result.html
+          grep -q 'data-zunva-smoke="PASS"' zunva-smoke-result.html || {
+            grep -o 'data-zunva-smoke="[^"]*"' zunva-smoke-result.html || true
+            exit 1
+          }
+          echo "ZUNVA journey smoke PASS: search, recent previews, start actions, text/photo editor, autosave, save/reopen and legacy tabs."
+
+      - name: Capture mobile Studio preview (headless Chrome)
+        shell: bash
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars \
+              --window-size=430,1150 --virtual-time-budget=3000 \
+              --screenshot="$PWD/zunva-mobile-preview.png" "file://$PWD/index.html"
+          else
+            echo "Chrome not installed; preview screenshot unavailable."
+          fi
+
+      - name: Capture editable canvas screen
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html=Path('index.html').read_text(encoding='utf-8')
+          script="""<script>
+          window.addEventListener('load',function(){
+            setTimeout(function(){
+              var button=document.querySelector('#z-gallery .z-template');
+              if(button)button.click();
+            },250);
+          });
+          </script>"""
+          Path('zunva-editor-demo.html').write_text(html.replace('</body>',script+'</body>'),encoding='utf-8')
+          PY
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars \
+              --window-size=430,1300 --virtual-time-budget=3000 \
+              --screenshot="$PWD/zunva-editor-preview.png" "file://$PWD/zunva-editor-demo.html"
+          fi
+
+      - name: Upload Studio preview screenshot
+        uses: actions/upload-artifact@v4
+        if: ${{ hashFiles('zunva-mobile-preview.png') != '' }}
+        with:
+          name: ZUNVA-Studio-Mobile-Preview
+          path: |
+            zunva-mobile-preview.png
+            zunva-editor-preview.png
+          retention-days: 14
+
       - name: Build debug APK
         working-directory: android
-        run: bash ./gradlew :app:assembleDebug --no-daemon
+        run: |
+          # Prefer Gradle already installed on GitHub runner to avoid CDN outages.
+          if command -v gradle >/dev/null 2>&1; then
+            echo "Trying runner-installed Gradle:"
+            gradle --version
+            if gradle :app:assembleDebug --no-daemon; then
+              exit 0
+            fi
+          fi
+          # Fall back to repository wrapper with retries if no compatible runner Gradle.
+          for attempt in 1 2 3; do
+            if bash ./gradlew :app:assembleDebug --no-daemon; then
+              exit 0
+            fi
+            echo "Android build attempt $attempt failed; retrying..."
+            sleep $((attempt * 12))
+          done
+          exit 1
 
       - name: Verify exactly five APK assets match canonical sources
         run: |
@@ -67,8 +290,14 @@ jobs:
           AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
           BADGING="$("$AAPT" dump badging "$APK")"
           printf '%s\\n' "$BADGING" | grep -E '^(package:|application:)'
-          printf '%s\\n' "$BADGING" | grep -F "package: name='vn.iaysystem.aicreatorstudio.test'"
-          printf '%s\\n' "$BADGING" | grep -F "label='AI Creator Studio TEST'"
+          printf '%s\\n' "$BADGING" | grep -F "package: name='vn.iaysystem.aicreatorstudio.p2verify'"
+          printf '%s\\n' "$BADGING" | grep -F "label='ZUNVA Studio 2.2 TEST'"
+
+      - name: Verify APK signing for Android device install
+        shell: bash
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK"
 
       - name: Upload test APK
         uses: actions/upload-artifact@v4
