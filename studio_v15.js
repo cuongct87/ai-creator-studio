@@ -350,6 +350,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
         button.querySelector('.z-template-info small').textContent=studioText(t.kind)+' · '+studioText('Có thể chỉnh sửa');
       });
       renderSaved();
+      refreshGallery();
       if($('z-status').dataset.originalMessage)$('z-status').textContent=studioText($('z-status').dataset.originalMessage);
     }
 
@@ -624,7 +625,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       var term=plain($('z-template-search').value), shown=0;
       galleryItems.forEach(function(entry){
         var visible=(activeKind==='Tất cả'||entry.template.kind===activeKind)&&
-          (!term||plain(entry.template.name+' '+entry.template.kind+' '+entry.template.preview+' '+entry.template.sub).includes(term));
+          (!term||plain(entry.template.name+' '+entry.template.kind+' '+studioText(entry.template.name)+' '+studioText(entry.template.kind)+' '+entry.template.preview+' '+entry.template.sub).includes(term));
         entry.button.hidden=!visible;if(visible)shown++;
       });
       $('z-no-results').classList.toggle('z-hidden',shown>0);
