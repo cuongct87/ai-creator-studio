@@ -1,0 +1,24 @@
+# Tasks — P0: Repository Audit
+
+- [ ] 1. Inspect repository state
+  - Report branch, git status, recent commits, folder structure
+  - If tree is dirty: stop and ask founder
+  - _Requirements: R1_
+- [ ] 2. Identify stack and how to run/build/test
+  - Read manifests/configs; try the commands; record real output
+  - _Requirements: R3_
+- [ ] 3. Build feature inventory with evidence
+  - [ ] 3.1 Prompt Studio, Prompt Vault / Work Templates
+  - [ ] 3.2 Image Toolkit / image editing, Print Studio Pro
+  - [ ] 3.3 Video Storyboard, AI Pro
+  - [ ] 3.4 Gemini BYOK, local save/export, AndroidImageSaver
+  - [ ] 3.5 Navigation tabs and i18n (incl. `vault_i18n.js`)
+  - _Requirements: R2_
+- [ ] 4. Security and defect scan
+  - Search for hardcoded/logged keys; list defects and risks by severity
+  - _Requirements: R4_
+- [ ] 5. Gap analysis against ZUNVA blueprint sections 3–5
+  - _Requirements: R5_
+- [ ] 6. Write `docs/AUDIT_REPORT.md` and propose prioritized small tasks
+  - Stop and wait for founder approval; do not code
+  - _Requirements: R6_

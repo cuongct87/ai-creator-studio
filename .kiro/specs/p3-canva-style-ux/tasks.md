@@ -1,0 +1,33 @@
+# Tasks — P3: Canva-style UX
+Run ONE task per Kiro session. After each task: list changed files, test steps, result. Stop and wait for founder OK.
+
+- [ ] 0. Checkpoint
+  - FIRST confirm which branch holds the ZUNVA Studio editor (PR #7). `main` still has the old v1.5 without the editor. Branch from the PR #7 branch, not from main
+  - Create branch `feat/canva-style-ux` from the current approved branch; commit clean state
+  - Read index.html, script.js, studio_v15.js; write a 1-page map of panels, entry points and the saved-project format (no code changes)
+- [ ] 1. Bottom navigation shell
+  - Add 5-tab bottom bar + `showTab()`; existing 4 panels reachable under AI tab; nothing removed
+  - Accept: tabs switch, no console errors, old tools still open
+- [ ] 2. Home screen
+  - Build exactly the layout in design.md "Home screen layout" (idea box, recent projects, start icons, template row, working tools only, floating +)
+  - Accept: each tile opens the editor with the right size; idea box opens AI tab with text prefilled; no promo banner; empty state shows a create-first-design card; no horizontal page scroll at 360px width
+- [ ] 3. Templates tab
+  - Category chips + grid using existing templates
+  - Accept: tap opens an editable copy; original template unchanged
+- [ ] 4. Projects tab
+  - List saved projects with thumbnail/name/date
+  - Accept: save, close app, reopen, project returns with all layers
+- [ ] 5. Unify editor entry
+  - Blank/template/AI all open the same editor; top bar (back/undo/redo/export)
+  - Accept: undo/redo, drag, multi-text, PNG export all still work
+- [ ] 6. Contextual bottom toolbar
+  - Show object options only when an object is selected
+  - Accept: Vietnamese text with diacritics renders correctly in canvas and exported PNG
+- [ ] 7. Move old tools under AI tab / editor
+  - Prompt Studio, Storyboard, Image Toolkit, AI Pro, Gemini BYOK, AndroidImageSaver
+  - Accept: regression checklist — each old feature performs its original action
+- [ ] 8. Account tab
+  - BYOK settings, language switch, export/import project file
+  - Accept: no key appears in logs or exported files
+- [ ] 9. Founder test on a real phone
+  - Script: open app → pick a template → edit text → drag → undo → save → reopen → export PNG, under 60 seconds

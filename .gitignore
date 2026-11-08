@@ -1,0 +1,4 @@
+.codex/
+android/.gradle/
+android/app/build/
+android/build/
