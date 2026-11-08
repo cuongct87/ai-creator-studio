@@ -132,3 +132,18 @@
   #zunva .z-project-cover{height:115px}
   #zunva .z-project-actions{gap:4px}
 }
+
+/* Above-the-fold mobile focus: see recent work without scrolling past a giant banner. */
+@media(max-width:720px){
+  #zunva .z-hero{padding:19px 18px;border-radius:18px}
+  #zunva .z-brand{font-size:10px}
+  #zunva .z-hero h2{font-size:26px;line-height:1.15;margin:11px 0 7px}
+  #zunva .z-hero p{font-size:13px;line-height:1.5;margin-bottom:14px}
+  #zunva .z-mainbtn,#zunva .z-softbtn{padding:10px 12px;font-size:13px}
+  #zunva .z-pillstrip{margin:10px 0 0;gap:5px}
+  #zunva .z-pillstrip span{padding:4px 7px;font-size:10px}
+  #zunva .z-home-search{margin:17px 0}
+  #zunva .z-home-search label{font-size:14px}
+  #zunva .z-recent,#zunva .z-start{margin:18px 0 22px}
+  #zunva .z-section-title h3{font-size:19px}
+}
