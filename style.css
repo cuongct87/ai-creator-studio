@@ -83,3 +83,52 @@
   main>nav .tab{width:auto!important;min-width:0!important;flex:none!important;word-break:normal!important;overflow-wrap:normal!important;white-space:normal!important;padding:11px 6px!important;font-size:12px!important;line-height:1.25!important;min-height:54px;text-align:center}
   main>nav #navZunva{background:linear-gradient(120deg,#58e0c9,#409de2);color:#092137}
 }
+
+
+/* ZUNVA P2 user journey: find, resume, start and then edit. */
+#zunva .z-home-search{margin:22px 0 18px}
+#zunva .z-home-search label{display:block;font-size:16px;font-weight:750;color:#f4f8ff;margin:0 0 9px}
+#zunva .z-search-input{display:flex;align-items:center;gap:12px;background:#172840;border:1px solid #47627d;border-radius:15px;padding:0 15px;box-shadow:0 9px 22px #070f203b}
+#zunva .z-search-input:focus-within{outline:2px solid #79e4d3;outline-offset:1px}
+#zunva .z-search-input span{font-size:25px;color:#9fd8df}
+#zunva .z-search-input input{font-size:15px;border:0;background:transparent;color:#fff;min-width:0;width:100%;height:52px;outline:0}
+#zunva .z-search-input input::placeholder{color:#9fb1c8}
+#zunva .z-recent,#zunva .z-start{margin:23px 0 27px}
+#zunva .z-recent .z-section-title,#zunva .z-start .z-section-title{margin:0 0 13px}
+#zunva .z-recent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:12px}
+#zunva .z-project-row{display:flex;flex-direction:column;align-items:stretch;gap:0;text-align:left;overflow:hidden;border-radius:16px;border:1px solid #3a536f;background:#182941;padding:0;min-width:0}
+#zunva .z-project-cover{height:156px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 80% 22%,#4e508c,transparent 50%),linear-gradient(140deg,#2b3458,#0e6177);font-size:48px;color:#8af4e7;overflow:hidden}
+#zunva .z-project-cover img{width:100%;height:100%;object-fit:contain}
+#zunva .z-project-body{display:flex;flex-direction:column;gap:5px;padding:12px}
+#zunva .z-project-body strong{color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+#zunva .z-project-body small{color:#aebed3;font-size:12px}
+#zunva .z-project-actions{display:flex;gap:9px;margin-top:8px}
+#zunva .z-project-row .z-project-actions button{min-height:37px;flex:1}
+#zunva .z-project-row .z-project-actions .z-open{background:#78ded2;color:#102637;border:0;font-weight:800}
+#zunva .z-empty{background:#14263d;color:#c5d7e9;border:1px dashed #59718c;border-radius:15px;padding:24px 18px;font-size:13px;line-height:1.7;grid-column:1/-1}
+#zunva .z-start-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+#zunva .z-start-card{display:flex;flex-direction:column;align-items:flex-start;text-align:left;min-width:0;min-height:150px;padding:17px 14px;border-radius:17px;background:linear-gradient(165deg,#243b61,#152b49);border:1px solid #476486;gap:8px;color:#e9f6ff;transition:transform .14s,border-color .14s}
+#zunva .z-start-card:hover,#zunva .z-start-card:focus-visible{border-color:#85e8e0;transform:translateY(-2px)}
+#zunva .z-start-card .z-start-icon{width:42px;height:42px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#7ce4da;color:#0e2736;font-size:24px}
+#zunva .z-start-card:nth-child(2) .z-start-icon{background:#b6a3fc}
+#zunva .z-start-card:nth-child(3) .z-start-icon{background:#f4cf92}
+#zunva .z-start-card:nth-child(4) .z-start-icon{background:#efacd3}
+#zunva .z-start-card strong{font-size:14px;line-height:1.3}
+#zunva .z-start-card small{font-size:11px;color:#aebed6;line-height:1.35}
+#zunva .z-filters{display:flex;overflow-x:auto;gap:9px;padding:2px 1px 12px;scrollbar-width:thin}
+#zunva .z-filters button{border:1px solid #546981;color:#dae9f7;background:#1a2f4b;border-radius:999px;white-space:nowrap;min-height:36px;padding:7px 14px;font-size:12px}
+#zunva .z-filters button.is-active{background:#80e8d6;color:#10283b;border-color:#80e8d6;font-weight:800}
+#zunva .z-template[hidden]{display:none!important}
+#zunva .z-project-actions button:focus-visible,#zunva .z-filters button:focus-visible{outline:2px solid #b7fff5;outline-offset:2px}
+@media(max-width:790px){
+  #zunva .z-start-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #zunva .z-start-card{min-height:128px}
+  #zunva .z-recent-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #zunva .z-project-cover{height:140px}
+  #zunva .z-hero{min-height:0}
+}
+@media(max-width:370px){
+  #zunva .z-start-card{padding:12px 9px}
+  #zunva .z-project-cover{height:115px}
+  #zunva .z-project-actions{gap:4px}
+}
