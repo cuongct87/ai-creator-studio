@@ -546,7 +546,13 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     }
     cv.addEventListener('pointerup',stopDrag);cv.addEventListener('pointercancel',stopDrag);
     function openEditor(d,id){
-      doc=deep(d); currentId=id||'';selectedId=doc.layers.length?doc.layers[doc.layers.length-1].id:'';
+      doc=deep(d); currentId=id||'';
+      // Avoid duplicate layer IDs when reopening a saved or imported project.
+      doc.layers.forEach(function(l){
+        var m=/^z([0-9]+)$/.exec(l.id||'');
+        if(m)seq=Math.max(seq,Number(m[1])+1);
+      });
+      selectedId=doc.layers.length?doc.layers[doc.layers.length-1].id:'';
       undo=[];redo=[];
       $('z-home').classList.add('z-hidden');$('z-editor').classList.remove('z-hidden');
       viewTab();controls();draw();
