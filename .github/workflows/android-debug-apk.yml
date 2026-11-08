@@ -261,8 +261,8 @@ jobs:
           AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
           BADGING="$("$AAPT" dump badging "$APK")"
           printf '%s\\n' "$BADGING" | grep -E '^(package:|application:)'
-          printf '%s\\n' "$BADGING" | grep -F "package: name='vn.iaysystem.aicreatorstudio.p2lang'"
-          printf '%s\\n' "$BADGING" | grep -F "label='ZUNVA Studio 2.1 TEST'"
+          printf '%s\\n' "$BADGING" | grep -F "package: name='vn.iaysystem.aicreatorstudio.p2verify'"
+          printf '%s\\n' "$BADGING" | grep -F "label='ZUNVA Studio 2.2 TEST'"
 
       - name: Verify APK signing for Android device install
         shell: bash
