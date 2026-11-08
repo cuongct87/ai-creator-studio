@@ -61,6 +61,25 @@ jobs:
                 if (!$('z-start-blank') || !$('z-start-template') || !$('z-start-print') || !$('z-start-ai'))
                   throw Error('start actions missing');
                 if (!$('z-template-search') || !$('z-project-list')) throw Error('search/recent missing');
+                $('language').value='en';
+                $('language').dispatchEvent(new Event('change',{bubbles:true}));
+                if (!$('z-home').textContent.includes('Continue designing') ||
+                    !$('z-home').textContent.includes('Choose how to start') ||
+                    !$('z-home').textContent.includes('Explore templates') ||
+                    !$('z-add').textContent.includes('Add text'))
+                  throw Error('English Studio locale incomplete');
+                $('language').value='es';
+                $('language').dispatchEvent(new Event('change',{bubbles:true}));
+                if (!$('z-home').textContent.includes('Seguir diseñando') ||
+                    !$('z-home').textContent.includes('Elige cómo empezar') ||
+                    !$('z-home').textContent.includes('Explorar plantillas') ||
+                    !$('z-add').textContent.includes('Añadir texto'))
+                  throw Error('Spanish Studio locale incomplete');
+                $('language').value='vi';
+                $('language').dispatchEvent(new Event('change',{bubbles:true}));
+                if (!$('z-home').textContent.includes('Tiếp tục thiết kế') ||
+                    !$('z-home').textContent.includes('Chọn cách bắt đầu'))
+                  throw Error('Vietnamese Studio locale lost');
                 $('z-template-search').value='thiệp';
                 $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
                 if (Array.from($('z-gallery').children).filter(function (b) { return !b.hidden; }).length !== 1)
