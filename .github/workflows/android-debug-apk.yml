@@ -171,7 +171,15 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: |
-          # Gradle distribution CDN may intermittently return 504; retry external download errors.
+          # Prefer Gradle already installed on GitHub runner to avoid CDN outages.
+          if command -v gradle >/dev/null 2>&1; then
+            echo "Trying runner-installed Gradle:"
+            gradle --version
+            if gradle :app:assembleDebug --no-daemon; then
+              exit 0
+            fi
+          fi
+          # Fall back to repository wrapper with retries if no compatible runner Gradle.
           for attempt in 1 2 3; do
             if bash ./gradlew :app:assembleDebug --no-daemon; then
               exit 0
