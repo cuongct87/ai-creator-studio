@@ -298,6 +298,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     var deep = function (obj) { return JSON.parse(JSON.stringify(obj)); };
     var SAVED_KEY = 'zunva_studio_projects_v1';
     var seq = 1, currentId = '', selectedId = '', doc = null, undo = [], redo = [], dragging = null;
+    var dirty = false;
     var templates = [
       {id:'sale',name:'Poster khuyến mãi',kind:'Quảng cáo',css:'z-tpl-sale',preview:'SIÊU SALE',sub:'ƯU ĐÃI 50%',a:'#37154f',b:'#f44385',ink:'#ffffff',layers:[
         {text:'SIÊU SALE',x:.5,y:.26,size:106,color:'#ffffff',weight:900},
@@ -311,7 +312,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
         {text:'THÀNH KÍNH PHÂN ƯU',x:.5,y:.25,size:56,color:'#2b3d3e',weight:700},
         {text:'THÔNG BÁO',x:.5,y:.48,size:76,color:'#35454a',weight:800},
         {text:'Nội dung chỉnh sửa tại đây',x:.5,y:.71,size:33,color:'#596767',weight:500}]},
-      {id:'social',name:'Bài đăng mạng xã hội',kind:'Social',css:'z-tpl-social',preview:'CREATE MORE',sub:'INSPIRE EVERY DAY',a:'#12224e',b:'#079ca4',ink:'#ffffff',layers:[
+      {id:'social',name:'Bài đăng mạng xã hội',kind:'Mạng xã hội',css:'z-tpl-social',preview:'CREATE MORE',sub:'INSPIRE EVERY DAY',a:'#12224e',b:'#079ca4',ink:'#ffffff',layers:[
         {text:'Ý TƯỞNG MỚI',x:.5,y:.27,size:90,color:'#ffffff',weight:900},
         {text:'KHỞI ĐẦU MỚI',x:.5,y:.48,size:63,color:'#9cfff0',weight:800},
         {text:'Sáng tạo mỗi ngày',x:.5,y:.76,size:39,color:'#ffffff',weight:500}]},
@@ -334,13 +335,33 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       '<div class="z-hero-actions"><button type="button" class="z-mainbtn" id="z-new">✦ Bắt đầu thiết kế</button>',
       '<button type="button" class="z-softbtn" id="z-jump">Khám phá mẫu ↓</button></div>',
       '<div class="z-pillstrip"><span>✓ Không cần AI key</span><span>✓ Lưu bản sửa được</span><span>✓ Xuất PNG</span></div></div>',
-      '<div class="z-section-title" id="z-templates"><div><h3>Bắt đầu từ một mẫu</h3>',
-      '<p>Chạm vào mẫu để mở xưởng thiết kế.</p></div></div>',
-      '<div class="z-gallery" id="z-gallery"></div>',
-      '<div class="z-projects"><h3>Thiết kế của bạn</h3><div id="z-project-list"></div></div>',
+      '<div class="z-home-search"><label for="z-template-search">Bạn muốn thiết kế gì?</label>',
+      '<div class="z-search-input"><span aria-hidden="true">⌕</span><input id="z-template-search" type="search" placeholder="Tìm poster, thiệp cưới, cáo phó, menu..." autocomplete="off"></div></div>',
+      '<section class="z-recent" aria-labelledby="z-recent-title"><div class="z-section-title"><div><h3 id="z-recent-title">Tiếp tục thiết kế</h3>',
+      '<p>Dự án trên thiết bị này · Chạm để mở lại và chỉnh sửa.</p></div></div>',
+      '<div class="z-recent-grid" id="z-project-list"></div></section>',
+      '<section class="z-start" aria-labelledby="z-start-title"><div class="z-section-title"><div><h3 id="z-start-title">Chọn cách bắt đầu</h3>',
+      '<p>Một thao tác là đến đúng công cụ bạn cần.</p></div></div>',
+      '<div class="z-start-grid">',
+      '<button type="button" class="z-start-card" id="z-start-blank"><span class="z-start-icon">✦</span><strong>Trang trắng</strong><small>Tự do sáng tạo từ đầu</small></button>',
+      '<button type="button" class="z-start-card" id="z-start-template"><span class="z-start-icon">▦</span><strong>Chọn mẫu</strong><small>Sửa ngay mẫu có sẵn</small></button>',
+      '<button type="button" class="z-start-card" id="z-start-print"><span class="z-start-icon">▤</span><strong>Thiệp & in ấn</strong><small>Cưới hỏi, cáo phó, quảng cáo</small></button>',
+      '<button type="button" class="z-start-card" id="z-start-ai"><span class="z-start-icon">✧</span><strong>Ý tưởng bằng AI</strong><small>Mở công cụ AI hiện có</small></button>',
+      '</div></section>',
+      '<div class="z-section-title" id="z-templates"><div><h3>Khám phá mẫu</h3>',
+      '<p>Chọn mẫu và thay nội dung ngay trong xưởng thiết kế.</p></div></div>',
+      '<div class="z-filters" id="z-filters" aria-label="Lọc mẫu theo danh mục">',
+      '<button type="button" class="z-filter is-active" data-kind="Tất cả">Tất cả</button>',
+      '<button type="button" class="z-filter" data-kind="Quảng cáo">Quảng cáo</button>',
+      '<button type="button" class="z-filter" data-kind="Cưới hỏi">Cưới hỏi</button>',
+      '<button type="button" class="z-filter" data-kind="In ấn">In ấn</button>',
+      '<button type="button" class="z-filter" data-kind="Mạng xã hội">Mạng xã hội</button>',
+      '<button type="button" class="z-filter" data-kind="Quán ăn">Quán ăn</button>',
+      '</div><div class="z-gallery" id="z-gallery"></div>',
+      '<p id="z-no-results" class="z-empty z-hidden">Không tìm thấy mẫu phù hợp. Thử từ khóa khác hoặc bắt đầu từ trang trắng.</p>',
       '<p class="z-privacy">Dữ liệu chỉ lưu trên thiết bị này. Hãy xuất PNG để chia sẻ; đây là xưởng thiết kế thử nghiệm.</p></div>',
       '<div id="z-editor" class="z-hidden"><div class="z-editor-shell">',
-      '<div class="z-editor-heading"><button type="button" class="z-softbtn" id="z-back">← Kho mẫu</button>',
+      '<div class="z-editor-heading"><button type="button" class="z-softbtn" id="z-back">← Trang chủ</button>',
       '<h3>Xưởng thiết kế</h3><span style="font-size:12px;color:#a5b9d4">Chạm và kéo chữ để di chuyển</span></div>',
       '<div class="z-toolbar" style="margin-bottom:13px">',
       '<button type="button" class="z-mainbtn" id="z-add">+ Thêm chữ</button>',
@@ -429,7 +450,9 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     }
     function notice(msg) { $('z-status').textContent = msg; }
     function historyBefore() {
-      if (!doc) return; undo.push(JSON.stringify(doc)); if (undo.length>30) undo.shift(); redo=[];
+      if (!doc) return;
+      dirty = true;
+      undo.push(JSON.stringify(doc)); if (undo.length>30) undo.shift(); redo=[];
     }
     function select(id) { selectedId=id; controls(); draw(); }
     function controls() {
@@ -540,7 +563,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     function stopDrag(){
       if(!dragging)return;
       if(JSON.stringify(doc)!==dragging.prior) {
-        undo.push(dragging.prior); if(undo.length>30)undo.shift();redo=[];controls();
+        dirty=true;undo.push(dragging.prior); if(undo.length>30)undo.shift();redo=[];controls();
       }
       dragging=null;cv.classList.remove('z-dragging');
     }
@@ -553,13 +576,37 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
         if(m)seq=Math.max(seq,Number(m[1])+1);
       });
       selectedId=doc.layers.length?doc.layers[doc.layers.length-1].id:'';
-      undo=[];redo=[];
+      undo=[];redo=[];dirty=false;
       $('z-home').classList.add('z-hidden');$('z-editor').classList.remove('z-hidden');
       viewTab();controls();draw();
       notice('Chỉnh chữ, di chuyển rồi lưu dự án. Không cần tài khoản hoặc API key.');
       window.scrollTo({top:0,behavior:'smooth'});
     }
-    var gallery=$('z-gallery');
+    var gallery=$('z-gallery'), galleryItems=[], activeKind='Tất cả';
+    function plain(s){
+      return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase();
+    }
+    function refreshGallery(){
+      var term=plain($('z-template-search').value), shown=0;
+      galleryItems.forEach(function(entry){
+        var visible=(activeKind==='Tất cả'||entry.template.kind===activeKind)&&
+          (!term||plain(entry.template.name+' '+entry.template.kind+' '+entry.template.preview+' '+entry.template.sub).includes(term));
+        entry.button.hidden=!visible;if(visible)shown++;
+      });
+      $('z-no-results').classList.toggle('z-hidden',shown>0);
+    }
+    function chooseCategory(kind){
+      activeKind=kind;
+      Array.prototype.forEach.call($('z-filters').querySelectorAll('button'),function(b){
+        b.classList.toggle('is-active',b.dataset.kind===kind);
+        b.setAttribute('aria-pressed',b.dataset.kind===kind?'true':'false');
+      });
+      refreshGallery();
+    }
+    $('z-template-search').addEventListener('input',refreshGallery);
+    Array.prototype.forEach.call($('z-filters').querySelectorAll('button'),function(b){
+      b.onclick=function(){chooseCategory(b.dataset.kind);};
+    });
     templates.forEach(function(t){
       var b=document.createElement('button');b.className='z-template';b.type='button';
       b.innerHTML='<div class="z-template-preview '+t.css+'"><strong></strong><small></small></div><div class="z-template-info"><b></b><small></small></div>';
@@ -567,8 +614,18 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       b.querySelector('.z-template-preview small').textContent=t.sub;
       b.querySelector('.z-template-info b').textContent=t.name;
       b.querySelector('.z-template-info small').textContent=t.kind+' · Có thể chỉnh sửa';
-      b.onclick=function(){openEditor(fromTemplate(t));};gallery.append(b);
+      b.onclick=function(){openEditor(fromTemplate(t));};
+      galleryItems.push({button:b,template:t});gallery.append(b);
     });
+    chooseCategory('Tất cả');
+    $('z-start-blank').onclick=function(){openEditor(blank());};
+    $('z-start-template').onclick=function(){chooseCategory('Tất cả');$('z-templates').scrollIntoView({behavior:'smooth',block:'start'});};
+    $('z-start-print').onclick=function(){
+      $('z-template-search').value='';
+      chooseCategory('Cưới hỏi');
+      $('z-templates').scrollIntoView({behavior:'smooth',block:'start'});
+    };
+    $('z-start-ai').onclick=function(){$('navAi').click();};
     $('z-new').onclick=function(){openEditor(blank());};
     imageButton.onclick=function(){imagePicker.click();};
     imagePicker.addEventListener('change',function(){
@@ -613,6 +670,10 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     };
     $('z-jump').onclick=function(){$('z-templates').scrollIntoView({behavior:'smooth',block:'start'});};
     $('z-back').onclick=function(){
+      if(dirty&&!persistProject(true)){
+        notice('Không lưu được. Hãy xuất JSON để sao lưu trước khi rời xưởng thiết kế.');
+        return;
+      }
       $('z-editor').classList.add('z-hidden');$('z-home').classList.remove('z-hidden');
       renderSaved();window.scrollTo({top:0,behavior:'smooth'});
     };
@@ -633,8 +694,8 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       doc.layers=doc.layers.filter(function(x){return x.id!==selectedId;});
       select(doc.layers.length?doc.layers[doc.layers.length-1].id:'');
     };
-    $('z-undo').onclick=function(){if(!undo.length)return;redo.push(JSON.stringify(doc));doc=JSON.parse(undo.pop());controls();draw();};
-    $('z-redo').onclick=function(){if(!redo.length)return;undo.push(JSON.stringify(doc));doc=JSON.parse(redo.pop());controls();draw();};
+    $('z-undo').onclick=function(){if(!undo.length)return;dirty=true;redo.push(JSON.stringify(doc));doc=JSON.parse(undo.pop());controls();draw();};
+    $('z-redo').onclick=function(){if(!redo.length)return;dirty=true;undo.push(JSON.stringify(doc));doc=JSON.parse(redo.pop());controls();draw();};
     [['z-width','width',480,3000],['z-height','height',480,3000],['z-dpi','dpi',72,600]].forEach(function(p){
       $(p[0]).addEventListener('change',function(){
         if(!doc)return;var n=Math.max(p[2],Math.min(p[3],Math.round(Number(this.value)||doc[p[1]])));
@@ -662,15 +723,32 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       catch(e){return [];}
     }
     function writeSaved(a) {try{localStorage.setItem(SAVED_KEY,JSON.stringify(a.slice(0,12)));return true;}catch(e){return false;}}
-    $('z-save').onclick=function(){
-      if(!doc)return;
+    function previewCanvas(){
+      try {
+        if(!imagesReady())return '';
+        draw(false);
+        var thumb=document.createElement('canvas');thumb.width=120;thumb.height=150;
+        thumb.getContext('2d').drawImage(cv,0,0,thumb.width,thumb.height);
+        return thumb.toDataURL('image/jpeg',.57);
+      }catch(e){return '';}
+      finally{draw();}
+    }
+    function persistProject(automatic){
+      if(!doc)return false;
       doc.name=($('z-name').value||'Thiết kế ZUNVA').trim().slice(0,60);
-      var a=readSaved();
-      if(!currentId)currentId='project-'+Date.now()+'-'+Math.random().toString(36).slice(2,7);
-      a=a.filter(function(p){return p.id!==currentId;});
-      a.unshift({id:currentId,saved:new Date().toISOString(),design:deep(doc)});
-      notice(writeSaved(a)?'Đã lưu bản chỉnh sửa trên thiết bị.':'Không lưu được: bộ nhớ trình duyệt bị chặn hoặc đã đầy.');
-    };
+      var all=readSaved();
+      var id=currentId||('project-'+Date.now()+'-'+Math.random().toString(36).slice(2,7));
+      all=all.filter(function(p){return p.id!==id;});
+      all.unshift({id:id,saved:new Date().toISOString(),design:deep(doc),preview:previewCanvas()});
+      if(!writeSaved(all)){
+        notice('Không lưu được: dung lượng bộ nhớ đầy. Hãy xuất bản JSON.');
+        return false;
+      }
+      currentId=id;dirty=false;
+      if(!automatic)notice('Đã lưu! Thiết kế sẽ hiện ở mục Tiếp tục thiết kế.');
+      return true;
+    }
+    $('z-save').onclick=function(){persistProject(false);};
     jsonButton.onclick=function(){jsonPicker.click();};
     jsonPicker.addEventListener('change',function(){
       var file=this.files&&this.files[0];this.value='';
@@ -709,16 +787,36 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     };
     function renderSaved(){
       var node=$('z-project-list');node.replaceChildren();
-      var a=readSaved();
-      if(!a.length){node.textContent='Chưa có thiết kế đã lưu trên thiết bị này.';return;}
-      a.forEach(function(item){
+      var all=readSaved();
+      if(!all.length){
+        var empty=document.createElement('div');empty.className='z-empty';
+        empty.textContent='Chưa có bản thiết kế nào. Chọn trang trắng hoặc mẫu để bắt đầu, ZUNVA sẽ lưu lại cho lần sau.';
+        node.append(empty);return;
+      }
+      all.forEach(function(item){
+        if(!item||!item.design||!Array.isArray(item.design.layers))return;
         var row=document.createElement('div');row.className='z-project-row';
-        var title=document.createElement('span');title.textContent=(item.design&&item.design.name)||'Thiết kế';
-        var open=document.createElement('button');open.type='button';open.textContent='Mở';
-        open.onclick=function(){if(item.design&&Array.isArray(item.design.layers))openEditor(item.design,item.id);};
+        var picture=document.createElement('div');picture.className='z-project-cover';
+        if(item.preview&&/^data:image\/jpeg;base64,/.test(item.preview)){
+          var im=document.createElement('img');im.src=item.preview;im.alt='Xem trước thiết kế';
+          picture.append(im);
+        }else picture.textContent='✦';
+        var body=document.createElement('div');body.className='z-project-body';
+        var title=document.createElement('strong');title.textContent=item.design.name||'Thiết kế';
+        var subtitle=document.createElement('small');
+        var date=new Date(item.saved);
+        subtitle.textContent='Lưu: '+(Number.isNaN(date.getTime())?'Trên thiết bị':date.toLocaleDateString('vi-VN'));
+        var buttons=document.createElement('div');buttons.className='z-project-actions';
+        var open=document.createElement('button');open.type='button';open.className='z-open';open.textContent='Tiếp tục';
+        open.onclick=function(){openEditor(item.design,item.id);};
         var del=document.createElement('button');del.type='button';del.textContent='Xóa';
-        del.onclick=function(){if(window.confirm('Xóa bản lưu này?')){writeSaved(readSaved().filter(function(x){return x.id!==item.id;}));renderSaved();}};
-        row.append(title,open,del);node.append(row);
+        del.onclick=function(){
+          if(window.confirm('Xóa thiết kế này khỏi thiết bị?')){
+            writeSaved(readSaved().filter(function(p){return p.id!==item.id;}));
+            renderSaved();
+          }
+        };
+        buttons.append(open,del);body.append(title,subtitle,buttons);row.append(picture,body);node.append(row);
       });
     }
     renderSaved();viewTab();
