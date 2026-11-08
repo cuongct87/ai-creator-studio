@@ -207,8 +207,14 @@ jobs:
           AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
           BADGING="$("$AAPT" dump badging "$APK")"
           printf '%s\\n' "$BADGING" | grep -E '^(package:|application:)'
-          printf '%s\\n' "$BADGING" | grep -F "package: name='vn.iaysystem.aicreatorstudio.test'"
-          printf '%s\\n' "$BADGING" | grep -F "label='AI Creator Studio TEST'"
+          printf '%s\\n' "$BADGING" | grep -F "package: name='vn.iaysystem.aicreatorstudio.p2test'"
+          printf '%s\\n' "$BADGING" | grep -F "label='ZUNVA Studio P2 TEST'"
+
+      - name: Verify APK signing for Android device install
+        shell: bash
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose --print-certs "$APK"
 
       - name: Upload test APK
         uses: actions/upload-artifact@v4
