@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
     <application
-        android:label="AI Creator Studio TEST"
+        android:label="@string/zunva_test_app_label"
         tools:replace="android:label" />
 </manifest>
