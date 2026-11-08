@@ -94,6 +94,35 @@ jobs:
                   throw Error('template search failed');
                 $('z-template-search').value='';
                 $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
+                // Regression: legacy tab navigation must never hide nested Studio home sections.
+                if (document.querySelectorAll('main > nav [data-tab]').length!==5)
+                  throw Error('Studio tab missing from navigation');
+                var route=[
+                  ['navPrompt','prompt'],['navVideo','video'],['navImage','image'],
+                  ['navAi','ai'],['navZunva','zunva']
+                ];
+                for(var round=0;round<5;round++){
+                  route.forEach(function(pair){
+                    $(pair[0]).click();
+                    var active=Array.from(document.querySelectorAll('main > nav [data-tab].active'));
+                    if(active.length!==1||active[0].id!==pair[0])
+                      throw Error('active tab wrong: '+pair[0]);
+                    var rootPanels=Array.from(document.querySelectorAll('main > section'));
+                    rootPanels.forEach(function(p){
+                      if(p.classList.contains('hidden')===(p.id===pair[1]))
+                        throw Error('root panel visibility wrong: '+pair[1]+' / '+p.id);
+                    });
+                    if(document.querySelector('#zunva .z-recent').classList.contains('hidden')||
+                       document.querySelector('#zunva .z-start').classList.contains('hidden'))
+                      throw Error('nested Studio section hidden after tab switch');
+                    if(pair[1]==='zunva'){
+                      if(getComputedStyle($('zunva')).display==='none'||
+                         getComputedStyle(document.querySelector('#zunva .z-recent')).display==='none'||
+                         getComputedStyle(document.querySelector('#zunva .z-start')).display==='none')
+                        throw Error('Studio home not visually restored');
+                    }
+                  });
+                }
                 $('z-gallery').querySelector('button').click();
                 if ($('z-editor').classList.contains('z-hidden')) throw Error('editor did not open');
                 if ($('z-layers').children.length !== 3) throw Error('template layers missing');
