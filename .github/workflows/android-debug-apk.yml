@@ -55,6 +55,15 @@ jobs:
               try {
                 var $ = function (id) { return document.getElementById(id); };
                 if (!$('zunva') || $('z-gallery').children.length !== 5) throw Error('gallery missing');
+                if (!$('z-start-blank') || !$('z-start-template') || !$('z-start-print') || !$('z-start-ai'))
+                  throw Error('start actions missing');
+                if (!$('z-template-search') || !$('z-project-list')) throw Error('search/recent missing');
+                $('z-template-search').value='thiệp';
+                $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
+                if (Array.from($('z-gallery').children).filter(function (b) { return !b.hidden; }).length !== 1)
+                  throw Error('template search failed');
+                $('z-template-search').value='';
+                $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
                 $('z-gallery').querySelector('button').click();
                 if ($('z-editor').classList.contains('z-hidden')) throw Error('editor did not open');
                 if ($('z-layers').children.length !== 3) throw Error('template layers missing');
@@ -99,6 +108,13 @@ jobs:
                         $('z-project-list').querySelector('.z-project-row button').click();
                         if($('z-layers').children.length!==5)throw Error('saved photo layer not restored');
                         if(!$('z-canvas').toDataURL('image/png').startsWith('data:image/png'))throw Error('photo PNG canvas broken');
+                        $('z-back').click();
+                        if (!$('z-project-list').querySelector('.z-project-cover img')) throw Error('recent preview missing');
+                        $('z-start-blank').click();
+                        $('z-add').click();
+                        $('z-back').click();
+                        if ($('z-project-list').querySelectorAll('.z-project-row').length < 2)
+                          throw Error('auto-save on return failed');
                         document.documentElement.dataset.zunvaSmoke='PASS';
                       } catch(err){document.documentElement.dataset.zunvaSmoke='FAIL: '+err.message;}
                     },650);
@@ -121,7 +137,7 @@ jobs:
             grep -o 'data-zunva-smoke="[^"]*"' zunva-smoke-result.html || true
             exit 1
           }
-          echo "Studio smoke test PASS: gallery, editor, text/photo layers, resize, undo/redo, save/reopen, legacy navigation."
+          echo "ZUNVA journey smoke PASS: search, recent previews, start actions, text/photo editor, autosave, save/reopen and legacy tabs."
 
       - name: Capture mobile Studio preview (headless Chrome)
         shell: bash
