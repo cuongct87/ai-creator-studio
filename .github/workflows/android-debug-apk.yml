@@ -108,12 +108,37 @@ jobs:
             echo "Chrome not installed; preview screenshot unavailable."
           fi
 
+      - name: Capture editable canvas screen
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html=Path('index.html').read_text(encoding='utf-8')
+          script="""<script>
+          window.addEventListener('load',function(){
+            setTimeout(function(){
+              var button=document.querySelector('#z-gallery .z-template');
+              if(button)button.click();
+            },250);
+          });
+          </script>"""
+          Path('zunva-editor-demo.html').write_text(html.replace('</body>',script+'</body>'),encoding='utf-8')
+          PY
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars \
+              --window-size=430,1300 --virtual-time-budget=3000 \
+              --screenshot="$PWD/zunva-editor-preview.png" "file://$PWD/zunva-editor-demo.html"
+          fi
+
       - name: Upload Studio preview screenshot
         uses: actions/upload-artifact@v4
         if: ${{ hashFiles('zunva-mobile-preview.png') != '' }}
         with:
           name: ZUNVA-Studio-Mobile-Preview
-          path: zunva-mobile-preview.png
+          path: |
+            zunva-mobile-preview.png
+            zunva-editor-preview.png
           retention-days: 14
 
       - name: Build debug APK
