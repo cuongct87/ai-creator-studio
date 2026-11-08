@@ -29,11 +29,13 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Install Android SDK 35
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android SDK 35 with runner's preinstalled SDK tools
+        shell: bash
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          SDKMGR="$(find "$ANDROID_HOME/cmdline-tools" -path '*/bin/sdkmanager' -type f | sort -V | tail -1)"
+          if [ -z "$SDKMGR" ]; then echo "sdkmanager not found"; exit 1; fi
+          "$SDKMGR" "platforms;android-35" "build-tools;35.0.0"
 
       - name: Build debug APK
         working-directory: android
