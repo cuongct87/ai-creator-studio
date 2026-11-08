@@ -37,6 +37,12 @@ jobs:
           if [ -z "$SDKMGR" ]; then echo "sdkmanager not found"; exit 1; fi
           "$SDKMGR" "platforms;android-35" "build-tools;35.0.0"
 
+      - name: Syntax-check main Studio scripts
+        run: |
+          node --check script.js
+          node --check studio_v15.js
+          node --check vault_i18n.js
+
       - name: Build debug APK
         working-directory: android
         run: bash ./gradlew :app:assembleDebug --no-daemon
