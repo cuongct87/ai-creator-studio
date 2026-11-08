@@ -434,8 +434,9 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       Array.prototype.forEach.call(nav.querySelectorAll('[data-tab]'), function (b) {
         b.classList.toggle('active', b === tab);
       });
-      Array.prototype.forEach.call(main.querySelectorAll('section'), function (s) {
-        s.classList.toggle('hidden', s !== panel);
+      // Only switch top-level app panels; keep nested Studio home sections visible.
+      Array.prototype.forEach.call(main.children, function (s) {
+        if(s.tagName==='SECTION')s.classList.toggle('hidden',s!==panel);
       });
     }
     tab.addEventListener('click', viewTab);
