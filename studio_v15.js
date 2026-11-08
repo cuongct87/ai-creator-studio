@@ -463,16 +463,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     var jsonPicker=document.createElement('input');
     jsonPicker.type='file';jsonPicker.id='z-project-upload';jsonPicker.accept='.json,application/json';
     jsonPicker.style.display='none';jsonButton.after(jsonPicker);
-    function viewTab() {
-      Array.prototype.forEach.call(nav.querySelectorAll('[data-tab]'), function (b) {
-        b.classList.toggle('active', b === tab);
-      });
-      // Only switch top-level app panels; keep nested Studio home sections visible.
-      Array.prototype.forEach.call(main.children, function (s) {
-        if(s.tagName==='SECTION')s.classList.toggle('hidden',s!==panel);
-      });
-    }
-    tab.addEventListener('click', viewTab);
+    // Tab switching is handled by the single showTab() router in script.js.
     $('language').addEventListener('change',updateStudioLanguage);
     function blank() {
       return {version:1, name:'Thiết kế mới', width:1080, height:1350, dpi:150, bg:['#14264d','#2383a5'], layers:[]};
@@ -612,7 +603,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       selectedId=doc.layers.length?doc.layers[doc.layers.length-1].id:'';
       undo=[];redo=[];dirty=false;
       $('z-home').classList.add('z-hidden');$('z-editor').classList.remove('z-hidden');
-      viewTab();controls();draw();
+      showTab('zunva');controls();draw();
       notice('Chỉnh chữ, di chuyển rồi lưu dự án. Không cần tài khoản hoặc API key.');
       window.scrollTo({top:0,behavior:'smooth'});
     }
@@ -854,7 +845,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
         buttons.append(open,del);body.append(title,subtitle,buttons);row.append(picture,body);node.append(row);
       });
     }
-    renderSaved();viewTab();updateStudioLanguage();
+    renderSaved();showTab('zunva');updateStudioLanguage();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready,{once:true});else ready();
 })();
