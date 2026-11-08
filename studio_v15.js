@@ -321,7 +321,39 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
         {text:'COMBO 99K',x:.5,y:.50,size:104,color:'#ffffff',weight:900},
         {text:'Đặt hàng ngay hôm nay',x:.5,y:.75,size:34,color:'#61391f',weight:600}]}
     ];
-    function tr(vi, en) { return $('language') && $('language').value === 'vi' ? vi : en; }
+    // Studio-only translations. Artwork text and saved project data are never modified.
+    var studioStrings={"Biến ý tưởng thành thiết kế của bạn.":["Turn ideas into designs.","Convierte ideas en diseños."],"Chọn mẫu có sẵn hoặc bắt đầu từ trang trắng. Kéo thả chữ, chỉnh từng lớp và xuất ảnh — miễn phí, không cần API key.":["Start with a template or a blank canvas. Drag text and photos, edit layers and export images — free, no API key required.","Empieza con una plantilla o un lienzo vacío. Arrastra texto e imágenes, edita capas y exporta diseños, gratis y sin clave API."],"✦ Bắt đầu thiết kế":["✦ Start designing","✦ Empezar a diseñar"],"Khám phá mẫu ↓":["Explore templates ↓","Explorar plantillas ↓"],"✓ Không cần AI key":["✓ No AI key","✓ Sin clave de IA"],"✓ Lưu bản sửa được":["✓ Editable projects","✓ Proyectos editables"],"✓ Xuất PNG":["✓ Export PNG","✓ Exportar PNG"],"Bạn muốn thiết kế gì?":["What would you like to design?","¿Qué quieres diseñar?"],"Tìm poster, thiệp cưới, cáo phó, menu...":["Search posters, invitations, notices, menus...","Busca carteles, invitaciones, avisos, menús..."],"Tiếp tục thiết kế":["Continue designing","Seguir diseñando"],"Dự án trên thiết bị này · Chạm để mở lại và chỉnh sửa.":["Saved on this device · Tap to reopen and edit.","Guardados en este dispositivo · Toca para editar."],"Chọn cách bắt đầu":["Choose how to start","Elige cómo empezar"],"Một thao tác là đến đúng công cụ bạn cần.":["Pick a starting point to get to work.","Elige una opción para empezar."],"Trang trắng":["Blank canvas","Lienzo en blanco"],"Tự do sáng tạo từ đầu":["Create from scratch","Crear desde cero"],"Chọn mẫu":["Choose a template","Elegir plantilla"],"Sửa ngay mẫu có sẵn":["Customize an existing design","Personaliza un diseño"],"Thiệp & in ấn":["Cards & print","Tarjetas e impresión"],"Cưới hỏi, cáo phó, quảng cáo":["Weddings, notices, ads","Bodas, avisos, anuncios"],"Ý tưởng bằng AI":["AI ideas","Ideas con IA"],"Mở công cụ AI hiện có":["Open existing AI tools","Abrir herramientas de IA"],"Khám phá mẫu":["Explore templates","Explorar plantillas"],"Chọn mẫu và thay nội dung ngay trong xưởng thiết kế.":["Choose a template and edit it in Studio.","Elige una plantilla y edítala en Studio."],"Tất cả":["All","Todas"],"Quảng cáo":["Advertising","Publicidad"],"Cưới hỏi":["Weddings","Bodas"],"In ấn":["Print","Impresión"],"Mạng xã hội":["Social media","Redes sociales"],"Quán ăn":["Food & menus","Comida y menús"],"Không tìm thấy mẫu phù hợp. Thử từ khóa khác hoặc bắt đầu từ trang trắng.":["No matching templates. Try another search or start blank.","No hay plantillas. Prueba otra búsqueda o empieza desde cero."],"Dữ liệu chỉ lưu trên thiết bị này. Hãy xuất PNG để chia sẻ; đây là xưởng thiết kế thử nghiệm.":["Designs stay on this device. Export PNG to share. This editor is a preview.","Los diseños se guardan aquí. Exporta PNG para compartir. Este editor está en pruebas."],"← Trang chủ":["← Home","← Inicio"],"Xưởng thiết kế":["Design editor","Editor de diseño"],"Chạm và kéo chữ để di chuyển":["Touch and drag text to move","Toca y arrastra texto"],"+ Thêm chữ":["+ Add text","+ Añadir texto"],"↶ Hoàn tác":["↶ Undo","↶ Deshacer"],"↷ Làm lại":["↷ Redo","↷ Rehacer"],"↓ Xuất PNG":["↓ Export PNG","↓ Exportar PNG"],"Chạm vào dòng chữ trên ảnh để chọn · Kéo để di chuyển":["Tap to select text or photo · Drag to move","Toca para seleccionar texto o imagen · Arrastra para mover"],"Chữ đang chọn":["Selected text","Texto seleccionado"],"Nội dung":["Text","Contenido"],"Cỡ chữ":["Font size","Tamaño de letra"],"Màu chữ":["Text color","Color del texto"],"Xóa chữ đã chọn":["Delete selected text","Eliminar texto"],"Lớp thiết kế":["Layers","Capas"],"Khổ thiết kế & in ấn":["Canvas size & print","Tamaño e impresión"],"Rộng (px)":["Width (px)","Ancho (px)"],"Cao (px)":["Height (px)","Alto (px)"],"DPI tham chiếu":["Reference DPI","PPP de referencia"],"DPI dùng để tính khổ in, PNG chưa gắn metadata DPI.":["DPI estimates print size; exported PNG has no embedded DPI.","Los PPP estiman el tamaño de impresión; el PNG no incluye PPP."],"Lưu bản có thể chỉnh sửa":["Save editable project","Guardar proyecto editable"],"Tên thiết kế":["Design name","Nombre del diseño"],"Lưu thiết kế":["Save design","Guardar diseño"],"Xuất dự án JSON":["Export project JSON","Exportar JSON del proyecto"],"Thiết kế của tôi":["My design","Mi diseño"],"Chọn hoặc thêm chữ":["Select or add text","Selecciona o añade texto"],"+ Thêm ảnh":["+ Add photo","+ Añadir imagen"],"Ảnh đang chọn":["Selected photo","Imagen seleccionada"],"Chiều rộng ảnh (% khổ thiết kế)":["Photo width (% of canvas)","Ancho de foto (% del lienzo)"],"Ảnh được giữ tỉ lệ · Chạm và kéo trên canvas":["Aspect ratio locked · Drag on canvas","Proporción fija · Arrastra en el lienzo"],"Xóa ảnh đã chọn":["Delete selected photo","Eliminar imagen"],"Nhập dự án JSON":["Import project JSON","Importar JSON del proyecto"],"Poster khuyến mãi":["Sale poster","Cartel de ofertas"],"Thiệp cưới tinh tế":["Wedding invitation","Invitación de boda"],"Thông báo cáo phó":["Obituary notice","Aviso de fallecimiento"],"Bài đăng mạng xã hội":["Social post","Publicación en redes"],"Menu sản phẩm":["Product menu","Menú de productos"],"Có thể chỉnh sửa":["Editable","Editable"],"Chữ mới":["New text","Texto nuevo"],"(Chữ trống)":["(Empty text)","(Texto vacío)"],"Chưa có bản thiết kế nào. Chọn trang trắng hoặc mẫu để bắt đầu, ZUNVA sẽ lưu lại cho lần sau.":["No saved designs yet. Choose a template or blank canvas to start.","No hay diseños guardados. Elige una plantilla o un lienzo vacío."],"Tiếp tục":["Continue","Continuar"],"Xóa":["Delete","Eliminar"],"Xem trước thiết kế":["Design preview","Vista previa"],"Xóa thiết kế này khỏi thiết bị?":["Delete this design from the device?","¿Eliminar este diseño del dispositivo?"],"Thiết kế":["Design","Diseño"],"Lưu: ":["Saved: ","Guardado: "],"Trên thiết bị":["On device","En el dispositivo"],"Chỉnh chữ, di chuyển rồi lưu dự án. Không cần tài khoản hoặc API key.":["Edit and move layers, then save. No account or API key required.","Edita y mueve capas y luego guarda. Sin cuenta ni clave API."],"Đã lưu! Thiết kế sẽ hiện ở mục Tiếp tục thiết kế.":["Saved! Find it under Continue designing.","¡Guardado! Estará en Seguir diseñando."],"Không lưu được. Hãy xuất JSON để sao lưu trước khi rời xưởng thiết kế.":["Save failed. Export JSON before leaving the editor.","Error al guardar. Exporta JSON antes de salir."],"Không lưu được: dung lượng bộ nhớ đầy. Hãy xuất bản JSON.":["Storage full. Export JSON to back up your project.","Almacenamiento lleno. Exporta JSON como copia."],"Không đọc được ảnh.":["Could not read photo.","No se pudo leer la imagen."],"Chỉ hỗ trợ JPG, PNG, WebP dưới 8 MB.":["Use JPG, PNG or WebP under 8 MB.","Usa JPG, PNG o WebP de menos de 8 MB."],"Đã thêm ảnh. Kéo ảnh trên canvas; chỉnh kích thước ở bảng điều khiển.":["Photo added. Drag to move and resize in controls.","Imagen añadida. Arrastra y cambia el tamaño en los controles."],"Đã tạo PNG. Mở ảnh trong thư viện hoặc thư mục Tải xuống.":["PNG generated. Check Gallery or Downloads.","PNG generado. Mira en Galería o Descargas."],"Ảnh chưa tải xong hoặc bị lỗi; chưa thể xuất PNG.":["Photo not ready; cannot export PNG.","La imagen no está lista; no se puede exportar PNG."],"Ảnh trong dự án bị lỗi, vui lòng thay ảnh.":["Project photo invalid; replace it.","La imagen del proyecto está dañada; cámbiala."],"Khổ in tương đương: ":["Approximate print size: ","Tamaño de impresión aprox.: "]};
+    function studioText(vi) {
+      var code=$('language')?$('language').value:'vi';
+      if(code==='vi')return vi;
+      var x=studioStrings[vi];return x?x[code==='es'?1:0]:vi;
+    }
+    var studioStatic=[],studioPlaceholders=[];
+    function recordStudioUI(){
+      var walk=document.createTreeWalker(panel,NodeFilter.SHOW_TEXT);
+      while(walk.nextNode()){
+        var node=walk.currentNode,raw=node.nodeValue;
+        if(studioStrings[raw.trim()])studioStatic.push({node:node,raw:raw});
+      }
+      Array.prototype.forEach.call(panel.querySelectorAll('[placeholder]'),function(el){
+        if(studioStrings[el.placeholder])studioPlaceholders.push({el:el,raw:el.placeholder});
+      });
+    }
+    function updateStudioLanguage(){
+      studioStatic.forEach(function(entry){
+        entry.node.nodeValue=entry.raw.replace(entry.raw.trim(),studioText(entry.raw.trim()));
+      });
+      studioPlaceholders.forEach(function(entry){entry.el.placeholder=studioText(entry.raw);});
+      Array.prototype.forEach.call(gallery.querySelectorAll('.z-template'),function(button,i){
+        var t=templates[i];if(!t)return;
+        button.querySelector('.z-template-info b').textContent=studioText(t.name);
+        button.querySelector('.z-template-info small').textContent=studioText(t.kind)+' · '+studioText('Có thể chỉnh sửa');
+      });
+      renderSaved();
+      if($('z-status').dataset.originalMessage)$('z-status').textContent=studioText($('z-status').dataset.originalMessage);
+    }
+
+    function tr(vi, en) { return $('language').value === 'vi' ? vi : studioText(vi); }
     var tab = document.createElement('button');
     tab.type = 'button'; tab.className = 'tab'; tab.id = 'navZunva'; tab.dataset.tab = 'zunva';
     tab.textContent = '✦ ZUNVA Studio'; nav.insertBefore(tab, nav.firstChild);
@@ -440,7 +472,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       });
     }
     tab.addEventListener('click', viewTab);
-    $('language').addEventListener('change', function () { /* Existing translations untouched. */ });
+    $('language').addEventListener('change',updateStudioLanguage);
     function blank() {
       return {version:1, name:'Thiết kế mới', width:1080, height:1350, dpi:150, bg:['#14264d','#2383a5'], layers:[]};
     }
@@ -449,7 +481,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       d.layers = t.layers.map(function (l) { var x=deep(l);x.id='z'+seq++;return x; });
       return d;
     }
-    function notice(msg) { $('z-status').textContent = msg; }
+    function notice(msg) { $('z-status').dataset.originalMessage=msg; $('z-status').textContent=studioText(msg); }
     function historyBefore() {
       if (!doc) return;
       dirty = true;
@@ -476,7 +508,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       if(doc){
         doc.layers.slice().reverse().forEach(function(layer){
           var row=document.createElement('div');row.className='z-layer'+(layer.id===selectedId?' z-selected':'');
-          var title=document.createElement('button');title.type='button';title.className='z-layer-title';title.textContent=layer.type==='image'?'🖼 '+(layer.name||'Ảnh'):layer.text||'(Chữ trống)';
+          var title=document.createElement('button');title.type='button';title.className='z-layer-title';title.textContent=layer.type==='image'?'🖼 '+(layer.name||'Ảnh'):layer.text||studioText('(Chữ trống)');
           title.onclick=function(){ select(layer.id); };
           row.append(title);
           [['↑','up'],['↓','down'],['×','delete']].forEach(function(pair){
@@ -583,6 +615,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       notice('Chỉnh chữ, di chuyển rồi lưu dự án. Không cần tài khoản hoặc API key.');
       window.scrollTo({top:0,behavior:'smooth'});
     }
+    recordStudioUI();
     var gallery=$('z-gallery'), galleryItems=[], activeKind='Tất cả';
     function plain(s){
       return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').toLowerCase();
@@ -613,8 +646,8 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       b.innerHTML='<div class="z-template-preview '+t.css+'"><strong></strong><small></small></div><div class="z-template-info"><b></b><small></small></div>';
       b.querySelector('strong').textContent=t.preview;
       b.querySelector('.z-template-preview small').textContent=t.sub;
-      b.querySelector('.z-template-info b').textContent=t.name;
-      b.querySelector('.z-template-info small').textContent=t.kind+' · Có thể chỉnh sửa';
+      b.querySelector('.z-template-info b').textContent=studioText(t.name);
+      b.querySelector('.z-template-info small').textContent=studioText(t.kind)+' · '+studioText('Có thể chỉnh sửa');
       b.onclick=function(){openEditor(fromTemplate(t));};
       galleryItems.push({button:b,template:t});gallery.append(b);
     });
@@ -680,7 +713,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     };
     $('z-add').onclick=function(){
       if(!doc)return;historyBefore();
-      var l={id:'z'+seq++,text:tr('Chữ mới','New text'),x:.5,y:.5,size:65,color:'#ffffff',weight:700};
+      var l={id:'z'+seq++,text:studioText('Chữ mới'),x:.5,y:.5,size:65,color:'#ffffff',weight:700};
       doc.layers.push(l);select(l.id);
     };
     [['z-text','text'],['z-font','size'],['z-color','color']].forEach(function(pair){
@@ -791,7 +824,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       var all=readSaved();
       if(!all.length){
         var empty=document.createElement('div');empty.className='z-empty';
-        empty.textContent='Chưa có bản thiết kế nào. Chọn trang trắng hoặc mẫu để bắt đầu, ZUNVA sẽ lưu lại cho lần sau.';
+        empty.textContent=studioText('Chưa có bản thiết kế nào. Chọn trang trắng hoặc mẫu để bắt đầu, ZUNVA sẽ lưu lại cho lần sau.');
         node.append(empty);return;
       }
       all.forEach(function(item){
@@ -799,20 +832,20 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
         var row=document.createElement('div');row.className='z-project-row';
         var picture=document.createElement('div');picture.className='z-project-cover';
         if(item.preview&&/^data:image\/jpeg;base64,/.test(item.preview)){
-          var im=document.createElement('img');im.src=item.preview;im.alt='Xem trước thiết kế';
+          var im=document.createElement('img');im.src=item.preview;im.alt=studioText('Xem trước thiết kế');
           picture.append(im);
         }else picture.textContent='✦';
         var body=document.createElement('div');body.className='z-project-body';
         var title=document.createElement('strong');title.textContent=item.design.name||'Thiết kế';
         var subtitle=document.createElement('small');
         var date=new Date(item.saved);
-        subtitle.textContent='Lưu: '+(Number.isNaN(date.getTime())?'Trên thiết bị':date.toLocaleDateString('vi-VN'));
+        subtitle.textContent=studioText('Lưu: ')+(Number.isNaN(date.getTime())?studioText('Trên thiết bị'):date.toLocaleDateString($('language').value||'vi-VN'));
         var buttons=document.createElement('div');buttons.className='z-project-actions';
-        var open=document.createElement('button');open.type='button';open.className='z-open';open.textContent='Tiếp tục';
+        var open=document.createElement('button');open.type='button';open.className='z-open';open.textContent=studioText('Tiếp tục');
         open.onclick=function(){openEditor(item.design,item.id);};
-        var del=document.createElement('button');del.type='button';del.textContent='Xóa';
+        var del=document.createElement('button');del.type='button';del.textContent=studioText('Xóa');
         del.onclick=function(){
-          if(window.confirm('Xóa thiết kế này khỏi thiết bị?')){
+          if(window.confirm(studioText('Xóa thiết kế này khỏi thiết bị?'))){
             writeSaved(readSaved().filter(function(p){return p.id!==item.id;}));
             renderSaved();
           }
@@ -820,7 +853,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
         buttons.append(open,del);body.append(title,subtitle,buttons);row.append(picture,body);node.append(row);
       });
     }
-    renderSaved();viewTab();
+    renderSaved();viewTab();updateStudioLanguage();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',ready,{once:true});else ready();
 })();
