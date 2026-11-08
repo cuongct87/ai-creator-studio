@@ -14,7 +14,22 @@ const ids=['subtitle','navPrompt','navVideo','navImage','promptHelp','categoryLa
 const $=id=>document.getElementById(id);const lang=$('language');Object.entries(languages).forEach(([code,name])=>{lang.add(new Option(name,code));$('outputLang').add(new Option(name,code))});const locale=navigator.language;lang.value=localStorage.getItem('acs-lang')||(languages[locale]?locale:(languages[locale.split('-')[0]]?locale.split('-')[0]:'en'));if(!languages[lang.value])lang.value='en';$('outputLang').value=lang.value;
 function translate(){const lines=dictionary[lang.value]||dictionary.en;ids.forEach((id,i)=>{const n=$(id);if(n)n.textContent=lines[i];});document.documentElement.lang=lang.value;document.title='AI Creator Studio';localStorage.setItem('acs-lang',lang.value);const optSets=[['category',[37,38,39,40,41]],['style',[42,43,44,45,46]],['videoStyle',[47,48,49,50]]];optSets.forEach(([selId,idxs])=>{const s=$(selId);if(s)idxs.forEach((k,i)=>{if(s.options[i])s.options[i].text=lines[k];});});const phMap={subject:lines[51],details:lines[52],story:lines[53],character:lines[54],overlay:lines[55]};Object.entries(phMap).forEach(([elId,ph])=>{if(ph){const n=$(elId);if(n)n.placeholder=ph;}});}
 lang.addEventListener('change',translate);translate();
-document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x===b));document.querySelectorAll('main section').forEach(s=>s.classList.toggle('hidden',s.id!==b.dataset.tab))}));
+// Single delegated navigation handler for all tabs, including Studio added later.
+const appNav=document.querySelector('main > nav');
+const appMain=document.querySelector('main');
+function activateAppTab(id){
+  if(!appMain||!appNav||!document.getElementById(id))return;
+  appNav.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===id));
+  // Do not hide nested Studio sections (recent projects, start choices, etc.).
+  Array.from(appMain.children).forEach(s=>{
+    if(s.tagName==='SECTION')s.classList.toggle('hidden',s.id!==id);
+  });
+}
+if(appNav)appNav.addEventListener('click',e=>{
+  const button=e.target.closest('[data-tab]');
+  if(button&&appNav.contains(button))activateAppTab(button.dataset.tab);
+});
+window.activateAppTab=activateAppTab;
 const categoryMap={food:'food advertisement',product:'product advertisement',portrait:'portrait photography',cartoon:'3D animated character',poster:'social media poster'};
 const instructions={en:'Write the final image-generation prompt in English.',vi:'Viết toàn bộ prompt tạo ảnh bằng tiếng Việt.','zh-CN':'请用简体中文编写最终图像提示词。',ko:'최종 이미지 생성 프롬프트를 한국어로 작성하세요.',es:'Escribe el prompt final en español.',ja:'最終的な画像生成プロンプトを日本語で書いてください。',th:'เขียนพรอมต์สร้างภาพเป็นภาษาไทย',id:'Tulis prompt pembuatan gambar akhir dalam bahasa Indonesia.',fr:'Rédige le prompt final de génération d’image en français.','pt-BR':'Escreva o prompt final de geração de imagem em português brasileiro.'};
 function generatePrompt(){const subject=$('subject').value.trim(),details=$('details').value.trim();if(!subject){alert(lang.value==='vi'?'Nhập chủ đề hoặc sản phẩm trước nhé.':'Please enter a subject or product.');$('subject').focus();return}const code=$('outputLang').value,cat=categoryMap[$('category').value],style=$('style').value,ratio=$('ratio').value;const templates={
