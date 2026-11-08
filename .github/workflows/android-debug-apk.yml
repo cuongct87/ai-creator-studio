@@ -76,7 +76,34 @@ jobs:
                 if ($('z-editor').classList.contains('z-hidden')) throw Error('reopen failed');
                 $('navImage').click();
                 if ($('image').classList.contains('hidden')) throw Error('legacy tabs broken');
-                document.documentElement.dataset.zunvaSmoke='PASS';
+                // Exercise a real local photo upload, resize, save and reopening.
+                $('navZunva').click();
+                var sample=document.createElement('canvas');sample.width=24;sample.height=18;
+                sample.getContext('2d').fillRect(0,0,24,18);
+                sample.toBlob(function(blob){
+                  try {
+                    if(!blob)throw Error('cannot create test photo');
+                    var data=new DataTransfer();
+                    data.items.add(new File([blob],'test-photo.png',{type:'image/png'}));
+                    var picker=$('z-image-upload');if(!picker)throw Error('photo picker missing');
+                    picker.files=data.files;
+                    picker.dispatchEvent(new Event('change',{bubbles:true}));
+                    setTimeout(function(){
+                      try {
+                        if($('z-layers').children.length!==5)throw Error('photo layer missing');
+                        if($('z-image-tools').classList.contains('z-hidden'))throw Error('photo controls missing');
+                        $('z-image-size').value='70';
+                        $('z-image-size').dispatchEvent(new Event('change',{bubbles:true}));
+                        if(!$('z-image-size-label').textContent.includes('70%'))throw Error('photo resize failed');
+                        $('z-save').click();$('z-back').click();
+                        $('z-project-list').querySelector('.z-project-row button').click();
+                        if($('z-layers').children.length!==5)throw Error('saved photo layer not restored');
+                        if(!$('z-canvas').toDataURL('image/png').startsWith('data:image/png'))throw Error('photo PNG canvas broken');
+                        document.documentElement.dataset.zunvaSmoke='PASS';
+                      } catch(err){document.documentElement.dataset.zunvaSmoke='FAIL: '+err.message;}
+                    },650);
+                  } catch(err){document.documentElement.dataset.zunvaSmoke='FAIL: '+err.message;}
+                },'image/png');
               } catch(e) {
                 document.documentElement.dataset.zunvaSmoke='FAIL: '+e.message;
               }
@@ -94,7 +121,7 @@ jobs:
             grep -o 'data-zunva-smoke="[^"]*"' zunva-smoke-result.html || true
             exit 1
           }
-          echo "Studio smoke test PASS: gallery, editor, editable layers, undo/redo, canvas, save/reopen, legacy navigation."
+          echo "Studio smoke test PASS: gallery, editor, text/photo layers, resize, undo/redo, save/reopen, legacy navigation."
 
       - name: Capture mobile Studio preview (headless Chrome)
         shell: bash
@@ -143,7 +170,16 @@ jobs:
 
       - name: Build debug APK
         working-directory: android
-        run: bash ./gradlew :app:assembleDebug --no-daemon
+        run: |
+          # Gradle distribution CDN may intermittently return 504; retry external download errors.
+          for attempt in 1 2 3; do
+            if bash ./gradlew :app:assembleDebug --no-daemon; then
+              exit 0
+            fi
+            echo "Android build attempt $attempt failed; retrying..."
+            sleep $((attempt * 12))
+          done
+          exit 1
 
       - name: Verify exactly five APK assets match canonical sources
         run: |
