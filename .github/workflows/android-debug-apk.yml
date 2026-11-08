@@ -68,6 +68,10 @@ jobs:
                     !$('z-home').textContent.includes('Explore templates') ||
                     !$('z-add').textContent.includes('Add text'))
                   throw Error('English Studio locale incomplete');
+                $('z-template-search').value='wedding';
+                $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
+                if(Array.from($('z-gallery').children).filter(function(b){return !b.hidden;}).length!==1)
+                  throw Error('English template search failed');
                 $('language').value='es';
                 $('language').dispatchEvent(new Event('change',{bubbles:true}));
                 if (!$('z-home').textContent.includes('Seguir diseñando') ||
@@ -75,6 +79,10 @@ jobs:
                     !$('z-home').textContent.includes('Explorar plantillas') ||
                     !$('z-add').textContent.includes('Añadir texto'))
                   throw Error('Spanish Studio locale incomplete');
+                $('z-template-search').value='boda';
+                $('z-template-search').dispatchEvent(new Event('input',{bubbles:true}));
+                if(Array.from($('z-gallery').children).filter(function(b){return !b.hidden;}).length!==1)
+                  throw Error('Spanish template search failed');
                 $('language').value='vi';
                 $('language').dispatchEvent(new Event('change',{bubbles:true}));
                 if (!$('z-home').textContent.includes('Tiếp tục thiết kế') ||
