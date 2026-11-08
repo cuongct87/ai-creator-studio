@@ -1,5 +1,23 @@
 plugins { id 'com.android.application' }
+
+// P1-1: package only the five canonical, repo-root web assets.
+// Do not point an Android assets sourceSet at the whole repository root.
+def repoRoot = rootProject.projectDir.parentFile
+def webAssetFiles = ['index.html', 'script.js', 'studio_v15.js', 'style.css', 'vault_i18n.js']
+def generatedWebAssetsDir = layout.buildDirectory.dir('generated/webAssets')
+def syncWebAssets = tasks.register('syncWebAssets', Sync) {
+    description = 'Copy canonical frontend files to generated Android assets.'
+    webAssetFiles.each { name -> from(new File(repoRoot, name)) }
+    into generatedWebAssetsDir
+}
+
 android { namespace 'vn.iaysystem.aicreatorstudio'; compileSdk 35
  defaultConfig { applicationId 'vn.iaysystem.aicreatorstudio'; minSdk 26; targetSdk 35; versionCode 15; versionName '1.5.0-beta' }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ // Keep debug APK separate from any AI Creator Studio already installed on a phone.
+ buildTypes { debug { applicationIdSuffix '.test'; versionNameSuffix '-test' } }
+ sourceSets { main { assets.srcDirs += generatedWebAssetsDir } }
 }
+
+// Ensure generated assets are copied before building/packaging an APK.
+tasks.named('preBuild') { dependsOn syncWebAssets }
