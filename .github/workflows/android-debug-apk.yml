@@ -65,8 +65,10 @@ jobs:
         run: |
           APK="android/app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
-          "$AAPT" dump badging "$APK" | grep -F "package: name='vn.iaysystem.aicreatorstudio.test'"
-          "$AAPT" dump badging "$APK" | grep -F "application-label:'AI Creator Studio TEST'"
+          BADGING="$("$AAPT" dump badging "$APK")"
+          printf '%s\\n' "$BADGING" | grep -E '^(package:|application:)'
+          printf '%s\\n' "$BADGING" | grep -F "package: name='vn.iaysystem.aicreatorstudio.test'"
+          printf '%s\\n' "$BADGING" | grep -F "label='AI Creator Studio TEST'"
 
       - name: Upload test APK
         uses: actions/upload-artifact@v4
