@@ -43,6 +43,59 @@ jobs:
           node --check studio_v15.js
           node --check vault_i18n.js
 
+      - name: Smoke-test Studio editor in real headless Chrome
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          html = Path('index.html').read_text(encoding='utf-8')
+          test = """<script>
+          window.addEventListener('load', function () {
+            setTimeout(function () {
+              try {
+                var $ = function (id) { return document.getElementById(id); };
+                if (!$('zunva') || $('z-gallery').children.length !== 5) throw Error('gallery missing');
+                $('z-gallery').querySelector('button').click();
+                if ($('z-editor').classList.contains('z-hidden')) throw Error('editor did not open');
+                if ($('z-layers').children.length !== 3) throw Error('template layers missing');
+                $('z-add').click();
+                if ($('z-layers').children.length !== 4) throw Error('add text failed');
+                $('z-undo').click();
+                if ($('z-layers').children.length !== 3) throw Error('undo failed');
+                $('z-redo').click();
+                if ($('z-layers').children.length !== 4) throw Error('redo failed');
+                $('z-text').value='Nội dung kiểm tra';
+                $('z-text').dispatchEvent(new Event('change',{bubbles:true}));
+                if (!Array.from($('z-layers').querySelectorAll('.z-layer-title')).some(function (x) {
+                  return x.textContent === 'Nội dung kiểm tra';
+                })) throw Error('edit text failed');
+                if (!$('z-canvas').toDataURL('image/png').startsWith('data:image/png')) throw Error('canvas missing');
+                $('z-save').click(); $('z-back').click();
+                if (!$('z-project-list').querySelector('.z-project-row')) throw Error('save project failed');
+                $('z-project-list').querySelector('.z-project-row button').click();
+                if ($('z-editor').classList.contains('z-hidden')) throw Error('reopen failed');
+                $('navImage').click();
+                if ($('image').classList.contains('hidden')) throw Error('legacy tabs broken');
+                document.documentElement.dataset.zunvaSmoke='PASS';
+              } catch(e) {
+                document.documentElement.dataset.zunvaSmoke='FAIL: '+e.message;
+              }
+            }, 350);
+          });
+          </script>"""
+          if '</body>' not in html: raise SystemExit('closing body missing')
+          Path('zunva-smoke.html').write_text(html.replace('</body>',test+'</body>'), encoding='utf-8')
+          PY
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -z "$CHROME" ]; then echo "Chrome not available"; exit 1; fi
+          "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --virtual-time-budget=4000 \
+            --dump-dom "file://$PWD/zunva-smoke.html" > zunva-smoke-result.html
+          grep -q 'data-zunva-smoke="PASS"' zunva-smoke-result.html || {
+            grep -o 'data-zunva-smoke="[^"]*"' zunva-smoke-result.html || true
+            exit 1
+          }
+          echo "Studio smoke test PASS: gallery, editor, editable layers, undo/redo, canvas, save/reopen, legacy navigation."
+
       - name: Capture mobile Studio preview (headless Chrome)
         shell: bash
         run: |
