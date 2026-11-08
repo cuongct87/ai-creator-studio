@@ -55,6 +55,9 @@ jobs:
               try {
                 var $ = function (id) { return document.getElementById(id); };
                 if (!$('zunva') || $('z-gallery').children.length !== 5) throw Error('gallery missing');
+                if (document.querySelector('#zunva .z-recent').classList.contains('hidden') ||
+                    document.querySelector('#zunva .z-start').classList.contains('hidden'))
+                  throw Error('recent/start sections are unexpectedly hidden');
                 if (!$('z-start-blank') || !$('z-start-template') || !$('z-start-print') || !$('z-start-ai'))
                   throw Error('start actions missing');
                 if (!$('z-template-search') || !$('z-project-list')) throw Error('search/recent missing');
