@@ -60,10 +60,18 @@ jobs:
           print('Verified exactly five APK assets; byte-identical to canonical root files.')
           PY
 
+      - name: Verify debug-only app identity
+        shell: bash
+        run: |
+          APK="android/app/build/outputs/apk/debug/app-debug.apk"
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          "$AAPT" dump badging "$APK" | grep -F "package: name='vn.iaysystem.aicreatorstudio.test'"
+          "$AAPT" dump badging "$APK" | grep -F "application-label:'AI Creator Studio TEST'"
+
       - name: Upload test APK
         uses: actions/upload-artifact@v4
         with:
-          name: ZUNVA-AI-Creator-Studio-v1.5-debug-APK
+          name: ZUNVA-AI-Creator-Studio-TEST-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
