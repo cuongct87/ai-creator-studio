@@ -430,8 +430,10 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     }
     function draw(showSelection) {
       if(!doc)return;
-      cv.width=doc.width;cv.height=doc.height;
+      if(cv.width!==doc.width)cv.width=doc.width;
+      if(cv.height!==doc.height)cv.height=doc.height;
       var w=cv.width,h=cv.height;
+      ctx.clearRect(0,0,w,h);
       var g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,doc.bg[0]);g.addColorStop(1,doc.bg[1]);
       ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
       ctx.save();ctx.globalAlpha=.09;ctx.strokeStyle='#ffffff';ctx.lineWidth=w*.002;
