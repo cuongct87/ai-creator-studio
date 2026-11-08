@@ -43,6 +43,26 @@ jobs:
           node --check studio_v15.js
           node --check vault_i18n.js
 
+      - name: Capture mobile Studio preview (headless Chrome)
+        shell: bash
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || true)"
+          if [ -n "$CHROME" ]; then
+            "$CHROME" --headless=new --no-sandbox --disable-dev-shm-usage --hide-scrollbars \
+              --window-size=430,1150 --virtual-time-budget=3000 \
+              --screenshot="$PWD/zunva-mobile-preview.png" "file://$PWD/index.html"
+          else
+            echo "Chrome not installed; preview screenshot unavailable."
+          fi
+
+      - name: Upload Studio preview screenshot
+        uses: actions/upload-artifact@v4
+        if: ${{ hashFiles('zunva-mobile-preview.png') != '' }}
+        with:
+          name: ZUNVA-Studio-Mobile-Preview
+          path: zunva-mobile-preview.png
+          retention-days: 14
+
       - name: Build debug APK
         working-directory: android
         run: bash ./gradlew :app:assembleDebug --no-daemon
