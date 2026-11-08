@@ -464,15 +464,9 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     jsonPicker.type='file';jsonPicker.id='z-project-upload';jsonPicker.accept='.json,application/json';
     jsonPicker.style.display='none';jsonButton.after(jsonPicker);
     function viewTab() {
-      Array.prototype.forEach.call(nav.querySelectorAll('[data-tab]'), function (b) {
-        b.classList.toggle('active', b === tab);
-      });
-      // Only switch top-level app panels; keep nested Studio home sections visible.
-      Array.prototype.forEach.call(main.children, function (s) {
-        if(s.tagName==='SECTION')s.classList.toggle('hidden',s!==panel);
-      });
+      // Use the same root-only navigation logic as the four legacy tools.
+      if (typeof window.activateAppTab === 'function') window.activateAppTab('zunva');
     }
-    tab.addEventListener('click', viewTab);
     $('language').addEventListener('change',updateStudioLanguage);
     function blank() {
       return {version:1, name:'Thiết kế mới', width:1080, height:1350, dpi:150, bg:['#14264d','#2383a5'], layers:[]};
