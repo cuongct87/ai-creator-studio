@@ -361,7 +361,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     panel.id = 'zunva'; panel.className = 'z-panel';
     panel.innerHTML = [
       '<div id="z-home">',
-      '<div class="z-hero"><div class="z-brand">✦ ZUNVA / CREATOR STUDIO</div>',
+      '<div class="z-hero"><div class="z-brand">✦ ZUNVA / CREATOR STUDIO · UX 2.1</div>',
       '<h2>Biến ý tưởng thành thiết kế của bạn.</h2>',
       '<p>Chọn mẫu có sẵn hoặc bắt đầu từ trang trắng. Kéo thả chữ, chỉnh từng lớp và xuất ảnh — miễn phí, không cần API key.</p>',
       '<div class="z-hero-actions"><button type="button" class="z-mainbtn" id="z-new">✦ Bắt đầu thiết kế</button>',
