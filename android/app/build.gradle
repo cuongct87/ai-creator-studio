@@ -12,10 +12,10 @@ def syncWebAssets = tasks.register('syncWebAssets', Sync) {
 }
 
 android { namespace 'vn.iaysystem.aicreatorstudio'; compileSdk 35
- defaultConfig { applicationId 'vn.iaysystem.aicreatorstudio'; minSdk 26; targetSdk 35; versionCode 21; versionName '2.0.0-studio-preview' }
+ defaultConfig { applicationId 'vn.iaysystem.aicreatorstudio'; minSdk 26; targetSdk 35; versionCode 22; versionName '2.0.0-ux-preview' }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
  // Keep debug APK separate from any AI Creator Studio already installed on a phone.
- buildTypes { debug { applicationIdSuffix '.p2test'; versionNameSuffix '-test' } }
+ buildTypes { debug { applicationIdSuffix '.p2ux'; versionNameSuffix '-test' } }
  sourceSets { main { assets.srcDirs += generatedWebAssetsDir } }
 }
 
