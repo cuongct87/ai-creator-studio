@@ -1,0 +1,67 @@
+name: ZUNVA Android debug APK
+
+on:
+  pull_request:
+    paths:
+      - 'android/**'
+      - '.github/workflows/android-debug-apk.yml'
+      - 'index.html'
+      - 'script.js'
+      - 'studio_v15.js'
+      - 'style.css'
+      - 'vault_i18n.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Build debug APK
+        working-directory: android
+        run: bash ./gradlew :app:assembleDebug --no-daemon
+
+      - name: Verify exactly five APK assets match canonical sources
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          apk = Path('android/app/build/outputs/apk/debug/app-debug.apk')
+          required = ['index.html', 'script.js', 'studio_v15.js', 'style.css', 'vault_i18n.js']
+          with ZipFile(apk) as z:
+              asset_names = {n for n in z.namelist() if n.startswith('assets/') and not n.endswith('/')}
+              expected = {f'assets/{name}' for name in required}
+              if asset_names != expected:
+                  raise SystemExit(f'Unexpected APK assets: {sorted(asset_names)} (expected {sorted(expected)})')
+              for name in required:
+                  if z.read(f'assets/{name}') != Path(name).read_bytes():
+                      raise SystemExit(f'APK asset content differs from repo source: {name}')
+          print('Verified exactly five APK assets; byte-identical to canonical root files.')
+          PY
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ZUNVA-AI-Creator-Studio-v1.5-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
