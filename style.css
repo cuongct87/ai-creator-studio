@@ -147,3 +147,25 @@
   #zunva .z-recent,#zunva .z-start{margin:18px 0 22px}
   #zunva .z-section-title h3{font-size:19px}
 }
+
+/* P3 task 2: Home / Projects / Templates are views of #zunva (set by showTab via data-view). */
+#zunva[data-view="home"] #z-home>.z-home-search,
+#zunva[data-view="home"] #z-home>.z-recent,
+#zunva[data-view="home"] #z-home>#z-templates,
+#zunva[data-view="home"] #z-home>#z-filters,
+#zunva[data-view="home"] #z-home>#z-gallery,
+#zunva[data-view="home"] #z-home>#z-no-results{display:none}
+#zunva[data-view="projects"] #z-home>:not(.z-recent){display:none}
+#zunva[data-view="templates"] #z-home>:not(.z-home-search):not(#z-templates):not(#z-filters):not(#z-gallery):not(#z-no-results){display:none}
+#zunva[data-view="projects"] .z-recent,#zunva[data-view="templates"] .z-home-search{margin-top:4px}
+
+/* P3 task 2: fixed bottom navigation. Page gets bottom padding so content is never covered. */
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom,0px))}
+body.z-editing{padding-bottom:0}
+body.z-editing .z-bottomnav{display:none}
+.z-bottomnav{position:fixed;left:0;right:0;bottom:0;z-index:50;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:2px;margin:0;padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));background:#101a2d;border-top:1px solid #334766;box-shadow:0 -6px 18px #0006}
+.z-bottomnav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;min-width:44px;padding:4px 2px;background:transparent;border:0;border-radius:12px;color:#a9bad2;font-size:11px;font-weight:650;line-height:1.15;white-space:normal;word-break:normal;overflow-wrap:anywhere;text-align:center;touch-action:manipulation}
+.z-bottomnav .z-bn-icon{font-size:20px;line-height:1}
+.z-bottomnav button.active{color:#0c2435;background:linear-gradient(120deg,#80f0d3,#63c9ed);font-weight:800}
+.z-bottomnav button:focus-visible{outline:2px solid #b7fff5;outline-offset:2px}
+@media(min-width:721px){.z-bottomnav{left:50%;right:auto;transform:translateX(-50%);width:min(560px,100%);border:1px solid #334766;border-bottom:0;border-radius:16px 16px 0 0}}
