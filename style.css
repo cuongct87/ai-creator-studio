@@ -219,3 +219,12 @@ body.z-editing .z-bottomnav{display:none}
 #zunva .z-sheet[hidden]{display:none!important}
 #zunva .z-sheet-backdrop{position:absolute;inset:0;background:#050b18b3}
 #zunva .z-sheet-panel{position:relative;width:min(560px,100%);max-height:85vh;overflow:auto;background:#142238;border:1px solid #334766;border-bottom:0;border-radius:20px 20px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom,0px))}
+
+/* P3 task 4: signage size prompt (reuses the sheet overlay). */
+#zunva .z-sign-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#zunva .z-sign-row label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:650;color:#c5d3e8;min-width:0}
+#zunva .z-sign-row input{width:100%;min-width:0;min-height:44px;padding:10px;font-size:16px;background:#101c30;border:1px solid #4c6383;border-radius:10px;color:#fff}
+#zunva .z-sign-hint{font-size:12px;color:#9eafcc;margin:8px 0 0}
+#zunva .z-sign-msg{font-size:13px;color:#ffb38a;min-height:18px;margin:6px 0}
+#zunva .z-sign-actions{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+#zunva .z-sign-actions button{min-height:44px}
