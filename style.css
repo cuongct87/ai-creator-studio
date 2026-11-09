@@ -149,6 +149,8 @@
 }
 
 /* P3 task 2: Home / Projects / Templates are views of #zunva (set by showTab via data-view). */
+#zunva[data-view="home"] #z-home>.z-hero,
+#zunva[data-view="home"] #z-home>.z-start,
 #zunva[data-view="home"] #z-home>.z-home-search,
 #zunva[data-view="home"] #z-home>.z-recent,
 #zunva[data-view="home"] #z-home>#z-templates,
@@ -169,3 +171,51 @@ body.z-editing .z-bottomnav{display:none}
 .z-bottomnav button.active{color:#0c2435;background:linear-gradient(120deg,#80f0d3,#63c9ed);font-weight:800}
 .z-bottomnav button:focus-visible{outline:2px solid #b7fff5;outline-offset:2px}
 @media(min-width:721px){.z-bottomnav{left:50%;right:auto;transform:translateX(-50%);width:min(560px,100%);border:1px solid #334766;border-bottom:0;border-radius:16px 16px 0 0}}
+
+/* P3 task 3: Home tab (idea box, horizontal rows, start icons, quick tools, floating + and sheet). */
+#zunva .z-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+#zunva[data-view="home"] #z-home{padding-bottom:72px}
+#zunva .z-idea h2{font-size:clamp(22px,5.6vw,32px);line-height:1.2;letter-spacing:-.02em;margin:4px 0 12px;color:#fff}
+#zunva .z-idea-form{display:flex;flex-direction:column;gap:10px;background:#172840;border:1px solid #47627d;border-radius:18px;padding:12px}
+#zunva .z-idea-form:focus-within{outline:2px solid #79e4d3;outline-offset:1px}
+#zunva .z-idea-form textarea{display:block;width:100%;min-height:96px;resize:vertical;background:transparent;border:0;color:#fff;font:inherit;font-size:16px;line-height:1.5;padding:6px;outline:0}
+#zunva .z-idea-form textarea::placeholder{color:#9fb1c8}
+#zunva .z-idea-form .z-mainbtn{align-self:flex-end;min-height:44px}
+#zunva .z-idea-note{font-size:12px;color:#9eafcc;margin:8px 2px 0}
+#zunva .z-hsec{margin:24px 0 0;min-width:0}
+#zunva .z-hsec-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 10px}
+#zunva .z-hsec-head h3{margin:0;font-size:18px;color:#f7f9ff}
+#zunva .z-link{background:none;border:0;color:#80e8d6;font-weight:700;min-height:44px;min-width:44px;padding:0 6px;white-space:nowrap}
+#zunva .z-hrow{display:flex;gap:12px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 2px 8px;scrollbar-width:thin}
+#zunva .z-hcard{flex:0 0 132px;width:132px;display:flex;flex-direction:column;gap:7px;padding:0;background:none;border:0;color:#e9f6ff;text-align:left;scroll-snap-align:start;min-height:44px}
+#zunva .z-hthumb{display:flex;align-items:center;justify-content:center;width:132px;height:165px;border-radius:14px;overflow:hidden;border:1px solid #3a536f;text-align:center}
+#zunva .z-hthumb-plain{background:radial-gradient(circle at 80% 22%,#4e508c,transparent 50%),linear-gradient(140deg,#2b3458,#0e6177);color:#8af4e7;font-size:34px}
+#zunva .z-hthumb-empty{border-style:dashed;border-color:#59718c;font-size:44px}
+#zunva .z-hthumb img{width:100%;height:100%;object-fit:cover;display:block}
+#zunva .z-hthumb strong{font-size:16px;font-weight:900;line-height:1.2;padding:10px}
+#zunva .z-hname{font-size:13px;font-weight:650;line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#zunva .z-hcard:focus-visible{outline:none}
+#zunva .z-hcard:focus-visible .z-hthumb{outline:2px solid #b7fff5;outline-offset:2px}
+#zunva .z-start-icons{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 6px}
+#zunva .z-sicon{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0;min-height:44px;padding:4px 2px;background:none;border:0;color:#e9f6ff;font-size:12px;font-weight:650;line-height:1.25;text-align:center}
+#zunva .z-sicon-dot{width:54px;height:54px;flex:none;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#0e2736;background:#7ce4da}
+#zunva .z-sicon-label{overflow-wrap:break-word;max-width:100%}
+#zunva .z-sicon[data-start="obituary"] .z-sicon-dot{background:#c9d6cf}
+#zunva .z-sicon[data-start="signage"] .z-sicon-dot{background:#f4cf92}
+#zunva .z-sicon[data-start="sales"] .z-sicon-dot{background:#ffb38a}
+#zunva .z-sicon[data-start="invite"] .z-sicon-dot{background:#b6a3fc}
+#zunva .z-sicon[data-start="social"] .z-sicon-dot{background:#63c9ed}
+#zunva .z-sicon[data-start="video"] .z-sicon-dot{background:#efacd3}
+#zunva .z-sicon[data-start="blank"] .z-sicon-dot{background:#e8edff}
+#zunva .z-sicon:focus-visible{outline:none}
+#zunva .z-sicon:focus-visible .z-sicon-dot{outline:2px solid #b7fff5;outline-offset:3px}
+#zunva .z-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#zunva .z-tool{display:flex;align-items:center;gap:10px;min-width:0;min-height:52px;padding:10px 12px;border-radius:14px;background:#1a2f4b;border:1px solid #476486;color:#e9f6ff;text-align:left;font-size:13px;font-weight:700}
+#zunva .z-tool-icon{width:30px;height:30px;flex:none;border-radius:9px;display:flex;align-items:center;justify-content:center;background:#7ce4da;color:#0e2736;font-size:16px}
+@media(min-width:721px){#zunva .z-tools{grid-template-columns:repeat(4,minmax(0,1fr))}}
+#zunva .z-fab{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:55;width:56px;height:56px;padding:0;border:0;border-radius:50%;background:linear-gradient(135deg,#80f0d3,#63c9ed);color:#0c2435;font-size:32px;font-weight:700;line-height:1;box-shadow:0 8px 22px #0008}
+#zunva .z-fab:focus-visible{outline:2px solid #fff;outline-offset:3px}
+#zunva .z-sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:flex-end;justify-content:center}
+#zunva .z-sheet[hidden]{display:none!important}
+#zunva .z-sheet-backdrop{position:absolute;inset:0;background:#050b18b3}
+#zunva .z-sheet-panel{position:relative;width:min(560px,100%);max-height:85vh;overflow:auto;background:#142238;border:1px solid #334766;border-bottom:0;border-radius:20px 20px 0 0;padding:14px 14px calc(18px + env(safe-area-inset-bottom,0px))}

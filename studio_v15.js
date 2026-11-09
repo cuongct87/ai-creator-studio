@@ -322,7 +322,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
         {text:'Đặt hàng ngay hôm nay',x:.5,y:.75,size:34,color:'#61391f',weight:600}]}
     ];
     // Studio-only translations. Artwork text and saved project data are never modified.
-    var studioStrings={"Biến ý tưởng thành thiết kế của bạn.":["Turn ideas into designs.","Convierte ideas en diseños."],"Chọn mẫu có sẵn hoặc bắt đầu từ trang trắng. Kéo thả chữ, chỉnh từng lớp và xuất ảnh — miễn phí, không cần API key.":["Start with a template or a blank canvas. Drag text and photos, edit layers and export images — free, no API key required.","Empieza con una plantilla o un lienzo vacío. Arrastra texto e imágenes, edita capas y exporta diseños, gratis y sin clave API."],"✦ Bắt đầu thiết kế":["✦ Start designing","✦ Empezar a diseñar"],"Khám phá mẫu ↓":["Explore templates ↓","Explorar plantillas ↓"],"✓ Không cần AI key":["✓ No AI key","✓ Sin clave de IA"],"✓ Lưu bản sửa được":["✓ Editable projects","✓ Proyectos editables"],"✓ Xuất PNG":["✓ Export PNG","✓ Exportar PNG"],"Bạn muốn thiết kế gì?":["What would you like to design?","¿Qué quieres diseñar?"],"Tìm poster, thiệp cưới, cáo phó, menu...":["Search posters, invitations, notices, menus...","Busca carteles, invitaciones, avisos, menús..."],"Tiếp tục thiết kế":["Continue designing","Seguir diseñando"],"Dự án trên thiết bị này · Chạm để mở lại và chỉnh sửa.":["Saved on this device · Tap to reopen and edit.","Guardados en este dispositivo · Toca para editar."],"Chọn cách bắt đầu":["Choose how to start","Elige cómo empezar"],"Một thao tác là đến đúng công cụ bạn cần.":["Pick a starting point to get to work.","Elige una opción para empezar."],"Trang trắng":["Blank canvas","Lienzo en blanco"],"Tự do sáng tạo từ đầu":["Create from scratch","Crear desde cero"],"Chọn mẫu":["Choose a template","Elegir plantilla"],"Sửa ngay mẫu có sẵn":["Customize an existing design","Personaliza un diseño"],"Thiệp & in ấn":["Cards & print","Tarjetas e impresión"],"Cưới hỏi, cáo phó, quảng cáo":["Weddings, notices, ads","Bodas, avisos, anuncios"],"Ý tưởng bằng AI":["AI ideas","Ideas con IA"],"Mở công cụ AI hiện có":["Open existing AI tools","Abrir herramientas de IA"],"Khám phá mẫu":["Explore templates","Explorar plantillas"],"Chọn mẫu và thay nội dung ngay trong xưởng thiết kế.":["Choose a template and edit it in Studio.","Elige una plantilla y edítala en Studio."],"Tất cả":["All","Todas"],"Quảng cáo":["Advertising","Publicidad"],"Cưới hỏi":["Weddings","Bodas"],"In ấn":["Print","Impresión"],"Mạng xã hội":["Social media","Redes sociales"],"Quán ăn":["Food & menus","Comida y menús"],"Không tìm thấy mẫu phù hợp. Thử từ khóa khác hoặc bắt đầu từ trang trắng.":["No matching templates. Try another search or start blank.","No hay plantillas. Prueba otra búsqueda o empieza desde cero."],"Dữ liệu chỉ lưu trên thiết bị này. Hãy xuất PNG để chia sẻ; đây là xưởng thiết kế thử nghiệm.":["Designs stay on this device. Export PNG to share. This editor is a preview.","Los diseños se guardan aquí. Exporta PNG para compartir. Este editor está en pruebas."],"← Trang chủ":["← Home","← Inicio"],"Xưởng thiết kế":["Design editor","Editor de diseño"],"Chạm và kéo chữ để di chuyển":["Touch and drag text to move","Toca y arrastra texto"],"+ Thêm chữ":["+ Add text","+ Añadir texto"],"↶ Hoàn tác":["↶ Undo","↶ Deshacer"],"↷ Làm lại":["↷ Redo","↷ Rehacer"],"↓ Xuất PNG":["↓ Export PNG","↓ Exportar PNG"],"Chạm vào dòng chữ trên ảnh để chọn · Kéo để di chuyển":["Tap to select text or photo · Drag to move","Toca para seleccionar texto o imagen · Arrastra para mover"],"Chữ đang chọn":["Selected text","Texto seleccionado"],"Nội dung":["Text","Contenido"],"Cỡ chữ":["Font size","Tamaño de letra"],"Màu chữ":["Text color","Color del texto"],"Xóa chữ đã chọn":["Delete selected text","Eliminar texto"],"Lớp thiết kế":["Layers","Capas"],"Khổ thiết kế & in ấn":["Canvas size & print","Tamaño e impresión"],"Rộng (px)":["Width (px)","Ancho (px)"],"Cao (px)":["Height (px)","Alto (px)"],"DPI tham chiếu":["Reference DPI","PPP de referencia"],"DPI dùng để tính khổ in, PNG chưa gắn metadata DPI.":["DPI estimates print size; exported PNG has no embedded DPI.","Los PPP estiman el tamaño de impresión; el PNG no incluye PPP."],"Lưu bản có thể chỉnh sửa":["Save editable project","Guardar proyecto editable"],"Tên thiết kế":["Design name","Nombre del diseño"],"Lưu thiết kế":["Save design","Guardar diseño"],"Xuất dự án JSON":["Export project JSON","Exportar JSON del proyecto"],"Thiết kế của tôi":["My design","Mi diseño"],"Chọn hoặc thêm chữ":["Select or add text","Selecciona o añade texto"],"+ Thêm ảnh":["+ Add photo","+ Añadir imagen"],"Ảnh đang chọn":["Selected photo","Imagen seleccionada"],"Chiều rộng ảnh (% khổ thiết kế)":["Photo width (% of canvas)","Ancho de foto (% del lienzo)"],"Ảnh được giữ tỉ lệ · Chạm và kéo trên canvas":["Aspect ratio locked · Drag on canvas","Proporción fija · Arrastra en el lienzo"],"Xóa ảnh đã chọn":["Delete selected photo","Eliminar imagen"],"Nhập dự án JSON":["Import project JSON","Importar JSON del proyecto"],"Poster khuyến mãi":["Sale poster","Cartel de ofertas"],"Thiệp cưới tinh tế":["Wedding invitation","Invitación de boda"],"Thông báo cáo phó":["Obituary notice","Aviso de fallecimiento"],"Bài đăng mạng xã hội":["Social post","Publicación en redes"],"Menu sản phẩm":["Product menu","Menú de productos"],"Có thể chỉnh sửa":["Editable","Editable"],"Chữ mới":["New text","Texto nuevo"],"(Chữ trống)":["(Empty text)","(Texto vacío)"],"Chưa có bản thiết kế nào. Chọn trang trắng hoặc mẫu để bắt đầu, ZUNVA sẽ lưu lại cho lần sau.":["No saved designs yet. Choose a template or blank canvas to start.","No hay diseños guardados. Elige una plantilla o un lienzo vacío."],"Tiếp tục":["Continue","Continuar"],"Xóa":["Delete","Eliminar"],"Xem trước thiết kế":["Design preview","Vista previa"],"Xóa thiết kế này khỏi thiết bị?":["Delete this design from the device?","¿Eliminar este diseño del dispositivo?"],"Thiết kế":["Design","Diseño"],"Lưu: ":["Saved: ","Guardado: "],"Trên thiết bị":["On device","En el dispositivo"],"Chỉnh chữ, di chuyển rồi lưu dự án. Không cần tài khoản hoặc API key.":["Edit and move layers, then save. No account or API key required.","Edita y mueve capas y luego guarda. Sin cuenta ni clave API."],"Đã lưu! Thiết kế sẽ hiện ở mục Tiếp tục thiết kế.":["Saved! Find it under Continue designing.","¡Guardado! Estará en Seguir diseñando."],"Không lưu được. Hãy xuất JSON để sao lưu trước khi rời xưởng thiết kế.":["Save failed. Export JSON before leaving the editor.","Error al guardar. Exporta JSON antes de salir."],"Không lưu được: dung lượng bộ nhớ đầy. Hãy xuất bản JSON.":["Storage full. Export JSON to back up your project.","Almacenamiento lleno. Exporta JSON como copia."],"Không đọc được ảnh.":["Could not read photo.","No se pudo leer la imagen."],"Chỉ hỗ trợ JPG, PNG, WebP dưới 8 MB.":["Use JPG, PNG or WebP under 8 MB.","Usa JPG, PNG o WebP de menos de 8 MB."],"Đã thêm ảnh. Kéo ảnh trên canvas; chỉnh kích thước ở bảng điều khiển.":["Photo added. Drag to move and resize in controls.","Imagen añadida. Arrastra y cambia el tamaño en los controles."],"Đã tạo PNG. Mở ảnh trong thư viện hoặc thư mục Tải xuống.":["PNG generated. Check Gallery or Downloads.","PNG generado. Mira en Galería o Descargas."],"Ảnh chưa tải xong hoặc bị lỗi; chưa thể xuất PNG.":["Photo not ready; cannot export PNG.","La imagen no está lista; no se puede exportar PNG."],"Ảnh trong dự án bị lỗi, vui lòng thay ảnh.":["Project photo invalid; replace it.","La imagen del proyecto está dañada; cámbiala."],"Khổ in tương đương: ":["Approximate print size: ","Tamaño de impresión aprox.: "],"Trang chủ":["Home","Inicio"],"Dự án":["Projects","Proyectos"],"Mẫu":["Templates","Plantillas"],"Tài khoản":["Account","Cuenta"],"Cài đặt sắp ra mắt.":["Settings coming soon.","Ajustes próximamente."],"Điều hướng chính":["Main navigation","Navegación principal"]};
+    var studioStrings={"Biến ý tưởng thành thiết kế của bạn.":["Turn ideas into designs.","Convierte ideas en diseños."],"Chọn mẫu có sẵn hoặc bắt đầu từ trang trắng. Kéo thả chữ, chỉnh từng lớp và xuất ảnh — miễn phí, không cần API key.":["Start with a template or a blank canvas. Drag text and photos, edit layers and export images — free, no API key required.","Empieza con una plantilla o un lienzo vacío. Arrastra texto e imágenes, edita capas y exporta diseños, gratis y sin clave API."],"✦ Bắt đầu thiết kế":["✦ Start designing","✦ Empezar a diseñar"],"Khám phá mẫu ↓":["Explore templates ↓","Explorar plantillas ↓"],"✓ Không cần AI key":["✓ No AI key","✓ Sin clave de IA"],"✓ Lưu bản sửa được":["✓ Editable projects","✓ Proyectos editables"],"✓ Xuất PNG":["✓ Export PNG","✓ Exportar PNG"],"Bạn muốn thiết kế gì?":["What would you like to design?","¿Qué quieres diseñar?"],"Tìm poster, thiệp cưới, cáo phó, menu...":["Search posters, invitations, notices, menus...","Busca carteles, invitaciones, avisos, menús..."],"Tiếp tục thiết kế":["Continue designing","Seguir diseñando"],"Dự án trên thiết bị này · Chạm để mở lại và chỉnh sửa.":["Saved on this device · Tap to reopen and edit.","Guardados en este dispositivo · Toca para editar."],"Chọn cách bắt đầu":["Choose how to start","Elige cómo empezar"],"Một thao tác là đến đúng công cụ bạn cần.":["Pick a starting point to get to work.","Elige una opción para empezar."],"Trang trắng":["Blank canvas","Lienzo en blanco"],"Tự do sáng tạo từ đầu":["Create from scratch","Crear desde cero"],"Chọn mẫu":["Choose a template","Elegir plantilla"],"Sửa ngay mẫu có sẵn":["Customize an existing design","Personaliza un diseño"],"Thiệp & in ấn":["Cards & print","Tarjetas e impresión"],"Cưới hỏi, cáo phó, quảng cáo":["Weddings, notices, ads","Bodas, avisos, anuncios"],"Ý tưởng bằng AI":["AI ideas","Ideas con IA"],"Mở công cụ AI hiện có":["Open existing AI tools","Abrir herramientas de IA"],"Khám phá mẫu":["Explore templates","Explorar plantillas"],"Chọn mẫu và thay nội dung ngay trong xưởng thiết kế.":["Choose a template and edit it in Studio.","Elige una plantilla y edítala en Studio."],"Tất cả":["All","Todas"],"Quảng cáo":["Advertising","Publicidad"],"Cưới hỏi":["Weddings","Bodas"],"In ấn":["Print","Impresión"],"Mạng xã hội":["Social media","Redes sociales"],"Quán ăn":["Food & menus","Comida y menús"],"Không tìm thấy mẫu phù hợp. Thử từ khóa khác hoặc bắt đầu từ trang trắng.":["No matching templates. Try another search or start blank.","No hay plantillas. Prueba otra búsqueda o empieza desde cero."],"Dữ liệu chỉ lưu trên thiết bị này. Hãy xuất PNG để chia sẻ; đây là xưởng thiết kế thử nghiệm.":["Designs stay on this device. Export PNG to share. This editor is a preview.","Los diseños se guardan aquí. Exporta PNG para compartir. Este editor está en pruebas."],"← Trang chủ":["← Home","← Inicio"],"Xưởng thiết kế":["Design editor","Editor de diseño"],"Chạm và kéo chữ để di chuyển":["Touch and drag text to move","Toca y arrastra texto"],"+ Thêm chữ":["+ Add text","+ Añadir texto"],"↶ Hoàn tác":["↶ Undo","↶ Deshacer"],"↷ Làm lại":["↷ Redo","↷ Rehacer"],"↓ Xuất PNG":["↓ Export PNG","↓ Exportar PNG"],"Chạm vào dòng chữ trên ảnh để chọn · Kéo để di chuyển":["Tap to select text or photo · Drag to move","Toca para seleccionar texto o imagen · Arrastra para mover"],"Chữ đang chọn":["Selected text","Texto seleccionado"],"Nội dung":["Text","Contenido"],"Cỡ chữ":["Font size","Tamaño de letra"],"Màu chữ":["Text color","Color del texto"],"Xóa chữ đã chọn":["Delete selected text","Eliminar texto"],"Lớp thiết kế":["Layers","Capas"],"Khổ thiết kế & in ấn":["Canvas size & print","Tamaño e impresión"],"Rộng (px)":["Width (px)","Ancho (px)"],"Cao (px)":["Height (px)","Alto (px)"],"DPI tham chiếu":["Reference DPI","PPP de referencia"],"DPI dùng để tính khổ in, PNG chưa gắn metadata DPI.":["DPI estimates print size; exported PNG has no embedded DPI.","Los PPP estiman el tamaño de impresión; el PNG no incluye PPP."],"Lưu bản có thể chỉnh sửa":["Save editable project","Guardar proyecto editable"],"Tên thiết kế":["Design name","Nombre del diseño"],"Lưu thiết kế":["Save design","Guardar diseño"],"Xuất dự án JSON":["Export project JSON","Exportar JSON del proyecto"],"Thiết kế của tôi":["My design","Mi diseño"],"Chọn hoặc thêm chữ":["Select or add text","Selecciona o añade texto"],"+ Thêm ảnh":["+ Add photo","+ Añadir imagen"],"Ảnh đang chọn":["Selected photo","Imagen seleccionada"],"Chiều rộng ảnh (% khổ thiết kế)":["Photo width (% of canvas)","Ancho de foto (% del lienzo)"],"Ảnh được giữ tỉ lệ · Chạm và kéo trên canvas":["Aspect ratio locked · Drag on canvas","Proporción fija · Arrastra en el lienzo"],"Xóa ảnh đã chọn":["Delete selected photo","Eliminar imagen"],"Nhập dự án JSON":["Import project JSON","Importar JSON del proyecto"],"Poster khuyến mãi":["Sale poster","Cartel de ofertas"],"Thiệp cưới tinh tế":["Wedding invitation","Invitación de boda"],"Thông báo cáo phó":["Obituary notice","Aviso de fallecimiento"],"Bài đăng mạng xã hội":["Social post","Publicación en redes"],"Menu sản phẩm":["Product menu","Menú de productos"],"Có thể chỉnh sửa":["Editable","Editable"],"Chữ mới":["New text","Texto nuevo"],"(Chữ trống)":["(Empty text)","(Texto vacío)"],"Chưa có bản thiết kế nào. Chọn trang trắng hoặc mẫu để bắt đầu, ZUNVA sẽ lưu lại cho lần sau.":["No saved designs yet. Choose a template or blank canvas to start.","No hay diseños guardados. Elige una plantilla o un lienzo vacío."],"Tiếp tục":["Continue","Continuar"],"Xóa":["Delete","Eliminar"],"Xem trước thiết kế":["Design preview","Vista previa"],"Xóa thiết kế này khỏi thiết bị?":["Delete this design from the device?","¿Eliminar este diseño del dispositivo?"],"Thiết kế":["Design","Diseño"],"Lưu: ":["Saved: ","Guardado: "],"Trên thiết bị":["On device","En el dispositivo"],"Chỉnh chữ, di chuyển rồi lưu dự án. Không cần tài khoản hoặc API key.":["Edit and move layers, then save. No account or API key required.","Edita y mueve capas y luego guarda. Sin cuenta ni clave API."],"Đã lưu! Thiết kế sẽ hiện ở mục Tiếp tục thiết kế.":["Saved! Find it under Continue designing.","¡Guardado! Estará en Seguir diseñando."],"Không lưu được. Hãy xuất JSON để sao lưu trước khi rời xưởng thiết kế.":["Save failed. Export JSON before leaving the editor.","Error al guardar. Exporta JSON antes de salir."],"Không lưu được: dung lượng bộ nhớ đầy. Hãy xuất bản JSON.":["Storage full. Export JSON to back up your project.","Almacenamiento lleno. Exporta JSON como copia."],"Không đọc được ảnh.":["Could not read photo.","No se pudo leer la imagen."],"Chỉ hỗ trợ JPG, PNG, WebP dưới 8 MB.":["Use JPG, PNG or WebP under 8 MB.","Usa JPG, PNG o WebP de menos de 8 MB."],"Đã thêm ảnh. Kéo ảnh trên canvas; chỉnh kích thước ở bảng điều khiển.":["Photo added. Drag to move and resize in controls.","Imagen añadida. Arrastra y cambia el tamaño en los controles."],"Đã tạo PNG. Mở ảnh trong thư viện hoặc thư mục Tải xuống.":["PNG generated. Check Gallery or Downloads.","PNG generado. Mira en Galería o Descargas."],"Ảnh chưa tải xong hoặc bị lỗi; chưa thể xuất PNG.":["Photo not ready; cannot export PNG.","La imagen no está lista; no se puede exportar PNG."],"Ảnh trong dự án bị lỗi, vui lòng thay ảnh.":["Project photo invalid; replace it.","La imagen del proyecto está dañada; cámbiala."],"Khổ in tương đương: ":["Approximate print size: ","Tamaño de impresión aprox.: "],"Trang chủ":["Home","Inicio"],"Dự án":["Projects","Proyectos"],"Mẫu":["Templates","Plantillas"],"Tài khoản":["Account","Cuenta"],"Cài đặt sắp ra mắt.":["Settings coming soon.","Ajustes próximamente."],"Điều hướng chính":["Main navigation","Navegación principal"],"Bạn muốn sáng tạo gì hôm nay?":["What do you want to create today?","¿Qué quieres crear hoy?"],"Mô tả ý tưởng của bạn":["Describe your idea","Describe tu idea"],"Mở trong AI":["Open in AI","Abrir en IA"],"Chưa gọi AI nào. Bạn kiểm tra ý tưởng rồi tự bấm tạo trong tab AI.":["No AI is called yet. Check your idea, then press generate in the AI tab.","Todavía no se usa ninguna IA. Revisa tu idea y pulsa generar en la pestaña IA."],"Tạo thiết kế đầu tiên":["Create your first design","Crea tu primer diseño"],"Bắt đầu tại đây":["Start here","Empieza aquí"],"Thiệp cưới":["Wedding card","Tarjeta de boda"],"Cáo phó":["Obituary","Esquela"],"Bảng hiệu":["Signage","Letrero"],"Bài bán hàng":["Sales post","Post de ventas"],"Thiệp mời":["Invitation","Invitación"],"Bài mạng xã hội":["Social post","Post social"],"Mẫu dành cho bạn":["Templates for you","Plantillas para ti"],"Xem tất cả":["See all","Ver todo"],"Công cụ nhanh":["Quick tools","Herramientas rápidas"],"Tạo prompt":["Prompt Studio","Estudio de prompts"],"Phân cảnh video":["Video Storyboard","Guion de video"],"Công cụ ảnh":["Image Toolkit","Herramientas de imagen"],"Tạo mới":["Create new","Crear nuevo"],"Đóng":["Close","Cerrar"]};
     function studioText(vi) {
       var code=$('language')?$('language').value:'vi';
       if(code==='vi')return vi;
@@ -353,6 +353,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       renderSaved();
       refreshGallery();
       if(bottomNav)bottomNav.setAttribute('aria-label',studioText('Điều hướng chính'));
+      if($('z-fab'))$('z-fab').setAttribute('aria-label',studioText('Tạo mới'));
       if($('z-status').dataset.originalMessage)$('z-status').textContent=studioText($('z-status').dataset.originalMessage);
     }
 
@@ -360,15 +361,43 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     var tab = document.createElement('button');
     tab.type = 'button'; tab.className = 'tab'; tab.id = 'navZunva'; tab.dataset.tab = 'zunva';
     tab.textContent = '✦ ZUNVA Studio'; nav.insertBefore(tab, nav.firstChild);
+    // P3 task 3: Home tab content. Static markup only (no user data); labels are studioStrings keys.
+    var startOptions=[['wedding','♡','Thiệp cưới'],['obituary','❀','Cáo phó'],['signage','▤','Bảng hiệu'],['sales','%','Bài bán hàng'],
+      ['invite','✉\uFE0E','Thiệp mời'],['social','#','Bài mạng xã hội'],['video','▶\uFE0E','Video'],['blank','□','Trang trắng']];
+    function startIcons(){
+      return startOptions.map(function(o){
+        return '<button type="button" class="z-sicon" data-start="'+o[0]+'"><span class="z-sicon-dot" aria-hidden="true">'+o[1]+'</span><span class="z-sicon-label">'+o[2]+'</span></button>';
+      }).join('');
+    }
+    var homeTemplateCards=templates.map(function(t,i){
+      return '<button type="button" class="z-hcard" data-tpl="'+i+'"><span class="z-hthumb '+t.css+'"><strong>'+t.preview+'</strong></span><span class="z-hname">'+t.name+'</span></button>';
+    }).join('');
+    var quickTools=[['prompt','✎','Tạo prompt'],['video','▶\uFE0E','Phân cảnh video'],['image','▧','Công cụ ảnh'],['ai','✦','AI Pro']].map(function(o){
+      return '<button type="button" class="z-tool" data-goto="'+o[0]+'"><span class="z-tool-icon" aria-hidden="true">'+o[1]+'</span><span>'+o[2]+'</span></button>';
+    }).join('');
     var panel = document.createElement('section');
     panel.id = 'zunva'; panel.className = 'z-panel';
     panel.innerHTML = [
       '<div id="z-home">',
+      '<div class="z-idea"><h2>Bạn muốn sáng tạo gì hôm nay?</h2>',
+      '<form id="z-idea-form" class="z-idea-form"><label for="z-idea-text" class="z-sr">Mô tả ý tưởng của bạn</label>',
+      '<textarea id="z-idea-text" rows="3" maxlength="1000" placeholder="Mô tả ý tưởng của bạn"></textarea>',
+      '<button type="submit" class="z-mainbtn" id="z-idea-go">Mở trong AI</button></form>',
+      '<p class="z-idea-note">Chưa gọi AI nào. Bạn kiểm tra ý tưởng rồi tự bấm tạo trong tab AI.</p></div>',
+      '<section class="z-hsec" aria-labelledby="z-hrecent-title"><div class="z-hsec-head"><h3 id="z-hrecent-title">Tiếp tục thiết kế</h3></div>',
+      '<div class="z-hrow" id="z-home-recent"></div></section>',
+      '<section class="z-hsec" aria-labelledby="z-hstart-title"><div class="z-hsec-head"><h3 id="z-hstart-title">Bắt đầu tại đây</h3></div>',
+      '<div class="z-start-icons" id="z-start-icons">'+startIcons()+'</div></section>',
+      '<section class="z-hsec" aria-labelledby="z-htpl-title"><div class="z-hsec-head"><h3 id="z-htpl-title">Mẫu dành cho bạn</h3>',
+      '<button type="button" class="z-link" id="z-see-all">Xem tất cả</button></div>',
+      '<div class="z-hrow" id="z-home-templates">'+homeTemplateCards+'</div></section>',
+      '<section class="z-hsec" aria-labelledby="z-htools-title"><div class="z-hsec-head"><h3 id="z-htools-title">Công cụ nhanh</h3></div>',
+      '<div class="z-tools" id="z-tools">'+quickTools+'</div></section>',
       '<div class="z-hero"><div class="z-brand">✦ ZUNVA / CREATOR STUDIO · UX 2.1</div>',
       '<h2>Biến ý tưởng thành thiết kế của bạn.</h2>',
       '<p>Chọn mẫu có sẵn hoặc bắt đầu từ trang trắng. Kéo thả chữ, chỉnh từng lớp và xuất ảnh — miễn phí, không cần API key.</p>',
       '<div class="z-hero-actions"><button type="button" class="z-mainbtn" id="z-new">✦ Bắt đầu thiết kế</button>',
-      '<button type="button" class="z-softbtn" id="z-jump">Khám phá mẫu ↓</button></div>',
+      '<button type="button" class="z-softbtn" id="z-jump">Khám phá mẫu</button></div>',
       '<div class="z-pillstrip"><span>✓ Không cần AI key</span><span>✓ Lưu bản sửa được</span><span>✓ Xuất PNG</span></div></div>',
       '<div class="z-home-search"><label for="z-template-search">Bạn muốn thiết kế gì?</label>',
       '<div class="z-search-input"><span aria-hidden="true">⌕</span><input id="z-template-search" type="search" placeholder="Tìm poster, thiệp cưới, cáo phó, menu..." autocomplete="off"></div></div>',
@@ -394,7 +423,11 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       '<button type="button" class="z-filter" data-kind="Quán ăn">Quán ăn</button>',
       '</div><div class="z-gallery" id="z-gallery"></div>',
       '<p id="z-no-results" class="z-empty z-hidden">Không tìm thấy mẫu phù hợp. Thử từ khóa khác hoặc bắt đầu từ trang trắng.</p>',
-      '<p class="z-privacy">Dữ liệu chỉ lưu trên thiết bị này. Hãy xuất PNG để chia sẻ; đây là xưởng thiết kế thử nghiệm.</p></div>',
+      '<p class="z-privacy">Dữ liệu chỉ lưu trên thiết bị này. Hãy xuất PNG để chia sẻ; đây là xưởng thiết kế thử nghiệm.</p>',
+      '<button type="button" class="z-fab" id="z-fab" aria-haspopup="dialog" aria-controls="z-sheet" aria-expanded="false" aria-label="Tạo mới"><span aria-hidden="true">+</span></button>',
+      '<div class="z-sheet" id="z-sheet" hidden><div class="z-sheet-backdrop" data-close="1"></div>',
+      '<div class="z-sheet-panel" role="dialog" aria-modal="true" aria-labelledby="z-sheet-title"><div class="z-hsec-head"><h3 id="z-sheet-title">Bắt đầu tại đây</h3>',
+      '<button type="button" class="z-link" id="z-sheet-close">Đóng</button></div><div class="z-start-icons">'+startIcons()+'</div></div></div></div>',
       '<div id="z-editor" class="z-hidden"><div class="z-editor-shell">',
       '<div class="z-editor-heading"><button type="button" class="z-softbtn" id="z-back">← Trang chủ</button>',
       '<h3>Xưởng thiết kế</h3><span style="font-size:12px;color:#a5b9d4">Chạm và kéo chữ để di chuyển</span></div>',
@@ -674,6 +707,45 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       showTab('templates');window.scrollTo(0,0);
     };
     $('z-start-ai').onclick=function(){showTab('ai');window.scrollTo(0,0);};
+    // P3 task 3 Home handlers. The idea box only copies text into #aiIdea; it never calls any AI.
+    $('z-idea-form').addEventListener('submit',function(e){
+      e.preventDefault();
+      var text=$('z-idea-text').value.trim();
+      if(!text){$('z-idea-text').focus();return;}
+      showTab('ai');
+      $('aiIdea').value=text;
+      window.scrollTo(0,0);
+      $('aiIdea').scrollIntoView({block:'center'});
+    });
+    var sheet=$('z-sheet'),fab=$('z-fab');
+    function closeSheet(){
+      if(sheet.hidden)return;
+      sheet.hidden=true;fab.setAttribute('aria-expanded','false');fab.focus();
+    }
+    fab.onclick=function(){
+      sheet.hidden=false;fab.setAttribute('aria-expanded','true');
+      var first=sheet.querySelector('[data-start]');if(first)first.focus();
+    };
+    $('z-sheet-close').onclick=closeSheet;
+    sheet.addEventListener('click',function(e){if(e.target.dataset&&e.target.dataset.close)closeSheet();});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')closeSheet();});
+    // Every start option uses the existing blank() path for now; size presets come in task 4.
+    Array.prototype.forEach.call(panel.querySelectorAll('.z-start-icons'),function(box){
+      box.addEventListener('click',function(e){
+        var b=e.target.closest('[data-start]');if(!b)return;
+        if(!sheet.hidden){sheet.hidden=true;fab.setAttribute('aria-expanded','false');}
+        openEditor(blank());
+      });
+    });
+    $('z-home-templates').addEventListener('click',function(e){
+      var b=e.target.closest('[data-tpl]');if(!b)return;
+      var t=templates[Number(b.dataset.tpl)];if(t)openEditor(fromTemplate(t));
+    });
+    $('z-see-all').onclick=function(){chooseCategory('Tất cả');showTab('templates');window.scrollTo(0,0);};
+    $('z-tools').addEventListener('click',function(e){
+      var b=e.target.closest('[data-goto]');if(!b)return;
+      showTab(b.dataset.goto);window.scrollTo(0,0);
+    });
     $('z-new').onclick=function(){openEditor(blank());};
     imageButton.onclick=function(){imagePicker.click();};
     imagePicker.addEventListener('change',function(){
@@ -833,7 +905,31 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       download(url,'zunva-project-'+Date.now()+'.json');setTimeout(function(){URL.revokeObjectURL(url);},5000);
       notice('Đã tạo bản sao JSON để lưu trữ.');
     };
+    // P3 task 3: horizontal "Continue designing" row on Home. Reads the same saved list (max 12).
+    function renderHomeRecent(){
+      var row=$('z-home-recent');if(!row)return;
+      row.replaceChildren();
+      var items=readSaved().filter(function(item){return item&&item.design&&Array.isArray(item.design.layers);}).slice(0,12);
+      if(!items.length){
+        var first=document.createElement('button');first.type='button';first.className='z-hcard';
+        var plus=document.createElement('span');plus.className='z-hthumb z-hthumb-plain z-hthumb-empty';plus.setAttribute('aria-hidden','true');plus.textContent='+';
+        var label=document.createElement('span');label.className='z-hname';label.textContent=studioText('Tạo thiết kế đầu tiên');
+        first.append(plus,label);first.onclick=function(){openEditor(blank());};
+        row.append(first);return;
+      }
+      items.forEach(function(item){
+        var card=document.createElement('button');card.type='button';card.className='z-hcard';
+        var thumb=document.createElement('span');thumb.className='z-hthumb z-hthumb-plain';
+        if(item.preview&&/^data:image\/jpeg;base64,/.test(item.preview)){
+          var im=document.createElement('img');im.src=item.preview;im.alt='';thumb.append(im);
+        }else{thumb.textContent='✦';thumb.setAttribute('aria-hidden','true');}
+        var name=document.createElement('span');name.className='z-hname';name.textContent=item.design.name||studioText('Thiết kế');
+        card.append(thumb,name);card.onclick=function(){openEditor(item.design,item.id);};
+        row.append(card);
+      });
+    }
     function renderSaved(){
+      renderHomeRecent();
       var node=$('z-project-list');node.replaceChildren();
       var all=readSaved();
       if(!all.length){
