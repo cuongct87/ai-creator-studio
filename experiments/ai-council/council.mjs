@@ -3,6 +3,7 @@
 // Provider isolation and text-only invocation adapted in design from the
 // Apache-2.0 OpenMausBot code referenced in THIRD_PARTY_NOTICES.md.
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -31,6 +32,21 @@ function argsFor(agent, cwd) {
   throw new Error("Unsupported engine " + agent);
 }
 export { argsFor };
+
+// PowerShell can block npm's codex.ps1; calling the installed JS entry
+// through Node runs without a shell or changing Windows execution policy.
+// This does not bypass Smart App Control for any downloaded installer.
+function launchFor(agent, { platform=process.platform, env=process.env, nodeBinary=process.execPath, exists=existsSync }={}) {
+  if (agent === "codex" && platform === "win32") {
+    if (!env.APPDATA) throw new Error("Cannot locate Windows APPDATA for Codex");
+    const entry = join(env.APPDATA, "npm", "node_modules", "@openai", "codex", "bin", "codex.js");
+    if (!exists(entry)) throw new Error("Codex JS entry not found; check the npm installation");
+    return { command: nodeBinary, prefixArgs: [entry] };
+  }
+  if (!AGENTS.has(agent)) throw new Error("Unsupported engine " + agent);
+  return { command: platform === "win32" ? agent + ".exe" : agent, prefixArgs: [] };
+}
+export { launchFor };
 
 function decode(agent, stdout) {
   if (agent === "claude") {
@@ -71,9 +87,9 @@ async function askReal(agent, prompt) {
       let finished = false;
       let stdout = "";
       let stderr = "";
-      const cli = process.platform === "win32" ? agent + ".exe" : agent;
+      const { command, prefixArgs } = launchFor(agent);
       // Deliberately NEVER use a shell or an arbitrary command from the task.
-      const child = spawn(cli, argsFor(agent,cwd), {
+      const child = spawn(command, [...prefixArgs, ...argsFor(agent,cwd)], {
         cwd, shell: false, windowsHide: true, stdio: ["pipe","pipe","pipe"],
         env: { ...process.env, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1" }
       });
@@ -180,7 +196,7 @@ async function main(argv) {
   const value = (prefix) => argv.find(s=>s.startsWith(prefix))?.slice(prefix.length);
   if (has("--help") || has("-h")) {
     console.log("node council.mjs --task=path/to/brief.txt [--demo] [--rounds=2] [--out=report.md]");
-    console.log("Live: --live --confirm-usage (uses installed, signed-in codex.exe and claude.exe; may consume quota)");
+    console.log("Live: --live --confirm-usage (uses local Codex JS via Node on Windows; Claude CLI must be installed; may consume quota)");
     return;
   }
   const file = value("--task=");
