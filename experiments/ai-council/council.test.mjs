@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { argsFor, decode, formatReport, runCouncil } from "./council.mjs";
+import { argsFor, decode, formatReport, launchFor, runCouncil } from "./council.mjs";
 
 test("demo produces two opinions and two critiques without credentials", async () => {
   const r = await runCouncil({task:"Giúp người dùng viết prompt ảnh",mode:"demo",rounds:2});
@@ -35,4 +35,22 @@ test("decode refuses extra tool activity", () => {
 test("decode accepts completed text output", () => {
   const sample='{"type":"item.completed","item":{"type":"agent_message","text":"Nên kiểm thử"}}\n{"type":"turn.completed"}';
   assert.equal(decode("codex",sample),"Nên kiểm thử");
+});
+
+test("Windows Codex uses its installed JS entry via Node (no shell)", () => {
+  const launcher=launchFor("codex",{
+    platform:"win32", env:{APPDATA:"C:/Users/example/AppData/Roaming"},
+    nodeBinary:"C:/Program Files/nodejs/node.exe", exists:()=>true
+  });
+  assert.equal(launcher.command,"C:/Program Files/nodejs/node.exe");
+  assert.equal(launcher.prefixArgs.length,1);
+  assert.ok(launcher.prefixArgs[0].endsWith("codex.js"));
+  assert.ok(launcher.prefixArgs[0].includes("@openai"));
+});
+
+test("Windows Codex rejects missing entry instead of executing npm shim", () => {
+  assert.throws(
+    ()=>launchFor("codex",{platform:"win32",env:{APPDATA:"C:/Users/example/AppData/Roaming"},exists:()=>false}),
+    /entry not found/
+  );
 });
