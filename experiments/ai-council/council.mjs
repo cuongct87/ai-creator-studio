@@ -154,6 +154,10 @@ export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex",
   if (![1,2].includes(rounds)) throw new Error("rounds must be 1 or 2");
   if (!["demo","live"].includes(mode)) throw new Error("mode must be demo or live");
   if (mode === "live" && !confirmUsage) throw new Error("Live mode may consume model quota: pass --confirm-usage");
+  // Preflight BEFORE any agent call. Avoid charging Codex quota when Gemini has no key.
+  if (mode === "live" && agents.includes("gemini") && !process.env.GEMINI_API_KEY?.trim()) {
+    throw new Error("GEMINI_API_KEY missing in this terminal session; no AI called. Load it locally, then retry only once.");
+  }
   const result = { mode, rounds, task, startedAt:new Date().toISOString(), initial:{}, review:{}, status:"not-approved" };
   async function invoke(agent, prompt, round, other) {
     try {
