@@ -61,10 +61,15 @@ footer{font-size:12px;color:#96abc0;max-width:940px;margin-top:18px}
 <h1>Phòng họp ZUNVA AI Council</h1>
 <p class="subtitle">Giao nhiệm vụ, cho Codex và Gemini phân tích độc lập, phản biện chéo và trình chủ dự án duyệt. Chạy thử mô phỏng miễn phí trước; phiên LIVE chỉ chạy khi mày bật chế độ và xác nhận dùng hạn mức.</p>
 <div class="cards">
-<div class="stat"><span>ĐỘI HÌNH THỬ NGHIỆM</span><strong>Codex + Gemini</strong><span>Claude/Kiro chưa kết nối</span></div>
+<div class="stat"><span>ĐỘI HÌNH THỬ NGHIỆM</span><strong>Codex + Gemini</strong><span>Có thể chọn Claude khi có quyền sử dụng</span></div>
 <div class="stat"><span>CHẾ ĐỘ</span><strong id="liveState">Đang kiểm tra</strong><span>LIVE mặc định bị khóa</span></div>
 <div class="stat"><span>BÁO CÁO ĐÃ LƯU</span><strong id="count">0</strong><span>Chỉ trong máy đang chạy</span></div>
 </div>
+<section class="panel">
+<h2>Thành viên bổ sung</h2>
+<p class="note"><strong>Claude Code:</strong> Đã hỗ trợ lựa chọn trong hội đồng; chế độ LIVE cần đăng nhập Claude Code hợp lệ (không bao gồm gói Free), bật chủ động trong máy chủ.</p>
+<p class="note"><strong>Kiro:</strong> Nhận phiếu kiểm thử/viết code qua <a href="https://github.com/cuongct87/ai-creator-studio/issues/13" target="_blank" rel="noopener noreferrer">GitHub Issue #13</a> rồi thực hiện trong ứng dụng Kiro chính thức. Không tự chạy Kiro hoặc dùng credits qua bộ điều phối.</p>
+</section>
 <div class="main">
 <aside>
 <section class="panel">
@@ -72,6 +77,10 @@ footer{font-size:12px;color:#96abc0;max-width:940px;margin-top:18px}
 <form id="form">
 <label for="task">Yêu cầu của chủ dự án</label>
 <textarea id="task" maxlength="6000" required placeholder="Ví dụ: Đề xuất một cách giúp người dùng ZUNVA tạo sản phẩm đầu tiên nhanh hơn mà không tăng chi phí API."></textarea>
+<div class="controls">
+<div><label for="agent1">AI thứ nhất</label><select id="agent1"><option value="codex">Codex</option><option value="gemini">Gemini</option><option value="claude">Claude Code</option></select></div>
+<div><label for="agent2">AI thứ hai</label><select id="agent2"><option value="gemini">Gemini</option><option value="codex">Codex</option><option value="claude">Claude Code</option></select></div>
+</div>
 <div class="controls">
 <div><label for="mode">Chế độ</label><select id="mode"><option value="demo">Mô phỏng (0 quota)</option><option value="live">LIVE (dùng hạn mức)</option></select></div>
 <div><label for="rounds">Số vòng</label><select id="rounds"><option value="1">1 — Hai ý kiến độc lập</option><option value="2">2 — Có phản biện chéo</option></select></div>
@@ -94,12 +103,12 @@ footer{font-size:12px;color:#96abc0;max-width:940px;margin-top:18px}
 <section class="panel" id="details" hidden>
 <div class="rowline"><h2>Biên bản cuộc họp</h2><span id="sessionStatus" class="chip"></span></div>
 <p id="sessionMeta" class="note"></p><p id="sessionTask"></p>
-<div class="sectiontitle">Vòng 1 · Phân tích độc lập</div><div class="reportgrid"><div class="agent"><h3>Codex</h3><pre id="firstCodex"></pre></div><div class="agent"><h3>Gemini</h3><pre id="firstGemini"></pre></div></div>
-<div id="reviewSection" hidden><div class="sectiontitle">Vòng 2 · Phản biện chéo</div><div class="reportgrid"><div class="agent"><h3>Codex phản biện Gemini</h3><pre id="reviewCodex"></pre></div><div class="agent"><h3>Gemini phản biện Codex</h3><pre id="reviewGemini"></pre></div></div></div>
+<div class="sectiontitle">Vòng 1 · Phân tích độc lập</div><div class="reportgrid"><div class="agent"><h3 id="firstCodexName">AI 1</h3><pre id="firstCodex"></pre></div><div class="agent"><h3 id="firstGeminiName">AI 2</h3><pre id="firstGemini"></pre></div></div>
+<div id="reviewSection" hidden><div class="sectiontitle">Vòng 2 · Phản biện chéo</div><div class="reportgrid"><div class="agent"><h3 id="reviewCodexName">AI 1 phản biện AI 2</h3><pre id="reviewCodex"></pre></div><div class="agent"><h3 id="reviewGeminiName">AI 2 phản biện AI 1</h3><pre id="reviewGemini"></pre></div></div></div>
 <div class="sectiontitle">Founder phê duyệt</div>
 <p class="note">Duyệt chỉ ghi lại quyết định; không chạy code, không merge, không deploy.</p>
 <label for="decisionNote">Ghi chú / yêu cầu sửa</label><textarea id="decisionNote" maxlength="1000" style="min-height:70px"></textarea>
-<div class="actions"><button id="approve" class="primary" type="button">Duyệt đề xuất</button><button id="changes" type="button" class="warn">Yêu cầu chỉnh sửa</button><button id="copy" type="button">Sao chép báo cáo</button><button id="download" type="button">Lưu báo cáo .md</button></div>
+<div class="actions"><button id="approve" class="primary" type="button">Duyệt đề xuất</button><button id="changes" type="button" class="warn">Yêu cầu chỉnh sửa</button><button id="copy" type="button">Sao chép báo cáo</button><button id="download" type="button">Lưu báo cáo .md</button><button id="kiroPacket" type="button">Sao chép phiếu giao Kiro</button></div>
 <div class="status" id="decisionStatus" role="status"></div>
 </section>
 </main></div>
@@ -111,6 +120,7 @@ footer{font-size:12px;color:#96abc0;max-width:940px;margin-top:18px}
 const el=id=>document.getElementById(id);
 let active=null, busy=false, state=null;
 const text=(id,value)=>{el(id).textContent=String(value??"")};
+const chosenAgents=()=>[el("agent1").value,el("agent2").value];
 function showError(e){text("status",e.message||String(e))}
 async function req(path,options){
 const res=await fetch(path,{cache:"no-store",...options});
@@ -125,11 +135,14 @@ const live=el("mode").value==="live";
 el("confirmWrap").hidden=!live;el("quotaNotice").textContent=live
 ?"LIVE cần key Gemini trong PowerShell chạy server và chủ động cho phép sử dụng quota. Không có giới hạn tiền API tuyệt đối."
 :"Mô phỏng hoàn toàn offline, không gọi AI và không tốn quota.";
-const canLive=Boolean(state?.liveEnabled&&state?.geminiKeyLoaded);
-if(live&&!canLive) {
-text("quotaNotice","LIVE đang bị khóa: phải khởi động server với --enable-live và nạp key Gemini trong cùng PowerShell, có Free Tier hợp lệ.");
+const agents=chosenAgents();
+const distinct=agents[0]!==agents[1];
+const canLive=Boolean(state?.liveEnabled && (!agents.includes("gemini") || state.geminiKeyLoaded) && (!agents.includes("claude") || state.claudeEnabled));
+if(!distinct){text("quotaNotice","Phải chọn hai AI khác nhau.");}
+else if(live&&!canLive) {
+text("quotaNotice","LIVE chưa đủ điều kiện: cần bật --enable-live, nạp key Gemini nếu có Gemini, hoặc bật Claude và đăng nhập Claude Code hợp lệ nếu có Claude.");
 }
-el("run").disabled=busy||(live&&!canLive);
+el("run").disabled=busy||!distinct||(live&&!canLive);
 }
 async function refresh(){
 try{
@@ -155,10 +168,18 @@ el("empty").hidden=true;el("details").hidden=false;
 const r=active.report;
 text("sessionStatus",active.status);text("sessionMeta",new Date(active.at).toLocaleString("vi-VN")+" • "+active.mode.toUpperCase()+" • "+active.rounds+" vòng");
 text("sessionTask",active.task);
-text("firstCodex",resultText(r.initial,"codex"));text("firstGemini",resultText(r.initial,"gemini"));
+const names=Object.keys(r.initial||{});
+const a=names[0]||"AI 1", b=names[1]||"AI 2";
+text("firstCodexName",a.toUpperCase());text("firstGeminiName",b.toUpperCase());
+text("firstCodex",resultText(r.initial,a));text("firstGemini",resultText(r.initial,b));
 const second=Object.keys(r.review||{}).length>0;el("reviewSection").hidden=!second;
-if(second){text("reviewCodex",resultText(r.review,"codex"));text("reviewGemini",resultText(r.review,"gemini"))}
+if(second){
+text("reviewCodexName",a.toUpperCase()+" phản biện "+b.toUpperCase());
+text("reviewGeminiName",b.toUpperCase()+" phản biện "+a.toUpperCase());
+text("reviewCodex",resultText(r.review,a));text("reviewGemini",resultText(r.review,b));
+}
 el("decisionNote").value=active.decisionNote||"";
+el("kiroPacket").disabled=active.status!=="approved";
 const eligible=active.status!=="incomplete";
 el("approve").disabled=!eligible;el("changes").disabled=!eligible;
 text("decisionStatus",active.decisionAt?"Đã ghi nhận lúc "+new Date(active.decisionAt).toLocaleString("vi-VN"):"");
@@ -166,6 +187,8 @@ await refresh();
 }catch(e){text("status","Không tải được báo cáo: "+e.message)}
 }
 el("mode").addEventListener("change",updateMode);
+el("agent1").addEventListener("change",updateMode);
+el("agent2").addEventListener("change",updateMode);
 el("form").addEventListener("submit",async e=>{
 e.preventDefault();if(busy)return;
 const mode=el("mode").value;const confirmUsage=el("confirm").checked;
@@ -173,7 +196,7 @@ if(mode==="live"&&!confirmUsage){text("status","Hãy xác nhận sử dụng quo
 setBusy(true);text("status","Đang điều phối… Đừng bấm chạy lại. Phiên LIVE có thể tiêu quota."); 
 try{
 const data=await req("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
-task:el("task").value, mode, rounds:Number(el("rounds").value),confirmUsage
+task:el("task").value, mode, rounds:Number(el("rounds").value),agents:chosenAgents(),confirmUsage
 })});
 text("status",data.status==="incomplete"?"Đã lưu nhưng có AI bị lỗi, xem biên bản.":"Đã lưu biên bản, đang chờ founder duyệt.");
 await load(data.id);
@@ -189,6 +212,20 @@ text("decisionStatus","Đã ghi nhận: "+r.status+". Không thực thi code.");
 el("approve").addEventListener("click",()=>decision("approved"));
 el("changes").addEventListener("click",()=>decision("changes-requested"));
 el("copy").addEventListener("click",async()=>{if(!active)return;try{await navigator.clipboard.writeText(active.markdown);text("decisionStatus","Đã sao chép báo cáo.")}catch{text("decisionStatus","Trình duyệt không cho phép sao chép. Dùng nút Lưu .md.")}});
+el("kiroPacket").addEventListener("click",async()=>{
+if(!active||active.status!=="approved")return;
+const ticket=[
+"KIRO — Phiếu giao việc ZUNVA (chỉ dùng trong Kiro IDE/CLI chính thức)",
+"Nhiệm vụ founder đã duyệt: "+active.task,
+"Ghi chú duyệt: "+(active.decisionNote||"Không có"),
+"Đọc và tuân thủ Issue #13: https://github.com/cuongct87/ai-creator-studio/issues/13",
+"Thực hiện qua Kiro native; tạo nhánh và PR riêng, test trước khi đề nghị duyệt.",
+"KHÔNG tự merge/deploy, KHÔNG gửi secrets hay dùng API tính phí khi chưa được duyệt.",
+"Báo lại kết quả, link PR và bằng chứng test; không khẳng định đã triển khai khi chưa có log."
+].join("\n");
+try{await navigator.clipboard.writeText(ticket);text("decisionStatus","Đã sao chép phiếu giao Kiro. Cần dán vào Kiro chính thức; chưa có agent nào tự nhận việc.")}
+catch{text("decisionStatus","Không thể sao chép. Hãy dùng liên kết Issue #13 ở phía trên.")}
+});
 el("download").addEventListener("click",()=>{
 if(!active)return;const blob=new Blob([active.markdown],{type:"text/markdown;charset=utf-8"});
 const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="zunva-council-"+active.id.slice(0,8)+".md";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);
