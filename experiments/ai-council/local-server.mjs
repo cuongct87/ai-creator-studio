@@ -4,8 +4,8 @@ import http from "node:http";
 import { randomUUID } from "node:crypto";
 import { readFile, mkdir, readdir, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
-import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join, resolve } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { runCouncil, formatReport } from "./council.mjs";
 
 const UI_FILE = fileURLToPath(new URL("./dashboard.html", import.meta.url));
@@ -42,6 +42,7 @@ export async function createCouncilServer({
   for (const name of names) {
     try { const data = JSON.parse(await readFile(join(storeDir,name),"utf8")); recent.push(data); } catch { /* ignore broken local report */ }
   }
+  recent.sort((a,b)=>b.at.localeCompare(a.at));
   const save = async (entry) => {
     await writeFile(join(storeDir,"run-"+entry.id+".json"),JSON.stringify(entry,null,2),{encoding:"utf8",mode:0o600});
   };
@@ -117,12 +118,7 @@ export async function createCouncilServer({
   const actualPort=server.address().port;
   return {url:"http://127.0.0.1:"+actualPort, close:()=>new Promise(resolve=>server.close(resolve))};
 }
-if (process.argv[1] && fileURLToPath(import.meta.url)===fileURLToPath(new URL("file://"+process.argv[1].replace(/\\/g,"/")))) {
-  // This branch is unlikely on Windows for drive letters; robust startup below.
-  void 0;
-}
-const direct = process.argv[1] && import.meta.url === new URL("./"+process.argv[1].replace(/\\/g,"/"),"file:///").href;
-if (process.argv[1] && /local-server\.mjs$/i.test(process.argv[1]) && !process.env.ZUNVA_SKIP_START) {
+if (process.argv[1] && import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
   createCouncilServer({enableLive:process.argv.includes("--enable-live")}).then(({url})=>{
     console.log("ZUNVA AI Council local dashboard: "+url);
     console.log("Only this computer can connect. Ctrl+C to stop. Live quota: "+(process.argv.includes("--enable-live")?"enabled":"disabled"));
