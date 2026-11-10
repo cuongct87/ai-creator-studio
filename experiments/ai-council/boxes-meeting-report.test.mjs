@@ -8,8 +8,8 @@ const good = () => ({
     {agent:'claude',mode:'LIVE',status:'completed',threadId:'thr_claude1',response:'Cần kiểm tra chất lượng PNG.',threadUrl:'https://boxes.dev/thread/2'}
   ],
   crossReviews:[
-    {agent:'codex',threadId:'thr_codex1',response:'Đồng ý bổ sung test ảnh.'},
-    {agent:'claude',threadId:'thr_claude1',response:'Cần xem kích thước thực tế.'}
+    {agent:'codex',targetAgent:'claude',mode:'LIVE',status:'completed',threadId:'thr_codex1',response:'Đồng ý bổ sung test ảnh.'},
+    {agent:'claude',targetAgent:'codex',mode:'LIVE',status:'completed',threadId:'thr_claude1',response:'Cần xem kích thước thực tế.'}
   ],consensus:'Thêm test',disagreements:'Mức DPI tối ưu chưa thống nhất',usage:'2 lượt agent, chi phí chưa đo'
 });
 test('two verified live peers yields founder review, never automatic approval',()=>{
@@ -43,4 +43,33 @@ test('reject duplicate agent and oversized brief',()=>{
   assert.throws(()=>inspectMeeting(x),/unique supported/);
   x.participants[1].agent='claude';x.brief='A'.repeat(6001);
   assert.throws(()=>inspectMeeting(x),/6000/);
+});
+
+test('two cross-reviews from Codex alone are not two independently completed reviews',()=>{
+  const x=good();x.crossReviews[1]={...x.crossReviews[1],agent:'codex',targetAgent:'claude'};
+  const result=inspectMeeting(x);
+  assert.equal(result.status,'CHƯA ĐỦ BẰNG CHỨNG');
+  assert.match(result.problems.join(' '),/claude: thiếu lượt phản biện chéo/);
+});
+test('self-review, missing target, or unknown peer cannot pass',()=>{
+  for (const targetAgent of ['codex','', 'gemini']) {
+    const x=good();x.crossReviews[0].targetAgent=targetAgent;
+    assert.equal(inspectMeeting(x).status,'CHƯA ĐỦ BẰNG CHỨNG');
+  }
+});
+test('unfinished or demo cross-review cannot be considered a live completed review',()=>{
+  for (const override of [{status:'starting'},{mode:'DEMO'}]) {
+    const x=good();Object.assign(x.crossReviews[0],override);
+    assert.equal(inspectMeeting(x).status,'CHƯA ĐỦ BẰNG CHỨNG');
+  }
+});
+test('same thread ID assigned to different AI is insufficient evidence of independent answers',()=>{
+  const x=good();x.participants[1].threadId=x.participants[0].threadId;
+  assert.equal(inspectMeeting(x).status,'CHƯA ĐỦ BẰNG CHỨNG');
+});
+test('a meeting with three participants requires each to provide one genuine peer review',()=>{
+  const x=good();x.participants.push({agent:'gemini',mode:'LIVE',status:'completed',threadId:'thr_gemini1',response:'Cần test lưu dữ liệu.'});
+  assert.equal(inspectMeeting(x).status,'CHƯA ĐỦ BẰNG CHỨNG');
+  x.crossReviews.push({agent:'gemini',targetAgent:'codex',mode:'LIVE',status:'completed',threadId:'thr_gemini1',response:'Kiểm tra quy trình.'});
+  assert.equal(inspectMeeting(x).status,'CHỜ FOUNDER NGHIỆM THU');
 });
