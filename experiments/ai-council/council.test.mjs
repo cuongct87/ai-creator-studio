@@ -84,3 +84,17 @@ test("CLI child environment strips sensitive API keys and tokens", () => {
   assert.equal(env.GH_TOKEN,undefined);
   assert.equal(env.MY_SECRET,undefined);
 });
+
+test("Claude preflight blocks LIVE before calling any AI when login missing", async () => {
+  await assert.rejects(runCouncil({
+    task:"Assess a non-sensitive product idea",mode:"live",
+    agents:["codex","claude"],confirmUsage:true,
+    claudeAuthCheck:async()=>false
+  }),/not authenticated.*no AI called/);
+});
+test("Claude option works as clearly marked DEMO without credentials", async()=>{
+  const r=await runCouncil({task:"Review concept",agents:["gemini","claude"],mode:"demo",rounds:2});
+  assert.equal(r.initial.claude.ok,true);
+  assert.match(r.initial.claude.text,/DEMO ONLY/);
+  assert.equal(r.review.claude.ok,true);
+});
