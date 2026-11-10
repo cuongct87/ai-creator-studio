@@ -84,3 +84,50 @@ Founder quyết định cuối cùng. Không tự động merge, deploy hay than
 3. Bản demo offline hoạt động khi chưa có key. Nếu chưa cấu hình Gemini Free Tier, chưa bật `--live`.
 4. Gemini CLI bằng tài khoản Google AI Pro cá nhân đã bị Google dừng hỗ trợ theo thông báo 18/06/2026; pilot này dùng **Gemini API Key Free Tier**, không dựa vào quota Gemini Pro.
 5. Tài liệu chính thức: https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals và https://ai.google.dev/gemini-api/docs/billing
+
+
+---
+
+## Bản thử giao diện tiếng Việt — v0.2 (local dashboard)
+
+**Đã thêm mã chạy thử; chưa phải bản phát hành công khai hoặc sản phẩm hoàn chỉnh.**
+
+Mở PowerShell ở thư mục experiments/ai-council trong bản ZIP của nhánh prototype/zunva-council-runtime và nhập:
+
+    node .\local-server.mjs
+
+Mở bằng Chrome hoặc Edge trên **cùng laptop**:
+
+    http://127.0.0.1:8765
+
+- Chọn **Mô phỏng**, điền nhiệm vụ, chọn 1 hoặc 2 vòng rồi bấm Bắt đầu. Mô phỏng không gọi AI và không tốn quota.
+- Chọn bản ghi trong Lịch sử để xem nội dung Codex/Gemini, sao chép báo cáo, lưu Markdown và ghi quyết định **Duyệt đề xuất / Yêu cầu chỉnh sửa**.
+- Quyết định là **biên bản** của founder, không tự động tạo/merge PR hay thay đổi code.
+- Báo cáo lưu local trong %USERPROFILE%\.zunva-council\reports trên Windows; không commit tự động lên GitHub và không truyền cho bên thứ ba.
+- Giao diện chỉ bind loopback 127.0.0.1. Không mở cổng trên router, không chia sẻ máy chủ ra Internet. Đóng cửa sổ PowerShell hoặc Ctrl+C để dừng.
+
+### Chỉ bật Live khi founder chủ động cho phép
+
+Trong **cùng PowerShell** sẽ chạy server, sau khi kiểm tra project Gemini ở Free Tier, có thể nhập key bằng prompt ẩn:
+
+    $secret = Read-Host "Gemini API key" -AsSecureString
+    $env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new("", $secret).Password
+
+Rồi **chủ động** bật LIVE:
+
+    node .\local-server.mjs --enable-live
+
+Trong giao diện, chọn LIVE, xác nhận sử dụng quota, và chỉ thử tác vụ **không chứa dữ liệu riêng**. Mỗi phiên LIVE sử dụng hạn mức Codex và Gemini; **không có trần chi phí cứng được bảo đảm** ở bản này. Đặc biệt, Gemini API Free Tier khác quyền lợi ứng dụng Google AI Pro.
+
+Khi xong, bấm Ctrl+C rồi chạy:
+
+    Remove-Item Env:\GEMINI_API_KEY
+
+**Giới hạn chưa giải quyết:** Chưa có bảng đo token/chi phí, yêu cầu phê duyệt theo từng hành động của agent, kiểm thử Chrome/Windows trên laptop founder, đăng nhập nhiều người, bảo mật triển khai công khai, hỗ trợ Kiro/Claude thật, quản lý nhiệm vụ tự động hoặc lịch chạy liên tục. Chỉ phù hợp chạy local bởi chính founder.
+
+### Kiểm thử
+GitHub Actions chạy bộ unit test và HTTP integration test hoàn toàn offline qua Node 20+:
+
+    node --test *.test.mjs
+
+Test xác nhận báo cáo mô phỏng, API host/origin, khóa LIVE mặc định, từ chối Gemini key trống và lưu quyết định local. Chưa có bằng chứng test LIVE qua UI trên laptop founder.
