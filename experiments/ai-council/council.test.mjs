@@ -54,3 +54,17 @@ test("Windows Codex rejects missing entry instead of executing npm shim", () => 
     /entry not found/
   );
 });
+
+test("live refuses absent Gemini key before any provider invocation", async () => {
+  const saved=process.env.GEMINI_API_KEY;
+  delete process.env.GEMINI_API_KEY;
+  try {
+    await assert.rejects(
+      runCouncil({task:"Can you evaluate a brief?",mode:"live",confirmUsage:true,agents:["codex","gemini"]}),
+      /GEMINI_API_KEY missing/
+    );
+  } finally {
+    if (saved===undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY=saved;
+  }
+});
