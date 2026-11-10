@@ -155,3 +155,18 @@ Test xác nhận báo cáo mô phỏng, API host/origin, khóa LIVE mặc địn
 - Kiro Free có hạn mức và một số model Claude bên trong Kiro, **không đồng nghĩa** với quyền sử dụng Claude Code hay Anthropic API độc lập.
 
 **Tình trạng:** Codex+Gemini đã qua hai vòng LIVE trên laptop founder. Claude mới có adapter, chưa có Claude Code đăng nhập. Kiro mới có phiếu việc và hướng tích hợp native, chưa tự nhận hoặc xử lý nhiệm vụ. Chưa thể gọi là phòng họp 4 AI tự động hay sản phẩm hoàn chỉnh.
+
+---
+
+## Claude làm trưởng nhóm ngay trong Kiro V3 (không cần Claude Code riêng)
+
+Tệp cấu hình native đã thêm vào PR #12:
+- `.kiro/agents/zunva-council-lead.md`: tạo custom agent **zunva-council-lead**; dùng model hợp lệ của phiên Kiro để lập kế hoạch, phân việc và tổng hợp qua Kiro subagents.
+- `experiments/ai-council/KIRO-LEAD-CONTRACT.md`: vai trò Builder / Reviewer / Tester, quy tắc kiểm thử/duyệt và giới hạn chi phí/quyền.
+- `experiments/ai-council/kiro-native.test.mjs`: test offline xác nhận cấu hình và các ràng buộc cơ bản.
+
+Sau khi Kiro đã clone nhánh `prototype/zunva-council-runtime` vào thư mục repo riêng, **mở phiên Kiro V3 mới tại thư mục gốc của repo** để Kiro nhận cấu hình agent. Trong phiên đó chọn `/agent swap zunva-council-lead` (hoặc bộ chọn Agent); dùng `/model` để xác minh model **thực sự có quyền chạy**. Nếu Opus 5.5 không khả dụng ở Kiro Free, để Auto và **không mua gói hay chuyển API có phí tự động**.
+
+Giao một lần: 'Đọc Issue #13, PR #12 và hợp đồng KIRO-LEAD-CONTRACT; chia việc cho sub-agents nếu quyền phiên cho phép, chạy test và trả báo cáo đầy đủ, không merge/deploy hoặc push chưa duyệt.'
+
+**Giới hạn quan trọng:** Cấu hình custom agent được kiểm tra về nội dung bởi Node unit test; chưa được kiểm chứng đã được Kiro V3 nhận/chạy thật trên Windows. Khi chạy native, agent trưởng nhóm có thể điều phối các subagent trong chính Kiro, nhưng **không có kết nối trực tiếp từ Claude web vào Kiro**, cũng chưa có tự động chuyển task từ dashboard ZUNVA tới Kiro. Không coi việc xuất hiện Opus trong dropdown là bằng chứng tài khoản Free đã được quyền gọi model này.
