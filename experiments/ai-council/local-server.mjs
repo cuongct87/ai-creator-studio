@@ -57,7 +57,7 @@ export async function createCouncilServer({
     const address = server.address();
     const expectedHost = "127.0.0.1:" + address.port;
     const expectedOrigin = "http://" + expectedHost;
-    if (req.headers.host !== expectedHost) return json(res,403,{error:"Invalid host"});
+    if (req.headers.host !== expectedHost) return json(res,403,{error:"Invalid host: open exactly "+expectedOrigin+" (not localhost or another name)"});
     res.setHeader("X-Frame-Options","DENY");
     res.setHeader("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
     try {

@@ -133,3 +133,80 @@ test("history keeps the 20 newest reports by timestamp and skips malformed files
   const {reports}=await resp.json();
   assert.deepEqual(reports.map(r=>r.task),Array.from({length:20},(_,i)=>"t"+(24-i)));
 });
+
+test("dashboard UI flow: run 2-round DEMO, load report, record decision, copy Kiro packet",async(t)=>{
+  const {url}=await setup(t);
+  const html=await readFile(fileURLToPath(new URL("./dashboard.html",import.meta.url)),"utf8");
+  const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+  const defaults={agent1:"codex",agent2:"gemini",mode:"demo",rounds:"1"};
+  const nodes={};
+  const makeNode=(id)=>({
+    id,textContent:"",value:defaults[id]??"",hidden:false,disabled:false,checked:false,className:"",listeners:{},children:[],
+    addEventListener(type,fn){(this.listeners[type]??=[]).push(fn)},
+    replaceChildren(){this.children=[]},
+    append(...c){this.children.push(...c)}
+  });
+  const document={
+    getElementById:(id)=>(nodes[id]??=makeNode(id)),
+    createElement:(tag)=>makeNode("<"+tag+">")
+  };
+  const copied=[];
+  const sandbox={
+    document,console,setTimeout,clearTimeout,Date,encodeURIComponent,JSON,Number,String,Object,Boolean,Error,URL,Blob,
+    navigator:{clipboard:{writeText:async(s)=>{copied.push(s)}}},
+    fetch:(path,opts)=>fetch(url+path,{...opts,headers:{...(opts?.headers??{}),...(opts?.method==="POST"?{Origin:url}:{})}})
+  };
+  vm.runInNewContext(script,sandbox,{filename:"dashboard.html"});
+  const until=async(cond,label)=>{
+    for(let i=0;i<100;i++){ if(cond()) return; await new Promise(r=>setTimeout(r,20)); }
+    assert.fail("timeout waiting for "+label);
+  };
+  const $=(id)=>document.getElementById(id);
+  await until(()=>$("liveState").textContent!=="","initial state");
+  assert.equal($("liveState").textContent,"Chỉ mô phỏng");
+  assert.equal($("run").disabled,false);
+
+  $("task").value="Kiểm thử giao diện ZUNVA";
+  $("rounds").value="2";
+  await $("form").listeners.submit[0]({preventDefault(){}});
+  await until(()=>!$("details").hidden,"report shown");
+  assert.match($("firstCodex").textContent,/DEMO ONLY/);
+  assert.match($("firstGemini").textContent,/DEMO ONLY/);
+  assert.equal($("reviewSection").hidden,false);
+  assert.match($("reviewCodex").textContent,/DEMO ONLY/);
+  assert.equal($("sessionStatus").textContent,"awaiting-approval");
+  assert.equal($("kiroPacket").disabled,true,"Kiro packet must stay locked until approval");
+  assert.equal($("count").textContent,"1");
+
+  $("decisionNote").value="Đồng ý";
+  await $("changes").listeners.click[0]();
+  await until(()=>$("sessionStatus").textContent==="changes-requested","changes-requested");
+  assert.equal($("kiroPacket").disabled,true);
+
+  await $("approve").listeners.click[0]();
+  await until(()=>$("sessionStatus").textContent==="approved","approved");
+  assert.equal($("kiroPacket").disabled,false);
+  await $("kiroPacket").listeners.click[0]();
+  assert.equal(copied.length,1);
+  assert.match(copied[0],/Kiểm thử giao diện ZUNVA/);
+  assert.match(copied[0],/KHÔNG tự merge\/deploy/);
+});
+
+test("Host header mismatch explains the exact address to open",async(t)=>{
+  const {url}=await setup(t);
+  const {request}=await import("node:http");
+  const port=new URL(url).port;
+  const body=await new Promise((ok,fail)=>{
+    const r=request({host:"127.0.0.1",port,path:"/",headers:{Host:"localhost:"+port}},(res)=>{
+      let s="";res.on("data",d=>s+=d);res.on("end",()=>ok({status:res.statusCode,s}));
+    });
+    r.on("error",fail);r.end();
+  });
+  assert.equal(body.status,403);
+  assert.match(body.s,new RegExp("open exactly http://127\\.0\\.0\\.1:"+port));
+});
+
+test("dashboard text uses neutral Vietnamese without informal pronouns",async()=>{
+  const html=await readFile(fileURLToPath(new URL("./dashboard.html",import.meta.url)),"utf8");
+  assert.doesNotMatch(html,/\b(mày|tao|Tao|tui)\b/);
+});
