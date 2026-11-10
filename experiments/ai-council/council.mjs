@@ -81,6 +81,18 @@ function decode(agent, stdout) {
 }
 export { decode };
 
+// Keep API keys and unrelated credentials out of Codex/Claude subprocesses.
+// They authenticate using their own approved local sign-in profiles.
+export function restrictedChildEnv(env=process.env) {
+  const out={};
+  for(const [name,value] of Object.entries(env)) {
+    if(/(?:API[_-]?KEY|TOKEN|PASSWORD|SECRET|CREDENTIAL|AUTHORIZATION|PRIVATE[_-]?KEY)/i.test(name)) continue;
+    if(value!==undefined) out[name]=value;
+  }
+  out.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1";
+  return out;
+}
+
 async function askReal(agent, prompt) {
   const cwd = await mkdtemp(join(tmpdir(), "zunva-council-"));
   try {
@@ -92,7 +104,7 @@ async function askReal(agent, prompt) {
       // Deliberately NEVER use a shell or an arbitrary command from the task.
       const child = spawn(command, [...prefixArgs, ...argsFor(agent,cwd)], {
         cwd, shell: false, windowsHide: true, stdio: ["pipe","pipe","pipe"],
-        env: { ...process.env, CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1" }
+        env: restrictedChildEnv(process.env)
       });
       const timer = setTimeout(() => {
         if (finished) return;
