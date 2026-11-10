@@ -30,7 +30,7 @@ async function parseBody(req) {
 function safeId(s) { return typeof s==="string" && /^[a-f0-9-]{36}$/.test(s) ? s : null; }
 
 export async function createCouncilServer({
-  port=8765, storeDir=DEFAULT_STORE, enableLive=false, runner=runCouncil, host="127.0.0.1"
+  port=8765, storeDir=DEFAULT_STORE, enableLive=false, enableClaude=false, runner=runCouncil, host="127.0.0.1"
 }={}) {
   // Never expose the council to LAN or public networks.
   if (host !== "127.0.0.1") throw new Error("ZUNVA pilot must bind to 127.0.0.1 only");
@@ -61,7 +61,7 @@ export async function createCouncilServer({
         return res.end(html);
       }
       if (req.method==="GET" && url.pathname==="/api/state") return json(res,200,{
-        busy:running,liveEnabled:enableLive,
+        busy:running,liveEnabled:enableLive,claudeEnabled:enableClaude,
         geminiKeyLoaded:Boolean(process.env.GEMINI_API_KEY?.trim()),
         reports: recent.slice(0,20).map(x=>({id:x.id,at:x.at,mode:x.mode,rounds:x.rounds,status:x.status,task:x.task.slice(0,90)}))
       });
@@ -77,13 +77,19 @@ export async function createCouncilServer({
         const task=typeof b.task==="string"?b.task.trim():"";
         const rounds=b.rounds;
         const mode=b.mode;
+        const agents=Array.isArray(b.agents)?b.agents:["codex","gemini"];
+        if(agents.length!==2 || new Set(agents).size!==2 ||
+           agents.some(a=>!["codex","gemini","claude"].includes(a))) {
+          return json(res,400,{error:"Choose two distinct supported AI agents"});
+        }
         if(!task || task.length>6000 || ![1,2].includes(rounds) || !["demo","live"].includes(mode)) return json(res,400,{error:"Invalid task, mode or rounds"});
         if (mode==="live" && (!enableLive || b.confirmUsage!==true)) return json(res,403,{error:"Enable live mode at startup and confirm quota usage"});
-        // Check the key BEFORE launching Codex to avoid spending quota on incomplete sessions.
-        if (mode==="live" && !process.env.GEMINI_API_KEY?.trim()) return json(res,400,{error:"Gemini key absent in the server process; no model was called"});
+        // Preflight all credentials before any quota is consumed.
+        if (mode==="live" && agents.includes("gemini") && !process.env.GEMINI_API_KEY?.trim()) return json(res,400,{error:"Gemini key absent in the server process; no model was called"});
+        if (mode==="live" && agents.includes("claude") && !enableClaude) return json(res,403,{error:"Claude LIVE disabled; only enable with an authorized Claude Code account"});
         running=true;
         try {
-          const report=await runner({task,mode,rounds,agents:["codex","gemini"],confirmUsage:mode==="live"});
+          const report=await runner({task,mode,rounds,agents,confirmUsage:mode==="live"});
           const status=Object.values(report.initial).every(x=>x.ok) &&
             (rounds===1 || Object.values(report.review).length===2 && Object.values(report.review).every(x=>x.ok))
             ? "awaiting-approval" : "incomplete";
@@ -119,7 +125,7 @@ export async function createCouncilServer({
   return {url:"http://127.0.0.1:"+actualPort, close:()=>new Promise(resolve=>server.close(resolve))};
 }
 if (process.argv[1] && import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
-  createCouncilServer({enableLive:process.argv.includes("--enable-live")}).then(({url})=>{
+  createCouncilServer({enableLive:process.argv.includes("--enable-live"),enableClaude:process.argv.includes("--enable-claude")}).then(({url})=>{
     console.log("ZUNVA AI Council local dashboard: "+url);
     console.log("Only this computer can connect. Ctrl+C to stop. Live quota: "+(process.argv.includes("--enable-live")?"enabled":"disabled"));
   }).catch(e=>{console.error("Unable to start Council:",safeError(e));process.exitCode=1;});
