@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -116,4 +117,19 @@ test("Vietnamese dashboard JavaScript compiles and exposes Claude/Kiro handoff",
   assert.match(html,/value="claude"/);
   assert.match(html,/id="kiroPacket"/);
   assert.match(html,/issues\/13/);
+});
+
+test("history keeps the 20 newest reports by timestamp and skips malformed files",async(t)=>{
+  const dir=await mkdtemp(join(tmpdir(),"zunva-ui-history-"));
+  for(let i=0;i<25;i++){
+    const id=randomUUID();
+    await writeFile(join(dir,"run-"+id+".json"),JSON.stringify({id,at:new Date(2026,0,1+i).toISOString(),mode:"demo",rounds:1,status:"awaiting-approval",task:"t"+i}));
+  }
+  await writeFile(join(dir,"run-"+randomUUID()+".json"),"{}");
+  const s=await createCouncilServer({port:0,storeDir:dir});
+  t.after(async()=>{await s.close();await rm(dir,{recursive:true,force:true})});
+  const resp=await fetch(s.url+"/api/state");
+  assert.equal(resp.status,200);
+  const {reports}=await resp.json();
+  assert.deepEqual(reports.map(r=>r.task),Array.from({length:20},(_,i)=>"t"+(24-i)));
 });
