@@ -8,11 +8,12 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { generateWithGemini } from "./gemini-provider.mjs";
 
 const MAX_TASK_CHARS = 6000;
 const MAX_OUTPUT = 350000;
 const TIMEOUT_MS = 150000;
-const AGENTS = new Set(["codex", "claude"]);
+const AGENTS = new Set(["codex", "claude", "gemini"]);
 const clean = (s) => String(s ?? "").replace(/\u0000/g, "").slice(0, 30000);
 const trimError = (s) => clean(s).replace(/(?:sk|api)[-_][a-z0-9_-]{16,}/gi,"[REDACTED]").slice(0,450);
 
@@ -133,7 +134,7 @@ function demoAnswer(agent, task, round, other) {
   if (round === 1) {
     return agent === "codex"
       ? "DEMO ONLY — Codex giả lập: cần xác định tiêu chí nghiệm thu, tách nhánh code và kiểm tra bảo mật cho yêu cầu: " + task.slice(0,120)
-      : "DEMO ONLY — Claude giả lập: cần bám sát ý tưởng founder, ưu tiên người dùng thực tế và hạn chế chi phí.";
+      : agent === "gemini" ? "DEMO ONLY — Gemini giả lập: cần đánh giá nhu cầu thật, giữ người dùng và kiểm soát chi phí." : "DEMO ONLY — Claude giả lập: cần bám sát ý tưởng founder, ưu tiên người dùng thực tế và hạn chế chi phí.";
   }
   return "DEMO ONLY — " + agent + " giả lập: phản biện ý kiến của AI kia, yêu cầu thêm bằng chứng thử nghiệm. Trích ý kiến: " + other.slice(0,150);
 }
@@ -144,11 +145,11 @@ function instruction(task, agent, peer) {
     (peer ? "\n\nÝ kiến AI khác cần PHẢN BIỆN, không tự động đồng thuận:\n" + peer : "");
 }
 
-export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex","claude"], confirmUsage=false }) {
+export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex","gemini"], confirmUsage=false }) {
   task = String(task ?? "").trim();
   if (!task || task.length > MAX_TASK_CHARS) throw new Error("Task must be 1–6000 characters");
   if (!Array.isArray(agents) || agents.length !== 2 || new Set(agents).size !== 2 || agents.some(a=>!AGENTS.has(a))) {
-    throw new Error("Pilot requires exactly codex and claude (two distinct engines)");
+    throw new Error("Pilot requires exactly two distinct supported engines (codex, gemini, claude)");
   }
   if (![1,2].includes(rounds)) throw new Error("rounds must be 1 or 2");
   if (!["demo","live"].includes(mode)) throw new Error("mode must be demo or live");
@@ -156,7 +157,7 @@ export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex",
   const result = { mode, rounds, task, startedAt:new Date().toISOString(), initial:{}, review:{}, status:"not-approved" };
   async function invoke(agent, prompt, round, other) {
     try {
-      return {ok:true, text:mode==="demo" ? demoAnswer(agent,task,round,other??"") : await askReal(agent,prompt)};
+      return {ok:true, text:mode==="demo" ? demoAnswer(agent,task,round,other??"") : agent === "gemini" ? await generateWithGemini(prompt) : await askReal(agent,prompt)};
     } catch (error) {return {ok:false, error:trimError(error?.message ?? error)};}
   }
   const initial = await Promise.all(agents.map(a => invoke(a,instruction(task,a),1)));
@@ -196,7 +197,7 @@ async function main(argv) {
   const value = (prefix) => argv.find(s=>s.startsWith(prefix))?.slice(prefix.length);
   if (has("--help") || has("-h")) {
     console.log("node council.mjs --task=path/to/brief.txt [--demo] [--rounds=2] [--out=report.md]");
-    console.log("Live: --live --confirm-usage (uses local Codex JS via Node on Windows; Claude CLI must be installed; may consume quota)");
+    console.log("Live: --live --confirm-usage [--agents=codex,gemini] (Gemini API uses GEMINI_API_KEY Free Tier; Codex CLI uses account quota)");
     return;
   }
   const file = value("--task=");
@@ -204,7 +205,8 @@ async function main(argv) {
   const mode = has("--live") ? "live" : "demo";
   const rounds = Number(value("--rounds=") || "1");
   const task = await readFile(resolve(file),"utf8");
-  const r = await runCouncil({task,mode,rounds,confirmUsage:has("--confirm-usage")});
+  const agents=(value("--agents=") || "codex,gemini").split(",").map(s=>s.trim());
+  const r = await runCouncil({task,mode,rounds,agents,confirmUsage:has("--confirm-usage")});
   const output = resolve(value("--out=") || "zunva-council-report.md");
   await writeFile(output,formatReport(r),"utf8");
   console.log("Wrote " + output + " | mode=" + mode + " | founder approval required");
