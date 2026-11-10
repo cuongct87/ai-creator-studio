@@ -72,3 +72,35 @@ test("incomplete response does not permit founder approval",async(t)=>{
   const d=await req("/api/decision","POST",{id:r.data.id,decision:"approved",note:""});
   assert.equal(d.status,409);
 });
+
+test("Claude is selectable in DEMO and selection is forwarded to the runner",async(t)=>{
+  let seen;
+  const fake=async(params)=>{
+    seen=params;
+    return {task:params.task,mode:"demo",rounds:1,startedAt:new Date().toISOString(),
+      initial:{codex:{ok:true,text:"DEMO ONLY Codex"},claude:{ok:true,text:"DEMO ONLY Claude"}},review:{}};
+  };
+  const {req}=await setup(t,{runner:fake});
+  const out=await req("/api/run","POST",{task:"Review the UX",mode:"demo",rounds:1,agents:["codex","claude"]});
+  assert.equal(out.status,200);
+  assert.deepEqual(seen.agents,["codex","claude"]);
+  const details=await req("/api/report?id="+out.data.id);
+  assert.ok(details.data.entry.report.initial.claude.text.includes("DEMO ONLY"));
+});
+test("Claude LIVE is forbidden unless explicitly enabled",async(t)=>{
+  const {req}=await setup(t,{enableLive:true});
+  const out=await req("/api/run","POST",{task:"Review the UX",mode:"live",rounds:1,agents:["codex","claude"],confirmUsage:true});
+  assert.equal(out.status,403);
+  assert.match(out.data.error,/Claude LIVE disabled/);
+});
+test("Kiro is not routed through this third-party Council harness",async(t)=>{
+  const {req}=await setup(t);
+  const out=await req("/api/run","POST",{task:"Review the UX",mode:"demo",rounds:1,agents:["codex","kiro"]});
+  assert.equal(out.status,400);
+  assert.match(out.data.error,/two distinct supported AI/);
+});
+test("two identical agents are rejected before any model call",async(t)=>{
+  const {req}=await setup(t);
+  const out=await req("/api/run","POST",{task:"Review the UX",mode:"demo",rounds:1,agents:["codex","codex"]});
+  assert.equal(out.status,400);
+});
