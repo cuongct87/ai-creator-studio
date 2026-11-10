@@ -157,7 +157,34 @@ function instruction(task, agent, peer) {
     (peer ? "\n\nÝ kiến AI khác cần PHẢN BIỆN, không tự động đồng thuận:\n" + peer : "");
 }
 
-export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex","gemini"], confirmUsage=false }) {
+// Check Claude credentials without sending a model prompt or consuming Claude tokens.
+// Claude Free accounts do not automatically include Claude Code.
+export async function checkClaudeAuthentication({
+  platform=process.platform, spawnImpl=spawn, timeoutMs=8000
+}={}) {
+  const command=platform==="win32"?"claude.exe":"claude";
+  return await new Promise(resolveResult=>{
+    let done=false, raw="";
+    let timer;
+    const finish=value=>{if(done)return;done=true;clearTimeout(timer);resolveResult(value);};
+    let child;
+    try{
+      child=spawnImpl(command,["auth","status"],{
+        shell:false,windowsHide:true,stdio:["ignore","pipe","ignore"],
+        env:restrictedChildEnv(process.env)
+      });
+    }catch {finish(false);return;}
+    timer=setTimeout(()=>{child.kill();finish(false);},timeoutMs);
+    child.stdout.on("data",chunk=>{raw+=String(chunk);if(raw.length>6000){child.kill();finish(false);}});
+    child.on("error",()=>finish(false));
+    child.on("close",code=>{
+      if(code!==0)return finish(false);
+      try {finish(JSON.parse(raw).loggedIn === true);} catch {finish(false);}
+    });
+  });
+}
+
+export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex","gemini"], confirmUsage=false, claudeAuthCheck=checkClaudeAuthentication }) {
   task = String(task ?? "").trim();
   if (!task || task.length > MAX_TASK_CHARS) throw new Error("Task must be 1–6000 characters");
   if (!Array.isArray(agents) || agents.length !== 2 || new Set(agents).size !== 2 || agents.some(a=>!AGENTS.has(a))) {
@@ -169,6 +196,9 @@ export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex",
   // Preflight BEFORE any agent call. Avoid charging Codex quota when Gemini has no key.
   if (mode === "live" && agents.includes("gemini") && !process.env.GEMINI_API_KEY?.trim()) {
     throw new Error("GEMINI_API_KEY missing in this terminal session; no AI called. Load it locally, then retry only once.");
+  }
+  if (mode === "live" && agents.includes("claude") && !(await claudeAuthCheck())) {
+    throw new Error("Claude Code is not authenticated. Paid subscription or authorized API access required; no AI called.");
   }
   const result = { mode, rounds, task, startedAt:new Date().toISOString(), initial:{}, review:{}, status:"not-approved" };
   async function invoke(agent, prompt, round, other) {
