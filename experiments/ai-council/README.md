@@ -14,7 +14,7 @@
 
 - Node.js 20+ để chạy script. **Không cần pnpm, không cần cài MausBot, không cần tắt Smart App Control**.
 - Mặc định DEMO không gọi mạng, không gọi AI, không tốn quota.
-- Chế độ LIVE: cần Codex CLI và Claude Code CLI bản native executable trên máy, đã đăng nhập; chi phí/hạn mức tùy tài khoản. Trên Windows script gọi codex.exe và claude.exe, không qua shell. Nếu máy chỉ có shim .cmd, LIVE chưa hỗ trợ; không tắt bảo vệ Windows để ép chạy.
+- Chế độ LIVE: cần Codex CLI và Claude Code CLI trên máy, đã đăng nhập; chi phí/hạn mức tùy tài khoản. Trên Windows, **Codex npm được gọi qua `node.exe` và file JS tại `%APPDATA%\\npm\\node_modules\\@openai\\codex\\bin\\codex.js`**, không dùng PowerShell `.ps1` hay `codex.cmd`. Claude vẫn cần CLI phù hợp đã cài; việc máy có Codex không đồng nghĩa đã có Claude. Không tắt bảo vệ Windows để ép chạy.
 - LIVE phải thêm --live --confirm-usage. Chưa có cách bảo đảm giới hạn tiền API ở tầng nhà cung cấp, nên dùng tài khoản có hạn mức riêng.
 
 ## Chạy thử bằng demo (không dùng AI thật)
@@ -60,3 +60,11 @@ Sau khi kiểm tra các CLI native, đăng nhập, và đồng ý dùng quota:
 4. Sau đó mới mở giao diện web local; tuyệt đối không công khai server khi chưa kiểm tra bảo mật.
 
 Founder quyết định cuối cùng. Không tự động merge, deploy hay thanh toán.
+
+## Kiểm tra cài đặt Windows của founder (10/11/2026)
+
+- Đã xác nhận từ PowerShell: `node --version` = 26.13.0, `codex.cmd --version` = 0.167.0, `codex.cmd login status` = Logged in using ChatGPT.
+- `Test-Path "$env:APPDATA\\npm\\node_modules\\@openai\\codex\\bin\\codex.js"` = True.
+- `claude --version` chưa nhận diện, nghĩa là chưa có Claude Code CLI trong PATH.
+- **Bước kiểm tra tiếp theo không tiêu lượt AI:** `node "$env:APPDATA\\npm\\node_modules\\@openai\\codex\\bin\\codex.js" --version`.
+- Chưa chạy thử LIVE hai agent trên laptop. Không chạy LIVE trước khi Claude Code được cài và xác nhận quota.
