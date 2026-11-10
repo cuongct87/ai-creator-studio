@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { argsFor, decode, formatReport, launchFor, runCouncil } from "./council.mjs";
+import { argsFor, decode, formatReport, launchFor, restrictedChildEnv, runCouncil } from "./council.mjs";
 
 test("demo produces two opinions and two critiques without credentials", async () => {
   const r = await runCouncil({task:"Giúp người dùng viết prompt ảnh",mode:"demo",rounds:2});
@@ -67,4 +67,20 @@ test("live refuses absent Gemini key before any provider invocation", async () =
     if (saved===undefined) delete process.env.GEMINI_API_KEY;
     else process.env.GEMINI_API_KEY=saved;
   }
+});
+
+test("CLI child environment strips sensitive API keys and tokens", () => {
+  const env=restrictedChildEnv({
+    PATH:"C:/Windows/System32",APPDATA:"C:/Users/demo/AppData/Roaming",
+    GEMINI_API_KEY:"DO_NOT_PASS",GOOGLE_API_KEY:"DO_NOT_PASS",
+    OPENAI_API_KEY:"DO_NOT_PASS",GH_TOKEN:"DO_NOT_PASS",
+    MY_SECRET:"DO_NOT_PASS",USERPROFILE:"C:/Users/demo"
+  });
+  assert.equal(env.PATH,"C:/Windows/System32");
+  assert.equal(env.USERPROFILE,"C:/Users/demo");
+  assert.equal(env.GEMINI_API_KEY,undefined);
+  assert.equal(env.GOOGLE_API_KEY,undefined);
+  assert.equal(env.OPENAI_API_KEY,undefined);
+  assert.equal(env.GH_TOKEN,undefined);
+  assert.equal(env.MY_SECRET,undefined);
 });
