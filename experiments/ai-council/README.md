@@ -131,3 +131,27 @@ GitHub Actions chạy bộ unit test và HTTP integration test hoàn toàn offli
     node --test *.test.mjs
 
 Test xác nhận báo cáo mô phỏng, API host/origin, khóa LIVE mặc định, từ chối Gemini key trống và lưu quyết định local. Chưa có bằng chứng test LIVE qua UI trên laptop founder.
+
+
+---
+
+## Thành viên Claude và Kiro — 10/11/2026
+
+### Claude Code (adapter tùy chọn)
+
+- Chọn codex+claude hoặc gemini+claude trong DEMO: ghi nhãn mô phỏng.
+- LIVE chỉ khi có quyền Claude Code hợp lệ. Lệnh claude auth status phải xác nhận loggedIn: true. Gói Claude Free hiện không đủ điều kiện; không dùng key API trôi nổi.
+- LIVE bật thủ công: node .\local-server.mjs --enable-live --enable-claude
+- Runtime kiểm tra Claude CLI trước khi gọi AI bất kỳ. Không nhận đủ quyền thì từ chối; không tiêu quota Codex/Gemini.
+- Khi founder được phép, có thể thử CLI: node council.mjs --task=brief.txt --live --confirm-usage --agents=codex,claude --rounds=1 --out=report-claude.md
+- **Chưa kiểm thử Claude LIVE trên máy founder.**
+
+### Kiro (chuyển phiếu native, không route subscription)
+
+- Kiro hỗ trợ IDE và CLI riêng, với tài khoản/credits khác Claude. Theo Kiro FAQ https://kiro.dev/faq/ , không được dùng hạn mức Kiro subscription qua third-party automation harness. Do đó ZUNVA AI Council không được dùng Kiro CLI làm backend trái quy định.
+- Phiếu Kiro: https://github.com/cuongct87/ai-creator-studio/issues/13
+- Giao diện ZUNVA cung cấp nút Sao chép phiếu giao Kiro cho nhiệm vụ đã được founder duyệt. Founder/nhân sự đưa vào Kiro IDE/CLI chính thức; Kiro tạo PR riêng và bằng chứng test theo workflow của Kiro. Nút sao chép không gửi tự động.
+- Khi founder muốn dùng Kiro thực, kiểm tra bằng kiro-cli whoami (không dùng model) và hạn mức còn lại trước. Không dùng --trust-all-tools hoặc cloud session nếu chưa được duyệt.
+- Kiro Free có hạn mức và một số model Claude bên trong Kiro, **không đồng nghĩa** với quyền sử dụng Claude Code hay Anthropic API độc lập.
+
+**Tình trạng:** Codex+Gemini đã qua hai vòng LIVE trên laptop founder. Claude mới có adapter, chưa có Claude Code đăng nhập. Kiro mới có phiếu việc và hướng tích hợp native, chưa tự nhận hoặc xử lý nhiệm vụ. Chưa thể gọi là phòng họp 4 AI tự động hay sản phẩm hoàn chỉnh.
