@@ -15,8 +15,8 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
-      - name: Unit tests (no network, no model calls)
-        run: node --test experiments/ai-council/council.test.mjs
+      - name: Unit and local HTTP integration tests (no model calls)
+        run: node --test experiments/ai-council/*.test.mjs
       - name: CLI smoke test (demo only)
         run: |
           printf 'ZUNVA: test offline Council pilot\n' > /tmp/zunva-council-brief.txt
