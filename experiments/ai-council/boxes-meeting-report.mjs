@@ -19,6 +19,7 @@ export function inspectMeeting(meeting) {
     throw new Error('Expected 2–4 participant records');
   }
   const seen = new Set();
+  const participantThreads = new Set();
   const problems = [];
   for (const p of meeting.participants) {
     const agent = asStr(p?.agent).toLowerCase();
@@ -27,15 +28,31 @@ export function inspectMeeting(meeting) {
     if (p?.mode !== 'LIVE') problems.push(`${agent}: chưa chứng minh là AI LIVE`);
     if (p?.status !== 'completed') problems.push(`${agent}: chưa xác nhận lượt chạy hoàn thành`);
     if (!asStr(p?.threadId)) problems.push(`${agent}: thiếu thread ID`);
+    else if (participantThreads.has(asStr(p.threadId))) problems.push(`${agent}: thread ID trùng với AI khác, chưa chứng minh chạy độc lập`);
+    else participantThreads.add(asStr(p.threadId));
     if (!asStr(p?.response)) problems.push(`${agent}: thiếu câu trả lời thực tế`);
     if (agent === 'kiro' && p?.provider !== 'kiro-native') problems.push('Kiro chưa có bằng chứng chạy bằng cơ chế Kiro chính thức');
   }
   const debates = Array.isArray(meeting.crossReviews) ? meeting.crossReviews : [];
-  if (debates.length < 2) problems.push('Chưa đủ 2 lượt phản biện chéo có bằng chứng');
+  const reviewed = new Set();
+  if (debates.length < seen.size) problems.push('Chưa đủ lượt phản biện độc lập từ từng AI');
   for (const r of debates) {
-    if (!seen.has(asStr(r?.agent).toLowerCase()) || !asStr(r?.response) || !asStr(r?.threadId)) {
+    const reviewer = asStr(r?.agent).toLowerCase();
+    const target = asStr(r?.targetAgent).toLowerCase();
+    if (!seen.has(reviewer) || !asStr(r?.response) || !asStr(r?.threadId)) {
       problems.push('Có lượt phản biện thiếu agent, nội dung hoặc thread ID');
     }
+    if (reviewed.has(reviewer)) problems.push(`${reviewer}: có nhiều lượt phản biện nhưng không thay thế được ý kiến AI khác`);
+    else reviewed.add(reviewer);
+    if (!seen.has(target) || target === reviewer) {
+      problems.push(`${reviewer}: phải nêu targetAgent là AI khác trong cùng cuộc họp`);
+    }
+    if (r?.mode !== 'LIVE' || r?.status !== 'completed') {
+      problems.push(`${reviewer}: chưa chứng minh lượt phản biện đã hoàn thành ở chế độ LIVE`);
+    }
+  }
+  for (const agent of seen) {
+    if (!reviewed.has(agent)) problems.push(`${agent}: thiếu lượt phản biện chéo`);
   }
   return { status: problems.length ? 'CHƯA ĐỦ BẰNG CHỨNG' : 'CHỜ FOUNDER NGHIỆM THU', problems };
 }
@@ -57,7 +74,7 @@ export function renderFounderReport(meeting) {
   }
   parts.push('## Phản biện chéo');
   if (Array.isArray(meeting.crossReviews) && meeting.crossReviews.length) {
-    for (const r of meeting.crossReviews) parts.push(`### ${clean(r.agent || '?')} phản biện`, `- Thread: ${clean(r.threadId || 'chưa có')}`, clean(r.response || 'CHƯA CÓ'), '');
+    for (const r of meeting.crossReviews) parts.push(`### ${clean(r.agent || '?')} phản biện ${clean(r.targetAgent || 'CHƯA RÕ ĐỐI TƯỢNG')}`, `- Thread: ${clean(r.threadId || 'chưa có')}`, `- Trạng thái: ${r.mode === 'LIVE' && r.status === 'completed' ? 'LIVE completed' : 'CHƯA XÁC NHẬN'}`, clean(r.response || 'CHƯA CÓ'), '');
   } else parts.push('CHƯA CÓ phản biện chéo.', '');
   parts.push('## Đồng thuận / bất đồng / rủi ro',
     `- Đồng thuận: ${clean(meeting.consensus || 'Chưa được tổng hợp')}`,
