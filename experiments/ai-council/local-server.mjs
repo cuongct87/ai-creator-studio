@@ -38,11 +38,18 @@ export async function createCouncilServer({
   let running = false;
   const recent = [];
   // Reports are local-only, with no API secrets in the saved files.
-  const names = (await readdir(storeDir)).filter(x=>/^run-[a-f0-9-]{36}\.json$/.test(x)).sort().reverse().slice(0,20);
+  // File names are random UUIDs, so recency must come from the stored timestamp,
+  // not from the name. Entries with an unexpected shape are skipped so one bad
+  // file cannot break the dashboard.
+  const validEntry = (d) => d && typeof d==="object" && safeId(d.id) && typeof d.at==="string" &&
+    typeof d.task==="string" && typeof d.mode==="string" && typeof d.status==="string" &&
+    Number.isFinite(d.rounds);
+  const names = (await readdir(storeDir)).filter(x=>/^run-[a-f0-9-]{36}\.json$/.test(x));
   for (const name of names) {
-    try { const data = JSON.parse(await readFile(join(storeDir,name),"utf8")); recent.push(data); } catch { /* ignore broken local report */ }
+    try { const data = JSON.parse(await readFile(join(storeDir,name),"utf8")); if (validEntry(data)) recent.push(data); } catch { /* ignore broken local report */ }
   }
   recent.sort((a,b)=>b.at.localeCompare(a.at));
+  recent.splice(20);
   const save = async (entry) => {
     await writeFile(join(storeDir,"run-"+entry.id+".json"),JSON.stringify(entry,null,2),{encoding:"utf8",mode:0o600});
   };
@@ -50,7 +57,7 @@ export async function createCouncilServer({
     const address = server.address();
     const expectedHost = "127.0.0.1:" + address.port;
     const expectedOrigin = "http://" + expectedHost;
-    if (req.headers.host !== expectedHost) return json(res,403,{error:"Invalid host"});
+    if (req.headers.host !== expectedHost) return json(res,403,{error:"Invalid host: open exactly "+expectedOrigin+" (not localhost or another name)"});
     res.setHeader("X-Frame-Options","DENY");
     res.setHeader("Content-Security-Policy","default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'");
     try {

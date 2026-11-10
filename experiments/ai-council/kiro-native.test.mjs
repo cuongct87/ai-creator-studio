@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 test("Kiro V3 lead config loads with a scoped delegation contract",async()=>{
   const agent=await readFile(new URL("../../.kiro/agents/zunva-council-lead.md",import.meta.url),"utf8");
   const contract=await readFile(new URL("./KIRO-LEAD-CONTRACT.md",import.meta.url),"utf8");
-  assert.match(agent,/^---\nname: zunva-council-lead\n/);
+  assert.match(agent,/^---\r?\nname: zunva-council-lead\r?\n/);
   assert.match(agent,/file:\/\/\.\/experiments\/ai-council\/KIRO-LEAD-CONTRACT\.md/);
   assert.match(agent,/sub-agents|subagents/);
   assert.match(contract,/Builder/);

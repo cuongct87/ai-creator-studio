@@ -156,6 +156,11 @@ Test xác nhận báo cáo mô phỏng, API host/origin, khóa LIVE mặc địn
 
 **Tình trạng:** Codex+Gemini đã qua hai vòng LIVE trên laptop founder. Claude mới có adapter, chưa có Claude Code đăng nhập. Kiro mới có phiếu việc và hướng tích hợp native, chưa tự nhận hoặc xử lý nhiệm vụ. Chưa thể gọi là phòng họp 4 AI tự động hay sản phẩm hoàn chỉnh.
 
+## Lưu ý khi mở bảng điều khiển
+
+- Hãy mở đúng địa chỉ `http://127.0.0.1:8765`. Địa chỉ `http://localhost:8765` và tên máy khác bị từ chối có chủ đích (chống truy cập chéo); thông báo lỗi sẽ chỉ rõ địa chỉ cần mở.
+- Lịch sử hiển thị 20 phiên gần nhất theo thời gian; tệp lịch sử hỏng hoặc sai cấu trúc sẽ bị bỏ qua thay vì làm lỗi bảng điều khiển.
+
 ---
 
 ## Claude làm trưởng nhóm ngay trong Kiro V3 (không cần Claude Code riêng)
