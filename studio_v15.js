@@ -335,6 +335,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       "Lọc mẫu theo danh mục":["Filter templates by category","Filtrar plantillas por categoría"],
       "Vùng thiết kế kéo thả chữ":["Design area: drag text","Área de diseño: arrastra el texto"]
     });
+    Object.assign(studioStrings,{"Ngôn ngữ": ["Language", "Idioma"], "Khóa API Gemini (tùy chọn)": ["Gemini API key (optional)", "Clave API de Gemini (opcional)"], "Khóa chỉ dùng trên máy bạn, không lưu và không đưa vào file xuất. Nhập khóa ở tab AI khi chọn Gemini.": ["The key stays on your device, is never saved and never goes into exported files. Enter it in the AI tab when you pick Gemini.", "La clave solo se usa en tu dispositivo, no se guarda ni se incluye en los archivos exportados. Introdúcela en la pestaña IA al elegir Gemini."], "Mở tab AI": ["Open AI tab", "Abrir pestaña IA"], "Sao lưu dự án": ["Project backup", "Copia de proyectos"], "Tạo file JSON chứa tất cả dự án đã lưu, hoặc nhập lại từ file đó. Dự án trùng mã được giữ nguyên.": ["Create a JSON file with all saved projects, or import it back. Projects with the same ID are kept as they are.", "Crea un archivo JSON con todos los proyectos guardados o impórtalo de nuevo. Los proyectos con el mismo ID se mantienen."], "Xuất tất cả dự án": ["Export all projects", "Exportar todos los proyectos"], "Nhập bản sao lưu": ["Import backup", "Importar copia"], "Đã xuất bản sao lưu.": ["Backup exported.", "Copia exportada."], "Chưa có dự án nào để xuất.": ["No projects to export yet.", "Aún no hay proyectos para exportar."], "Đã nhập bản sao lưu.": ["Backup imported.", "Copia importada."], "Không có dự án mới để nhập.": ["No new projects to import.", "No hay proyectos nuevos para importar."], "File sao lưu không hợp lệ hoặc quá lớn.": ["The backup file is invalid or too large.", "El archivo de copia no es válido o es demasiado grande."], "Không đủ bộ nhớ để nhập. Xóa bớt dự án rồi thử lại.": ["Not enough storage to import. Delete some projects and try again.", "No hay espacio suficiente para importar. Elimina proyectos e inténtalo de nuevo."]});
     function studioText(vi) {
       var code=$('language')?$('language').value:'vi';
       if(code==='vi')return vi;
@@ -365,6 +366,7 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
       renderSaved();
       refreshGallery();
       if(bottomNav)bottomNav.setAttribute('aria-label',studioText('Điều hướng chính'));
+      if($('z-acc-msg')&&$('z-acc-msg').dataset.original)$('z-acc-msg').textContent=studioText($('z-acc-msg').dataset.original);
       if($('z-filters'))$('z-filters').setAttribute('aria-label',studioText('Lọc mẫu theo danh mục'));
       if($('z-canvas'))$('z-canvas').setAttribute('aria-label',studioText('Vùng thiết kế kéo thả chữ'));
       if($('z-fab'))$('z-fab').setAttribute('aria-label',studioText('Tạo mới'));
@@ -671,7 +673,12 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     // P3 task 2: Account placeholder panel + fixed bottom bar. Switching uses showTab() from script.js.
     var account=document.createElement('section');
     account.id='account';account.className='panel hidden';
-    account.innerHTML='<h2>Tài khoản</h2><p>Cài đặt sắp ra mắt.</p>';
+    account.innerHTML='<h2>Tài khoản</h2>'+
+      '<h3>Ngôn ngữ</h3><div id="z-acc-lang"></div>'+
+      '<h3>Khóa API Gemini (tùy chọn)</h3><p>Khóa chỉ dùng trên máy bạn, không lưu và không đưa vào file xuất. Nhập khóa ở tab AI khi chọn Gemini.</p><button type="button" class="z-smallbtn" id="z-acc-ai">Mở tab AI</button>'+
+      '<h3>Sao lưu dự án</h3><p>Tạo file JSON chứa tất cả dự án đã lưu, hoặc nhập lại từ file đó. Dự án trùng mã được giữ nguyên.</p>'+
+      '<button type="button" class="z-smallbtn" id="z-acc-export">Xuất tất cả dự án</button> <button type="button" class="z-smallbtn" id="z-acc-import">Nhập bản sao lưu</button>'+
+      '<input type="file" id="z-acc-file" accept="application/json,.json" hidden><p id="z-acc-msg" role="status"></p>';
     main.insertBefore(account,main.querySelector('footer'));
     var bottomNav=document.createElement('nav');
     bottomNav.className='z-bottomnav';
@@ -682,6 +689,37 @@ Nếu dùng AI, ưu tiên bảo toàn tính chân thực và kiểm tra bản g�
     }).join('');
     document.body.append(bottomNav);
     recordStudioUI(account);recordStudioUI(bottomNav);
+    // Language selector lives in the Account tab (moving the node keeps its id and listeners).
+    (function(){var host=$('z-acc-lang'),sel=$('language');if(host&&sel){sel.style.width='100%';host.appendChild(sel);}})();
+    function accMsg(vi){var m=$('z-acc-msg');m.dataset.original=vi;m.textContent=studioText(vi);}
+    $('z-acc-ai').onclick=function(){if(typeof showTab==='function')showTab('ai');};
+    $('z-acc-export').onclick=function(){
+      var list=readSaved();
+      if(!list.length){accMsg('Chưa có dự án nào để xuất.');return;}
+      var blob=new Blob([JSON.stringify({type:'zunva-backup',version:1,projects:list})],{type:'application/json'});
+      var url=URL.createObjectURL(blob);download(url,'zunva-backup-'+Date.now()+'.json');setTimeout(function(){URL.revokeObjectURL(url);},5000);
+      accMsg('Đã xuất bản sao lưu.');
+    };
+    $('z-acc-import').onclick=function(){$('z-acc-file').click();};
+    $('z-acc-file').onchange=function(){
+      var file=this.files&&this.files[0];this.value='';
+      if(!file)return;
+      if(file.size>8*1024*1024){accMsg('File sao lưu không hợp lệ hoặc quá lớn.');return;}
+      var reader=new FileReader();
+      reader.onload=function(){
+        try{
+          var data=JSON.parse(reader.result);
+          if(!data||data.type!=='zunva-backup'||data.version!==1||!Array.isArray(data.projects))throw new Error('bad');
+          var cur=readSaved(),ids={};cur.forEach(function(p){ids[p.id]=1;});
+          var add=data.projects.filter(function(p){return p&&typeof p.id==='string'&&!ids[p.id]&&p.design&&p.design.version===1&&Array.isArray(p.design.layers)&&p.design.layers.length<=100;});
+          if(!add.length){accMsg('Không có dự án mới để nhập.');return;}
+          if(!writeSaved(cur.concat(add))){accMsg('Không đủ bộ nhớ để nhập. Xóa bớt dự án rồi thử lại.');return;}
+          renderSaved();accMsg('Đã nhập bản sao lưu.');
+        }catch(e){accMsg('File sao lưu không hợp lệ hoặc quá lớn.');}
+      };
+      reader.onerror=function(){accMsg('File sao lưu không hợp lệ hoặc quá lớn.');};
+      reader.readAsText(file);
+    };
     // Hide the bottom bar while the editor is visible. Observing classes keeps editor code unchanged.
     function syncEditing(){
       document.body.classList.toggle('z-editing',!panel.classList.contains('hidden')&&!$('z-editor').classList.contains('z-hidden'));
