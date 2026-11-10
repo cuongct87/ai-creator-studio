@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>ZUNVA AI Council — Phòng họp nội bộ</title>
+<style>
+:root{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;background:#0b101b;color:#eef5ff;font-size:15px}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 100% 0%,#1a3d4f 0%,#0b101b 45%);line-height:1.55}
+a{color:#97ddfb}button,textarea,select,input{font:inherit}
+button{cursor:pointer;border-radius:10px;padding:10px 15px;color:#eaf5ff;background:#223345;border:1px solid #506479;font-weight:600}
+button:hover:not(:disabled){background:#304b61}button:disabled{opacity:.42;cursor:not-allowed}
+button.primary{background:#61ddb5;color:#05271e;border:1px solid #61ddb5}
+button.warn{background:#4b3434}
+.layout{max-width:1320px;margin:0 auto;padding:22px 18px 48px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:23px;flex-wrap:wrap}
+.brand{font-weight:900;font-size:21px;letter-spacing:.12em;color:#80efc4}
+.caption{color:#9fb0c5;font-size:13px}
+.nav{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.pill{border:1px solid #35576a;background:#142a36;border-radius:999px;padding:5px 12px;font-size:12px;color:#a2e3dc}
+h1{font-size:clamp(24px,4vw,35px);line-height:1.18;margin:6px 0 12px}
+h2{font-size:18px;margin:0 0 12px}h3{font-size:15px;margin:15px 0 8px}
+.subtitle{color:#b2c2d4;max-width:800px;margin-bottom:23px}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.stat,.panel{background:#141f2e;border:1px solid #35475a;border-radius:15px;padding:18px;min-width:0}
+.stat strong{display:block;font-size:20px;margin-top:4px}
+.stat span{font-size:12px;color:#aebdd0}
+.main{display:grid;grid-template-columns: minmax(300px,420px) minmax(0,1fr);gap:16px;align-items:start}
+.panel{margin-bottom:15px}
+label{display:block;font-size:14px;font-weight:650;margin:12px 0 7px}
+textarea,select,input[type=text]{display:block;width:100%;border-radius:10px;background:#0d1724;color:#f2f8ff;border:1px solid #4e6175;padding:11px 12px}
+textarea{min-height:130px;resize:vertical}
+textarea:focus,select:focus,input:focus{outline:2px solid #75eac1;outline-offset:1px}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.note{font-size:12px;color:#aabed1}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:15px}
+.checkline{display:flex;align-items:start;gap:9px;font-size:13px;margin:14px 0;color:#d1e1ed}
+.checkline input{margin-top:4px;accent-color:#69e8bb}
+.status{margin-top:12px;min-height:24px;color:#bcebd7}
+.history{display:flex;flex-direction:column;gap:7px;max-height:360px;overflow:auto}
+.history button{width:100%;text-align:left;background:#0f1b2a;border:1px solid #34475a;font-weight:400}
+.history button.selected{border-color:#68dcb8}
+.rowline{display:flex;justify-content:space-between;gap:10px}
+.mini{font-size:11px;color:#a8bad0}
+.reportgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.agent{min-width:0;border-radius:12px;border:1px solid #3d5267;background:#0f1928;padding:14px}
+.agent h3{margin:0 0 7px;color:#80e4bd;letter-spacing:.02em}
+.agent pre,.report pre{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.6 system-ui,sans-serif;margin:0;color:#e6f1fd}
+.agent p{margin:0;color:#a7bacd}
+.sectiontitle{color:#b1c8dd;text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:12px;margin:16px 0 10px}
+fieldset{border:0;padding:0;margin:0}fieldset[disabled]{opacity:.6}
+.tag{font-size:12px;color:#7ef0c5}
+.chip{font-size:11px;background:#203348;border:1px solid #3a536d;padding:3px 8px;border-radius:7px;color:#d0deec}
+footer{font-size:12px;color:#96abc0;max-width:940px;margin-top:18px}
+[hidden]{display:none!important}
+@media(max-width:900px){.main{grid-template-columns:1fr}.cards{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:580px){.layout{padding:15px 12px}.cards{grid-template-columns:1fr}.reportgrid,.controls{grid-template-columns:1fr}}
+</style></head>
+<body><div class="layout">
+<header class="top"><div><div class="brand">ZUNVA ✦</div><div class="caption">AI Creator Studio · Hội đồng AI nội bộ</div></div><div class="nav"><span class="pill">Chạy riêng trên máy</span><span class="caption" id="now">Chưa tải trạng thái</span></div></header>
+<h1>Phòng họp ZUNVA AI Council</h1>
+<p class="subtitle">Giao nhiệm vụ, cho Codex và Gemini phân tích độc lập, phản biện chéo và trình chủ dự án duyệt. Chạy thử mô phỏng miễn phí trước; phiên LIVE chỉ chạy khi mày bật chế độ và xác nhận dùng hạn mức.</p>
+<div class="cards">
+<div class="stat"><span>ĐỘI HÌNH THỬ NGHIỆM</span><strong>Codex + Gemini</strong><span>Claude/Kiro chưa kết nối</span></div>
+<div class="stat"><span>CHẾ ĐỘ</span><strong id="liveState">Đang kiểm tra</strong><span>LIVE mặc định bị khóa</span></div>
+<div class="stat"><span>BÁO CÁO ĐÃ LƯU</span><strong id="count">0</strong><span>Chỉ trong máy đang chạy</span></div>
+</div>
+<div class="main">
+<aside>
+<section class="panel">
+<h2>Giao nhiệm vụ</h2>
+<form id="form">
+<label for="task">Yêu cầu của chủ dự án</label>
+<textarea id="task" maxlength="6000" required placeholder="Ví dụ: Đề xuất một cách giúp người dùng ZUNVA tạo sản phẩm đầu tiên nhanh hơn mà không tăng chi phí API."></textarea>
+<div class="controls">
+<div><label for="mode">Chế độ</label><select id="mode"><option value="demo">Mô phỏng (0 quota)</option><option value="live">LIVE (dùng hạn mức)</option></select></div>
+<div><label for="rounds">Số vòng</label><select id="rounds"><option value="1">1 — Hai ý kiến độc lập</option><option value="2">2 — Có phản biện chéo</option></select></div>
+</div>
+<div id="quotaNotice" class="note" style="margin-top:11px">Chế độ mô phỏng không gọi AI thật.</div>
+<label class="checkline" id="confirmWrap" hidden><input type="checkbox" id="confirm"><span>Tao hiểu lệnh này gọi AI thật, có thể dùng quota và chỉ gửi nội dung không nhạy cảm.</span></label>
+<div class="actions"><button type="submit" class="primary" id="run">Bắt đầu phiên họp</button></div>
+<div class="status" id="status" role="status" aria-live="polite"></div>
+</form></section>
+<section class="panel">
+<h2>Lịch sử trên máy</h2>
+<p class="note">Bản ghi lưu tại thư mục người dùng <code>.zunva-council/reports</code>, không đăng GitHub. Chỉ hiển thị 20 phiên gần nhất.</p>
+<div class="history" id="history"><p class="note">Chưa có phiên nào.</p></div>
+</section>
+</aside>
+<main>
+<section class="panel" id="empty">
+<h2>Kết quả họp</h2><p class="note">Chọn một bản báo cáo trong lịch sử, hoặc bấm bắt đầu phiên họp. Demo cho phép thử giao diện mà không cần API key.</p>
+</section>
+<section class="panel" id="details" hidden>
+<div class="rowline"><h2>Biên bản cuộc họp</h2><span id="sessionStatus" class="chip"></span></div>
+<p id="sessionMeta" class="note"></p><p id="sessionTask"></p>
+<div class="sectiontitle">Vòng 1 · Phân tích độc lập</div><div class="reportgrid"><div class="agent"><h3>Codex</h3><pre id="firstCodex"></pre></div><div class="agent"><h3>Gemini</h3><pre id="firstGemini"></pre></div></div>
+<div id="reviewSection" hidden><div class="sectiontitle">Vòng 2 · Phản biện chéo</div><div class="reportgrid"><div class="agent"><h3>Codex phản biện Gemini</h3><pre id="reviewCodex"></pre></div><div class="agent"><h3>Gemini phản biện Codex</h3><pre id="reviewGemini"></pre></div></div></div>
+<div class="sectiontitle">Founder phê duyệt</div>
+<p class="note">Duyệt chỉ ghi lại quyết định; không chạy code, không merge, không deploy.</p>
+<label for="decisionNote">Ghi chú / yêu cầu sửa</label><textarea id="decisionNote" maxlength="1000" style="min-height:70px"></textarea>
+<div class="actions"><button id="approve" class="primary" type="button">Duyệt đề xuất</button><button id="changes" type="button" class="warn">Yêu cầu chỉnh sửa</button><button id="copy" type="button">Sao chép báo cáo</button><button id="download" type="button">Lưu báo cáo .md</button></div>
+<div class="status" id="decisionStatus" role="status"></div>
+</section>
+</main></div>
+<footer>Đây là bản thử nội bộ v0.2, không phải dịch vụ công khai. API key được đọc từ biến môi trường của tiến trình máy chủ, không hiển thị trên giao diện. Không nhập mã nguồn riêng, dữ liệu khách hàng hoặc bí mật vào Gemini API Free Tier. Mỗi kết quả là đề xuất, không phải công việc đã được AI tự thực hiện.</footer>
+</div>
+<script>
+(()=>{
+"use strict";
+const el=id=>document.getElementById(id);
+let active=null, busy=false, state=null;
+const text=(id,value)=>{el(id).textContent=String(value??"")};
+function showError(e){text("status",e.message||String(e))}
+async function req(path,options){
+const res=await fetch(path,{cache:"no-store",...options});
+const data=await res.json();
+if(!res.ok)throw new Error(data.error||("HTTP "+res.status));
+return data;
+}
+function resultText(r,agent){const x=r?.[agent];return x ? x.ok ? x.text : "KHÔNG CHẠY ĐƯỢC: "+x.error : "(không có kết quả)"}
+function setBusy(x){busy=x;el("run").disabled=x;text("run",x?"Đang chạy phiên họp…":"Bắt đầu phiên họp")}
+function updateMode(){
+const live=el("mode").value==="live";
+el("confirmWrap").hidden=!live;el("quotaNotice").textContent=live
+?"LIVE cần key Gemini trong PowerShell chạy server và chủ động cho phép sử dụng quota. Không có giới hạn tiền API tuyệt đối."
+:"Mô phỏng hoàn toàn offline, không gọi AI và không tốn quota.";
+const canLive=Boolean(state?.liveEnabled&&state?.geminiKeyLoaded);
+if(live&&!canLive) {
+text("quotaNotice","LIVE đang bị khóa: phải khởi động server với --enable-live và nạp key Gemini trong cùng PowerShell, có Free Tier hợp lệ.");
+}
+el("run").disabled=busy||(live&&!canLive);
+}
+async function refresh(){
+try{
+state=await req("/api/state");
+text("liveState",state.liveEnabled&&state.geminiKeyLoaded?"Sẵn sàng LIVE":"Chỉ mô phỏng");
+text("count",state.reports.length);
+text("now",state.busy?"Có phiên họp đang chạy":"Đang hoạt động trên 127.0.0.1");
+const h=el("history");h.replaceChildren();
+if(!state.reports.length){const p=document.createElement("p");p.className="note";p.textContent="Chưa có phiên nào.";h.append(p)}
+for(const r of state.reports){
+const b=document.createElement("button");b.type="button";b.className=active?.id===r.id?"selected":"";
+const t=document.createElement("div");t.className="rowline";const a=document.createElement("strong");a.textContent=r.task;const s=document.createElement("span");s.className="mini";s.textContent=r.mode.toUpperCase();t.append(a,s);
+const line=document.createElement("div");line.className="mini";line.textContent=new Date(r.at).toLocaleString("vi-VN")+" · "+r.status;
+b.append(t,line);b.addEventListener("click",()=>load(r.id));h.append(b);
+}
+updateMode();
+}catch(e){text("status","Không kết nối được máy chủ: "+e.message)}
+}
+async function load(id){
+try{
+const data=await req("/api/report?id="+encodeURIComponent(id));active=data.entry;
+el("empty").hidden=true;el("details").hidden=false;
+const r=active.report;
+text("sessionStatus",active.status);text("sessionMeta",new Date(active.at).toLocaleString("vi-VN")+" • "+active.mode.toUpperCase()+" • "+active.rounds+" vòng");
+text("sessionTask",active.task);
+text("firstCodex",resultText(r.initial,"codex"));text("firstGemini",resultText(r.initial,"gemini"));
+const second=Object.keys(r.review||{}).length>0;el("reviewSection").hidden=!second;
+if(second){text("reviewCodex",resultText(r.review,"codex"));text("reviewGemini",resultText(r.review,"gemini"))}
+el("decisionNote").value=active.decisionNote||"";
+const eligible=active.status!=="incomplete";
+el("approve").disabled=!eligible;el("changes").disabled=!eligible;
+text("decisionStatus",active.decisionAt?"Đã ghi nhận lúc "+new Date(active.decisionAt).toLocaleString("vi-VN"):"");
+await refresh();
+}catch(e){text("status","Không tải được báo cáo: "+e.message)}
+}
+el("mode").addEventListener("change",updateMode);
+el("form").addEventListener("submit",async e=>{
+e.preventDefault();if(busy)return;
+const mode=el("mode").value;const confirmUsage=el("confirm").checked;
+if(mode==="live"&&!confirmUsage){text("status","Hãy xác nhận sử dụng quota trước.");return}
+setBusy(true);text("status","Đang điều phối… Đừng bấm chạy lại. Phiên LIVE có thể tiêu quota."); 
+try{
+const data=await req("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+task:el("task").value, mode, rounds:Number(el("rounds").value),confirmUsage
+})});
+text("status",data.status==="incomplete"?"Đã lưu nhưng có AI bị lỗi, xem biên bản.":"Đã lưu biên bản, đang chờ founder duyệt.");
+await load(data.id);
+}catch(e){showError(e)}finally{setBusy(false);await refresh();}
+});
+async function decision(decision){
+if(!active)return;
+try{
+const r=await req("/api/decision",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:active.id,decision,note:el("decisionNote").value})});
+text("decisionStatus","Đã ghi nhận: "+r.status+". Không thực thi code.");await load(active.id);
+}catch(e){text("decisionStatus",e.message)}
+}
+el("approve").addEventListener("click",()=>decision("approved"));
+el("changes").addEventListener("click",()=>decision("changes-requested"));
+el("copy").addEventListener("click",async()=>{if(!active)return;try{await navigator.clipboard.writeText(active.markdown);text("decisionStatus","Đã sao chép báo cáo.")}catch{text("decisionStatus","Trình duyệt không cho phép sao chép. Dùng nút Lưu .md.")}});
+el("download").addEventListener("click",()=>{
+if(!active)return;const blob=new Blob([active.markdown],{type:"text/markdown;charset=utf-8"});
+const u=URL.createObjectURL(blob);const a=document.createElement("a");a.href=u;a.download="zunva-council-"+active.id.slice(0,8)+".md";a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);
+});
+refresh();
+})();
+</script></body></html>
