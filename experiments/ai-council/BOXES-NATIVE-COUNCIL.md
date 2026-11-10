@@ -48,7 +48,7 @@ Round 2 (cross-criticism) requires its own quota approval. If approved, send eac
 
 ## Evidence and human approval
 
-Save a temporary JSON record **outside the repository** with `brief`, `participants`, `crossReviews`, consensus, disagreements, quota and test evidence. Each `participants[]` record needs `{ "agent": "codex|claude", "mode": "LIVE", "status": "completed", "threadId": "...", "threadUrl": "...", "response": "..." }` only if true. Each cross-review needs `{ "agent": "...", "threadId": "...", "response": "..." }`. Never invent thread IDs or mark incomplete work as LIVE.
+Save a temporary JSON record **outside the repository** with `brief`, `participants`, `crossReviews`, consensus, disagreements, quota and test evidence. Each `participants[]` record needs `{ "agent": "codex|claude", "mode": "LIVE", "status": "completed", "threadId": "...", "threadUrl": "...", "response": "..." }` only if true. Each cross-review needs `{ "agent": "codex|claude", "targetAgent": "the-other-agent", "mode": "LIVE", "status": "completed", "threadId": "...", "response": "..." }`, with an explicitly different peer target. Each participant must provide their own completed review; two reviews from one agent do not count as two perspectives. Records are self-reported and must be checked against actual Boxes thread/turn logs before claiming the meeting occurred. Never invent thread IDs or mark incomplete work as LIVE.
 
 Render a Vietnamese report with:
 
@@ -56,7 +56,7 @@ Render a Vietnamese report with:
 node experiments/ai-council/boxes-meeting-report.mjs --input=/tmp/zunva-meeting.json --output=/tmp/zunva-founder-report.md
 ```
 
-The renderer refuses a definitive ready status if 2 LIVE participants with recorded completions or 2 cross-reviews are missing. Tests:
+The renderer refuses a definitive ready status if participants lack separate thread IDs, each agent has not provided their own LIVE completed review of another agent, or evidence fields are missing. The renderer cannot independently authenticate thread IDs; the coordinator must verify source logs. Tests:
 
 ```sh
 node --test experiments/ai-council/boxes-meeting-report.test.mjs
