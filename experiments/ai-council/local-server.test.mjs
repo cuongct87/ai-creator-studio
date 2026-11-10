@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import vm from "node:vm";
 import { createCouncilServer } from "./local-server.mjs";
 
 async function setup(t,opts={}) {
@@ -103,4 +105,15 @@ test("two identical agents are rejected before any model call",async(t)=>{
   const {req}=await setup(t);
   const out=await req("/api/run","POST",{task:"Review the UX",mode:"demo",rounds:1,agents:["codex","codex"]});
   assert.equal(out.status,400);
+});
+
+test("Vietnamese dashboard JavaScript compiles and exposes Claude/Kiro handoff",async()=>{
+  const html=await readFile(fileURLToPath(new URL("./dashboard.html",import.meta.url)),"utf8");
+  const m=html.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(m,"inline UI script must exist");
+  assert.doesNotThrow(()=>new vm.Script(m[1],{filename:"dashboard.html"}));
+  assert.match(html,/id="agent1"/);
+  assert.match(html,/value="claude"/);
+  assert.match(html,/id="kiroPacket"/);
+  assert.match(html,/issues\/13/);
 });
