@@ -33,6 +33,26 @@ git clone https://github.com/cuongct87/ai-creator-studio.git
 
 Open "index.html" in a browser or deploy the project using GitHub Pages.
 
+🧪 Kiểm thử nhanh bản web (không cần API key)
+
+Mục này dành cho việc kiểm tra thủ công bản web tĩnh. Không cần cài đặt hay build.
+
+Cách mở:
+
+1. Tải hoặc clone repo, sau đó mở tệp `index.html` bằng trình duyệt (nhấp đúp hoặc kéo thả vào cửa sổ trình duyệt).
+2. Không cần máy chủ; các thao tác dưới đây chạy hoàn toàn trên trình duyệt.
+
+Checklist thủ công (3 bước):
+
+1. **Vào Prompt Studio:** mở tab "Prompt Studio" (tab mặc định), nhập chủ đề/sản phẩm rồi bấm "Generate prompt". Prompt được tạo theo mẫu có sẵn trên máy.
+2. **Tạo storyboard mẫu:** mở tab "Video Storyboard", nhập ý tưởng câu chuyện rồi bấm "Build storyboard". Đây là công cụ lập kế hoạch theo mẫu, không phải AI tạo video. Có thể bấm "Copy storyboard" để sao chép kết quả.
+3. **Lưu/xuất dữ liệu không cần API:** mở tab "AI Pro", chọn nhà cung cấp "Free — offline prompt templates", nhập ý tưởng và tạo prompt theo mẫu. Sau đó dùng "Lưu ý tưởng / kết quả" để lưu vào Kho prompt trên trình duyệt (tối đa 30 mục) hoặc "Tải TXT" để tải tệp văn bản. Tệp và bản lưu không chứa API key.
+
+Lưu ý:
+
+- Chức năng AI thực sự (ví dụ Gemini trong tab "AI Pro", tạo ảnh bằng AI) có thể cần API key riêng của bạn. Không đăng API key lên repo, issue hoặc PR.
+- Checklist trên chỉ là hướng dẫn kiểm tra thủ công dựa trên mã nguồn hiện tại, chưa phải bộ kiểm thử tự động.
+
 🔒 Privacy
 
 Saved prompts are stored locally in your browser. They are not automatically synchronized to the cloud.
