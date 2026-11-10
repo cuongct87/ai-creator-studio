@@ -6,9 +6,9 @@ test("demo produces two opinions and two critiques without credentials", async (
   const r = await runCouncil({task:"Giúp người dùng viết prompt ảnh",mode:"demo",rounds:2});
   assert.equal(r.mode,"demo");
   assert.equal(r.initial.codex.ok,true);
-  assert.equal(r.initial.claude.ok,true);
+  assert.equal(r.initial.gemini.ok,true);
   assert.equal(r.review.codex.ok,true);
-  assert.equal(r.review.claude.ok,true);
+  assert.equal(r.review.gemini.ok,true);
   assert.match(formatReport(r),/CHỜ FOUNDER DUYỆT/);
   assert.match(formatReport(r),/MÔ PHỎNG/);
   assert.match(formatReport(r),/DEMO ONLY/);
