@@ -2,7 +2,7 @@
  * @zunva/platform — hợp đồng giữa ZUNVA và thiết bị.
  * Lõi và công cụ không gọi thẳng trình duyệt hay Android/iOS; mỗi vỏ ứng dụng
  * (web, Capacitor, Tauri) cung cấp một bản cài đặt các giao diện dưới đây.
- * G1-2 chỉ khai báo kiểu; G1-5 thêm kho dự án và bản cài đặt cho web.
+ * G1-2 chỉ khai báo kiểu; G1-5 thêm kho dự án và bản cài đặt cho web; G1-7 thêm bản Android (cầu nối Java).
  */
 
 import type { DesignDocument, Id } from '@zunva/core';
@@ -31,9 +31,23 @@ export interface GallerySaver {
   saveImage(fileName: string, bytes: Uint8Array): Promise<PlatformResult<{ location: string }>>;
 }
 
+export interface PickedFile {
+  name: string;
+  bytes: Uint8Array;
+}
+
+export interface FileOpener {
+  /**
+   * Cho người dùng chọn một file (ví dụ `.zunva`) và đọc nội dung. `null` = người dùng bấm hủy.
+   * `accept` chỉ là gợi ý cho hộp chọn file; nơi gọi phải tự kiểm tra nội dung.
+   */
+  openFile(accept: string): Promise<PlatformResult<PickedFile | null>>;
+}
+
 export interface Platform {
   readonly name: 'web' | 'android' | 'ios' | 'windows' | 'macos';
   readonly files: FileSaver;
+  readonly opener: FileOpener;
   readonly images: ImagePicker;
   readonly gallery: GallerySaver;
 }
@@ -83,4 +97,6 @@ export { createIndexedDbProjectStore, STORE_MESSAGES } from './indexeddb-store';
 export type { IndexedDbStoreOptions } from './indexeddb-store';
 export { createAutosave } from './autosave';
 export type { Autosave, AutosaveOptions, AutosaveState, AutosaveStatus } from './autosave';
-export { createWebPlatform } from './web-platform';
+export { createWebPlatform, detectImageType } from './web-platform';
+export { createAndroidPlatform, createPlatform } from './android-platform';
+export type { AndroidBridgeWindow } from './android-platform';
