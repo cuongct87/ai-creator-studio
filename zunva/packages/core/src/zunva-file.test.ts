@@ -165,6 +165,11 @@ describe('file .zunva: mở file lạ hoặc hỏng một cách an toàn', () =>
     expect(errorsOf(rezip(e))).toContain('cập nhật app');
   });
 
+  it('manifest hỏng chỉ báo một lỗi', () => {
+    const r = unpackZunva(rezip(replace(sampleEntries(), 'manifest.json', utf8Encode('{oops'))));
+    expect(r).toEqual({ ok: false, errors: ['manifest.json: không đọc được (JSON hỏng)'] });
+  });
+
   it('JSON hỏng hoặc không phải UTF-8', () => {
     expect(errorsOf(rezip(replace(sampleEntries(), 'document.json', utf8Encode('{"id":'))))).toContain('JSON');
     expect(errorsOf(rezip(replace(sampleEntries(), 'document.json', new Uint8Array([0xff, 0xfe]))))).toContain('UTF-8');

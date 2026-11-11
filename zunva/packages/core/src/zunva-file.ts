@@ -29,6 +29,7 @@ const DOCUMENT = 'document.json';
 const ASSET_PREFIX = 'assets/';
 /** ID tài nguyên dùng làm tên file nên chỉ nhận chữ Latin, số, `_`, `-`. */
 const SAFE_ASSET_ID = /^[A-Za-z0-9_-]{1,64}$/;
+const TOO_LARGE = 'Thiết kế quá lớn để lưu thành một file (> 300 MB)';
 
 export interface ZunvaManifest {
   format: typeof ZUNVA_FORMAT;
@@ -98,9 +99,13 @@ export function packZunva(
     { name: DOCUMENT, data: utf8Encode(JSON.stringify(document)) },
     ...ids.map((id) => ({ name: ASSET_PREFIX + id, data: assets[id]! })),
   ];
+  // Kiểm tra trên kích thước file thật (gồm cả phần đầu và mục lục ZIP), đúng ngưỡng mà
+  // unpackZunva dùng, để file lưu được thì chắc chắn mở lại được.
   const total = entries.reduce((n, e) => n + e.data.length, 0);
-  if (total > ZUNVA_MAX_BYTES) return { ok: false, errors: ['Thiết kế quá lớn để lưu thành một file (> 300 MB)'] };
-  return { ok: true, value: writeZip(entries, now) };
+  if (total > ZUNVA_MAX_BYTES) return { ok: false, errors: [TOO_LARGE] };
+  const bytes = writeZip(entries, now);
+  if (bytes.length > ZUNVA_MAX_BYTES) return { ok: false, errors: [TOO_LARGE] };
+  return { ok: true, value: bytes };
 }
 
 function checkManifest(value: unknown, errors: string[]): void {
@@ -151,7 +156,9 @@ export function unpackZunva(bytes: Uint8Array): ZunvaResult<ZunvaContent> {
   if (documentBytes === null) errors.push('Thiếu document.json');
   if (errors.length > 0 || manifestBytes === null || documentBytes === null) return { ok: false, errors };
 
-  checkManifest(parseJson(manifestBytes, 'manifest.json', errors), errors);
+  // JSON hỏng thì parseJson đã ghi lỗi; không kiểm cấu trúc nữa để khỏi báo hai lỗi trùng ý.
+  const manifest = parseJson(manifestBytes, 'manifest.json', errors);
+  if (errors.length === 0) checkManifest(manifest, errors);
   if (errors.length > 0) return { ok: false, errors };
 
   const raw = parseJson(documentBytes, 'document.json', errors);
