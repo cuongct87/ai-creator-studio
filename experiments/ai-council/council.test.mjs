@@ -73,7 +73,8 @@ test("CLI child environment strips sensitive API keys and tokens", () => {
   const env=restrictedChildEnv({
     PATH:"C:/Windows/System32",APPDATA:"C:/Users/demo/AppData/Roaming",
     GEMINI_API_KEY:"DO_NOT_PASS",GOOGLE_API_KEY:"DO_NOT_PASS",
-    OPENAI_API_KEY:"DO_NOT_PASS",GH_TOKEN:"DO_NOT_PASS",
+    OPENAI_API_KEY:"DO_NOT_PASS",GH_TOKEN:"DO_NOT_PASS",AWS_ACCESS_KEY_ID:"DO_NOT_PASS",
+    AWS_PROFILE:"private-profile",AZURE_CLIENT_ID:"DO_NOT_PASS",
     MY_SECRET:"DO_NOT_PASS",USERPROFILE:"C:/Users/demo"
   });
   assert.equal(env.PATH,"C:/Windows/System32");
@@ -83,6 +84,9 @@ test("CLI child environment strips sensitive API keys and tokens", () => {
   assert.equal(env.OPENAI_API_KEY,undefined);
   assert.equal(env.GH_TOKEN,undefined);
   assert.equal(env.MY_SECRET,undefined);
+  assert.equal(env.AWS_ACCESS_KEY_ID,undefined);
+  assert.equal(env.AWS_PROFILE,undefined);
+  assert.equal(env.AZURE_CLIENT_ID,undefined);
 });
 
 test("Claude preflight blocks LIVE before calling any AI when login missing", async () => {
