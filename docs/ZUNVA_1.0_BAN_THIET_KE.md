@@ -265,12 +265,27 @@ Nguyên tắc: **tầng sau chỉ xây khi tầng trước đã có người dù
 
 Lý do không làm mạng xã hội ngay từ đầu: lúc chưa có người dùng, bảng tin sẽ trống — đúng cảm giác "vào không biết làm gì" mà founder muốn tránh. Tầng 1 tốt kéo người dùng đến; người dùng lấp đầy tầng 2.
 
+**6. SkyRadar là nguồn người dùng đầu tiên của C87 (founder đồng ý ghi, 11/11 tối)**
+
+Founder đã có app SkyRadar Pro (skyradar.vn, Google Play): dự báo săn ảnh bình minh, hoàng hôn, biển mây, Ngân Hà và bản đồ trời tối ở Việt Nam; đã có khách trả tiền. Khách SkyRadar (dân phượt, người chụp ảnh phong cảnh) đúng là người dùng mục tiêu "đi du lịch, chụp ảnh rồi chỉnh và đăng" của C87.
+
+- ĐỀ XUẤT: trong SkyRadar có nút "Chỉnh ảnh vừa chụp bằng C87" để kéo người dùng sang C87 không tốn quảng cáo.
+- ĐỀ XUẤT: cuộc thi đầu tiên "Ảnh biển mây đẹp nhất": săn bằng SkyRadar, chỉnh bằng C87, đăng kèm hashtag (tầng 1, không cần máy chủ).
+- Bài học từ SkyRadar: mục "Kèo biển mây 500 km" cho người dùng việc để làm ngay khi mở app — đúng nguyên tắc "không bao giờ trống" của trang chủ C87; SkyRadar đã có gói nhỏ và gói lớn, khách vẫn mua gói lớn — C87 nên có ít nhất 2 mức giá.
+
+**Ý tưởng mới của founder: ảnh của khách hiện trên bản đồ (CHƯA RÕ cách làm, thuộc tầng 2)**
+
+Khách chụp xong, chỉnh trên C87, rồi gắn ảnh lên bản đồ SkyRadar đúng vị trí chụp để mọi người cùng thấy (ví dụ: "sáng nay Tà Xùa có biển mây thật"). Giá trị: ảnh thật xác nhận dự báo, người khác biết điểm nào đang đẹp, tạo cộng đồng chung giữa SkyRadar và C87.
+
+Cần giải quyết trước khi làm: máy chủ lưu ảnh (dùng ảnh thu nhỏ để rẻ), kiểm duyệt ảnh, quyền riêng tư (không lộ vị trí nhà riêng — chỉ gắn vào điểm chụp công khai hoặc làm mờ vị trí), tài khoản người dùng chung giữa hai app.
+
 **Câu hỏi thêm cho GPT, Gemini, Kiro (bổ sung vòng 2):**
 
 6. Capacitor có đủ tốt cho camera, quay video và chỉnh video trên cả Android và iOS không? Nếu không, phương án nào (plugin gốc, React Native, Flutter…) và đổi lại mất gì? Dẫn chứng.
 7. Chia sẻ video qua nút "Chia sẻ" của hệ điều hành sang TikTok/YouTube/Zalo có bẫy nào (định dạng, dung lượng, iOS)?
 8. Kiến trúc mô-đun cần gì để thêm "đăng thẳng" từng nền tảng sau này mà không sửa lõi?
 9. Nền móng cần chừa sẵn gì ngay từ G1 để sau này thêm tài khoản, bảng tin, chợ mẫu (tầng 2–3) mà không phải viết lại? Gợi ý cách lưu trữ đám mây rẻ nhất khi đến tầng 2 (ước tính chi phí theo số người dùng).
+10. Ý tưởng "ảnh của khách hiện trên bản đồ SkyRadar": cách làm rẻ nhất, cách bảo vệ vị trí riêng tư, cách kiểm duyệt; ước tính chi phí lưu ảnh theo số ảnh mỗi tháng. Chưa viết mã.
 
 ## Đề bài phản biện cho GPT, Gemini, Kiro
 
