@@ -3,15 +3,15 @@
  * Không phụ thuộc React, DOM hay thư viện vẽ.
  */
 
-/** Tên hiển thị cho người dùng. Đổi thương hiệu (ví dụ sang C87) chỉ sửa dòng này, khi founder duyệt. */
-export const PRODUCT_NAME = 'ZUNVA';
-
+export { PRODUCT_NAME } from './brand';
 export * from './model';
 export * from './ids';
 export * from './factory';
 export * from './validate';
 export * from './ops';
 export * from './history';
+export * from './zip';
+export * from './zunva-file';
 
 /** Giới hạn một số trong khoảng [min, max]. */
 export function clamp(value: number, min: number, max: number): number {
