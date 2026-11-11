@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // Chỉ thư viện ECMAScript, không có DOM: lõi không thể gọi window/document.
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src"]
+}

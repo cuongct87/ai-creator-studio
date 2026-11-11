@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+
+# pnpm 10 chặn script cài đặt mặc định; chỉ cho esbuild (Vite cần).
+onlyBuiltDependencies:
+  - esbuild
