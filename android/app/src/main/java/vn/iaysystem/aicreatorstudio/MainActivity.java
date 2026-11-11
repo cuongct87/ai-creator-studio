@@ -1,26 +1,33 @@
 package vn.iaysystem.aicreatorstudio;
 
 import android.app.Activity;
-import android.os.Bundle;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.content.ContentValues;
+import android.util.Base64;
 import android.webkit.*;
 import android.widget.Toast;
-import android.util.Base64;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.IOException;
+import java.util.Locale;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class MainActivity extends Activity {
     private WebView web;
     private ValueCallback<Uri[]> chooser;
     private static final int PICK_FILE = 100;
-    private static final String HOME = "https://appassets.androidplatform.net/assets/index.html";
+    private static final String HOST = "appassets.androidplatform.net";
+    private static final String HOME = "https://" + HOST + "/assets/index.html";
+    /** Max decoded size for AndroidFileSaver (same limit as a .zunva file). */
+    private static final int MAX_SAVE_BYTES = 300 * 1024 * 1024;
 
+    /** Saves rendered images to the gallery (Pictures/C87). Kept from v1.5. */
     public class ImageSaver {
         @JavascriptInterface
         public void saveImage(String dataUrl, String fileName) {
@@ -32,15 +39,15 @@ public class MainActivity extends Activity {
                     String mime = header.contains("image/jpeg") ? "image/jpeg" : header.contains("image/webp") ? "image/webp" : "image/png";
                     String ext = mime.equals("image/jpeg") ? ".jpg" : mime.equals("image/webp") ? ".webp" : ".png";
                     byte[] bytes = Base64.decode(dataUrl.substring(comma + 1), Base64.DEFAULT);
-                    String safeName = fileName == null ? "ai-creator-studio" : fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
-                    if (!safeName.endsWith(ext)) safeName = "ai-creator-studio" + ext;
+                    String safeName = fileName == null ? "c87" : fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+                    if (!safeName.endsWith(ext)) safeName = "c87" + ext;
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         throw new IOException("Android 10+ required for direct gallery save");
                     }
                     ContentValues values = new ContentValues();
                     values.put(MediaStore.Images.Media.DISPLAY_NAME, safeName);
                     values.put(MediaStore.Images.Media.MIME_TYPE, mime);
-                    values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/AICreatorStudio");
+                    values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/C87");
                     values.put(MediaStore.Images.Media.IS_PENDING, 1);
                     Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
                     if (uri == null) throw new IOException("Cannot create image file");
@@ -56,12 +63,128 @@ public class MainActivity extends Activity {
                         getContentResolver().delete(uri, null, null);
                         throw e;
                     }
-                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Đã lưu vào Ảnh / AICreatorStudio", Toast.LENGTH_LONG).show());
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Đã lưu vào Ảnh / C87", Toast.LENGTH_LONG).show());
                 } catch (Exception e) {
                     runOnUiThread(() -> Toast.makeText(MainActivity.this, "Lưu ảnh thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show());
                 }
             }).start();
         }
+    }
+
+    /**
+     * Saves any file (PNG, PDF, .zunva, JSON) into Download/C87 (Android 10+).
+     * Returns JSON: {"ok":true,"location":"Tải xuống/C87"} or {"ok":false,"error":"..."}.
+     * Runs on the WebView bridge thread (not the UI thread), so blocking I/O is fine here.
+     */
+    public class FileSaver {
+        @JavascriptInterface
+        public String saveBytes(String fileName, String mimeType, String base64) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+                return error("Cần Android 10 trở lên để lưu file vào Tải xuống.");
+            }
+            if (base64 == null || base64.isEmpty()) return error("Không có dữ liệu để lưu.");
+            // Base64 is ~4/3 of the real size: reject huge input before decoding into memory.
+            if ((long) base64.length() * 3 / 4 > MAX_SAVE_BYTES) return error("File quá lớn (tối đa 300 MB).");
+            byte[] bytes;
+            try {
+                bytes = Base64.decode(base64, Base64.DEFAULT);
+            } catch (IllegalArgumentException e) {
+                return error("Dữ liệu file không hợp lệ.");
+            }
+            String name = safeFileName(fileName);
+            String mime = safeMimeType(mimeType);
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Downloads.DISPLAY_NAME, name);
+            values.put(MediaStore.Downloads.MIME_TYPE, mime);
+            values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/C87");
+            values.put(MediaStore.Downloads.IS_PENDING, 1);
+            Uri uri;
+            try {
+                uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+            } catch (Exception e) {
+                return error("Không tạo được file trong Tải xuống.");
+            }
+            if (uri == null) return error("Không tạo được file trong Tải xuống.");
+            try {
+                try (OutputStream out = getContentResolver().openOutputStream(uri)) {
+                    if (out == null) throw new IOException("no stream");
+                    out.write(bytes);
+                }
+                ContentValues done = new ContentValues();
+                done.put(MediaStore.Downloads.IS_PENDING, 0);
+                getContentResolver().update(uri, done, null, null);
+            } catch (Exception e) {
+                try { getContentResolver().delete(uri, null, null); } catch (Exception ignored) {}
+                return error("Không ghi được file. Có thể máy đã hết chỗ lưu.");
+            }
+            return ok("Tải xuống/C87");
+        }
+    }
+
+    /** Keeps letters (incl. Vietnamese), digits and common punctuation; blocks path separators. */
+    static String safeFileName(String fileName) {
+        String name = fileName == null ? "" : fileName.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_").trim();
+        while (name.startsWith(".")) name = name.substring(1);
+        if (name.isEmpty()) name = "c87-file";
+        if (name.length() > 120) name = name.substring(name.length() - 120);
+        return name;
+    }
+
+    static String safeMimeType(String mimeType) {
+        if (mimeType != null && mimeType.matches("[a-zA-Z0-9.+-]+/[a-zA-Z0-9.+-]+")) return mimeType.toLowerCase(Locale.ROOT);
+        return "application/octet-stream";
+    }
+
+    private static String ok(String location) {
+        try {
+            return new JSONObject().put("ok", true).put("location", location).toString();
+        } catch (JSONException e) {
+            return "{\"ok\":true}";
+        }
+    }
+
+    private static String error(String message) {
+        try {
+            return new JSONObject().put("ok", false).put("error", message).toString();
+        } catch (JSONException e) {
+            return "{\"ok\":false}";
+        }
+    }
+
+    /**
+     * Maps a request path to a file inside the APK assets (the Vite build of zunva/apps/web).
+     * Returns null when the path is not allowed. "/" or a path without extension → index.html.
+     */
+    static String assetName(String path) {
+        if (path == null) return null;
+        String name = path.startsWith("/assets/") ? path.substring(8) : path.startsWith("/") ? path.substring(1) : path;
+        if (name.contains("..") || name.contains("\\") || name.contains("//") || name.startsWith("/") || name.indexOf('\0') >= 0) return null;
+        if (name.isEmpty() || name.endsWith("/")) return name + "index.html";
+        String last = name.substring(name.lastIndexOf('/') + 1);
+        if (last.indexOf('.') < 0) return "index.html";
+        return name;
+    }
+
+    /** MIME type by extension; null = not served. */
+    static String mimeFor(String name) {
+        String ext = name.substring(name.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
+        switch (ext) {
+            case "html": return "text/html";
+            case "js": return "application/javascript";
+            case "css": return "text/css";
+            case "svg": return "image/svg+xml";
+            case "png": return "image/png";
+            case "jpg": case "jpeg": return "image/jpeg";
+            case "webp": return "image/webp";
+            case "woff2": return "font/woff2";
+            case "json": return "application/json";
+            case "ico": return "image/x-icon";
+            default: return null;
+        }
+    }
+
+    private static boolean isText(String mime) {
+        return mime.startsWith("text/") || mime.equals("application/javascript") || mime.equals("application/json") || mime.equals("image/svg+xml");
     }
 
     @Override public void onCreate(Bundle state) {
@@ -74,26 +197,30 @@ public class MainActivity extends Activity {
         web.getSettings().setAllowContentAccess(true);
         web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         web.addJavascriptInterface(new ImageSaver(), "AndroidImageSaver");
+        web.addJavascriptInterface(new FileSaver(), "AndroidFileSaver");
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri u = request.getUrl();
-                if (!"appassets.androidplatform.net".equals(u.getHost())) return null;
-                String p = u.getPath();
-                if (p == null || !p.startsWith("/assets/")) return notFound();
-                String name = p.substring(8);
-                if (!(name.equals("index.html") || name.equals("script.js") || name.equals("studio_v15.js") || name.equals("style.css") || name.equals("vault_i18n.js"))) return notFound();
-                String mime = name.endsWith(".html") ? "text/html" : name.endsWith(".css") ? "text/css" : "application/javascript";
-                try { return new WebResourceResponse(mime, "UTF-8", getAssets().open(name)); }
-                catch (IOException e) { return notFound(); }
+                if (!HOST.equals(u.getHost())) return null;
+                String name = assetName(u.getPath());
+                if (name == null) return notFound();
+                String mime = mimeFor(name);
+                if (mime == null) return notFound();
+                try {
+                    InputStream in = getAssets().open(name);
+                    return new WebResourceResponse(mime, isText(mime) ? "UTF-8" : null, in);
+                } catch (IOException e) {
+                    return notFound();
+                }
             }
             private WebResourceResponse notFound() {
                 return new WebResourceResponse("text/plain", "UTF-8", 404, "Not Found", null, new java.io.ByteArrayInputStream(new byte[0]));
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest req) {
                 Uri uri = req.getUrl();
-                if ("appassets.androidplatform.net".equals(uri.getHost())) return false;
+                if (HOST.equals(uri.getHost())) return false;
                 if (req.isForMainFrame()) {
-                    try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch(Exception ignored) {}
+                    try { startActivity(new Intent(Intent.ACTION_VIEW, uri)); } catch (Exception ignored) {}
                     return true;
                 }
                 return false;

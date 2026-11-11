@@ -1,5 +1,33 @@
 plugins { id 'com.android.application' }
-android { namespace 'vn.iaysystem.aicreatorstudio'; compileSdk 35
- defaultConfig { applicationId 'vn.c87.lsc'; minSdk 26; targetSdk 35; versionCode 15; versionName '1.5.0-beta' }
- compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+
+// G1-7: the APK serves the Vite build of zunva/apps/web (run `pnpm build` in zunva/ first).
+def repoRoot = rootProject.projectDir.parentFile
+def webDist = new File(repoRoot, 'zunva/apps/web/dist')
+def generatedWebAssetsDir = layout.buildDirectory.dir('generated/webAssets')
+
+// Separate check task: a Sync task with a missing source is skipped silently, so it cannot fail by itself.
+def checkWebDist = tasks.register('checkWebDist') {
+    description = 'Fail clearly if the web build is missing.'
+    doLast {
+        if (!new File(webDist, 'index.html').isFile()) {
+            throw new GradleException("Chưa có bản build web: không thấy ${webDist}/index.html. " +
+                "Chạy trước: cd zunva && pnpm install --frozen-lockfile && pnpm build")
+        }
+    }
 }
+
+def syncWebAssets = tasks.register('syncWebAssets', Sync) {
+    description = 'Copy zunva/apps/web/dist/** into generated Android assets.'
+    dependsOn checkWebDist
+    from(webDist)
+    into generatedWebAssetsDir
+}
+
+android { namespace 'vn.iaysystem.aicreatorstudio'; compileSdk 35
+ defaultConfig { applicationId 'vn.c87.lsc'; minSdk 26; targetSdk 35; versionCode 16; versionName '1.0.0-g1' }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ sourceSets { main { assets.srcDirs += generatedWebAssetsDir } }
+}
+
+// Make sure web assets are copied before any build or packaging step.
+tasks.named('preBuild') { dependsOn syncWebAssets }

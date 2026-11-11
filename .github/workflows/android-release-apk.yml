@@ -39,6 +39,29 @@ jobs:
           echo "BUILD_TOOLS=$BT" >> "$GITHUB_ENV"
           echo "Using build-tools: $(basename "$BT")"
 
+      # G1-7: build the web app (zunva/apps/web) that the APK serves from its assets.
+      - name: Set up pnpm 10.28.0 (from zunva/package.json packageManager)
+        uses: pnpm/action-setup@v4
+        with:
+          package_json_file: zunva/package.json
+
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: zunva/pnpm-lock.yaml
+
+      - name: Install web dependencies (locked versions)
+        working-directory: zunva
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app
+        working-directory: zunva
+        run: |
+          pnpm build
+          if [ ! -f apps/web/dist/index.html ]; then echo "::error::zunva/apps/web/dist/index.html missing after build"; exit 1; fi
+
       # Build runs before the secret check so a build problem is visible even before secrets exist.
       - name: Build unsigned release APK
         working-directory: android
@@ -95,6 +118,8 @@ jobs:
           PKG="$("$BUILD_TOOLS/aapt" dump badging "$APK" | sed -n "s/^package: name='\([^']*\)'.*/\1/p")"
           VER="$("$BUILD_TOOLS/aapt" dump badging "$APK" | sed -n "s/^package: .*versionCode='\([^']*\)'.*versionName='\([^']*\)'.*/\1 (\2)/p")"
           if [ "$PKG" != "$EXPECTED_PACKAGE" ]; then echo "::error::Package is $PKG, expected $EXPECTED_PACKAGE"; exit 1; fi
+          # The web app must be inside the APK.
+          if ! unzip -l "$APK" | grep -q ' assets/index.html$'; then echo "::error::assets/index.html missing from APK"; exit 1; fi
           # The certificate SHA-256 digest is public information (it is inside every APK).
           CERT="$(grep -m1 'certificate SHA-256 digest' "$RUNNER_TEMP/verify.txt" | sed 's/.*digest: //')"
           if [ -z "$CERT" ]; then echo "::error::No certificate digest found"; exit 1; fi
