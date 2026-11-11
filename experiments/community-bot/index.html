@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>ZUNVA Community Bot — Pilot 0.1</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#f2f4f8;background:#0d1119}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(circle at 90% 0%,#18334e 0%,#0d1119 45%)}
+main{max-width:820px;margin:auto;padding:24px 16px 70px}
+header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:26px}
+.brand{font-size:22px;font-weight:850;letter-spacing:2px;color:#6ee7c8}
+.version{font-size:12px;color:#a9b7ca;border:1px solid #39475a;padding:5px 9px;border-radius:50px}
+h1{font-size:clamp(26px,6vw,38px);margin:0 0 8px}
+.subtitle{color:#b2c0cf;line-height:1.6;margin:0 0 22px}
+.panel{border:1px solid #304254;border-radius:18px;background:#151e2b;padding:20px;box-shadow:0 16px 45px #0003}
+label{display:block;font-size:14px;font-weight:650;margin:15px 0 7px}
+small,.note{color:#9eadc0;line-height:1.5}
+input,textarea,select{width:100%;font:inherit;border:1px solid #47566a;border-radius:10px;padding:12px;background:#0d1420;color:#f2f4f8}
+textarea{resize:vertical;min-height:100px}
+input:focus,textarea:focus,select:focus{outline:2px solid #67d5b8;outline-offset:1px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+button{font:inherit;font-weight:700;border:1px solid #63728b;border-radius:10px;padding:11px 16px;background:#26344a;color:white;cursor:pointer}
+button.primary{border-color:#7ce9c9;background:#5de0b4;color:#08271d}
+button:disabled{opacity:.45;cursor:not-allowed}
+.result{margin-top:18px}
+pre{white-space:pre-wrap;word-wrap:break-word;font:14px/1.65 system-ui,sans-serif;background:#0b131e;border:1px solid #314457;border-radius:12px;padding:16px;min-height:100px}
+footer{margin-top:20px;color:#94a9bf;font-size:13px;line-height:1.6}
+.status{min-height:22px;color:#9fead2;margin-top:8px;font-size:14px}
+@media(max-width:560px){.two{grid-template-columns:1fr}main{padding-top:16px}.panel{padding:15px}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="brand">ZUNVA<span aria-hidden="true"> ✦</span></div><div class="version">Community Bot · Pilot 0.1</div></header>
+<h1>Biến ý tưởng thành bản nháp sáng tạo</h1>
+<p class="subtitle">Thử công cụ hỗ trợ tạo prompt ảnh, storyboard và dàn ý quảng cáo miễn phí. Bản thử này chạy ngay trên trình duyệt, không dùng API AI và không gửi dữ liệu lên máy chủ.</p>
+<section class="panel" aria-label="Tạo bản nháp">
+<form id="maker">
+<label for="kind">Mày muốn làm gì?</label>
+<select id="kind">
+<option value="image">Tạo prompt hình ảnh</option>
+<option value="video">Lên storyboard video 5 cảnh</option>
+<option value="ads">Lên dàn ý bài quảng cáo</option>
+</select>
+<label for="idea">Ý tưởng / chủ đề</label>
+<textarea id="idea" maxlength="1200" required placeholder="Ví dụ: Quảng cáo tiệm cà phê ven sông vào buổi sáng..."></textarea>
+<div class="two">
+<div><label for="audience">Khách hàng / đối tượng (không bắt buộc)</label><input id="audience" maxlength="160" placeholder="Ví dụ: người trẻ, chủ shop..."></div>
+<div><label for="style">Phong cách</label><select id="style"><option>Hiện đại, rõ ràng</option><option>Ấm áp, gần gũi</option><option>Sang trọng, chuyên nghiệp</option><option>Vui nhộn, năng động</option><option>Tối giản</option></select></div>
+</div>
+<div class="two">
+<div><label for="ratio">Tỷ lệ khung</label><select id="ratio"><option value="9:16">9:16 (video dọc)</option><option value="1:1">1:1 (bài đăng)</option><option value="16:9">16:9 (ngang)</option><option value="4:5">4:5 (dọc)</option></select></div>
+<div><label for="lang">Ngôn ngữ bản nháp</label><select id="lang"><option value="vi">Tiếng Việt</option><option value="en">English</option></select></div>
+</div>
+<div class="actions"><button class="primary" type="submit">Tạo bản nháp</button><button type="reset">Làm lại</button></div>
+</form>
+<div class="result" id="result" hidden>
+<h2 style="font-size:19px">Kết quả</h2><pre id="output" aria-live="polite"></pre>
+<div class="actions"><button id="copy" type="button">Sao chép</button><button id="download" type="button">Lưu TXT</button></div>
+<div id="status" role="status" class="status"></div>
+</div>
+</section>
+<footer>Minh bạch: đây là bộ tạo mẫu theo quy tắc, không phải chatbot AI sinh nội dung tự do. Chưa có tài khoản, quảng cáo, theo dõi người dùng hay gọi API trả phí. Bản thử độc lập, chưa tích hợp vào ứng dụng ZUNVA chính.</footer>
+</main>
+<script>
+(function(){
+"use strict";
+const get=id=>document.getElementById(id);
+let latest="";
+const text={vi:{
+image:(p)=>["PROMPT ẢNH — BẢN NHÁP","Chủ thể / thông điệp: "+p.idea,"Đối tượng: "+p.audience,"Phong cách: "+p.style,"Bối cảnh: phù hợp chủ đề; chi tiết trực quan, dễ nhận biết.","Ánh sáng: tự nhiên, bố cục cân đối, trọng tâm rõ ràng.","Tỷ lệ: "+p.ratio,"Hạn chế: chữ sai chính tả, méo hình, chi tiết thừa, watermark.","Hãy chỉnh lại các chi tiết cho đúng nhu cầu trước khi đưa vào mô hình tạo ảnh."].join("\n"),
+video:(p)=>{const beats=["Mở đầu: giới thiệu bối cảnh và gây chú ý","Nêu nhu cầu/vấn đề của đối tượng xem","Cho thấy ý tưởng hoặc giải pháp chính","Nhấn mạnh chi tiết/lợi ích nổi bật","Kết thúc bằng kết quả và lời kêu gọi hành động"];return ["STORYBOARD 5 CẢNH × 6 GIÂY","Chủ đề: "+p.idea,"Đối tượng: "+p.audience,"Phong cách: "+p.style,"Khung: "+p.ratio,""].concat(beats.map((b,i)=>"Cảnh "+(i+1)+" (6 giây)\nSự kiện: "+b+"\nKhung hình: tập trung vào "+p.idea+"\nImage prompt: "+p.style+", "+p.ratio+", cảnh số "+(i+1)+"\nMotion prompt: chuyển động nhẹ, mạch lạc, tránh nhấp nháy\n")).join("\n")},
+ads:(p)=>["DÀN Ý QUẢNG CÁO — BẢN NHÁP","Chủ đề / sản phẩm: "+p.idea,"Khách hàng: "+p.audience,"Giọng điệu: "+p.style,"","1. Câu mở đầu: Nêu nhu cầu hoặc kết quả mà khách mong muốn.","2. Lợi ích: Điền 2–3 lợi ích có thể kiểm chứng.","3. Minh chứng: Thêm ảnh/video thực tế hoặc đánh giá được phép sử dụng.","4. Lời mời: Gợi ý hành động cụ thể (xem mẫu, dùng thử, liên hệ).","5. Chỗ đăng phù hợp: điều chỉnh chiều dài và tỷ lệ ảnh "+p.ratio+".","Lưu ý: không bịa đánh giá, thành tích hay cam kết."].join("\n")
+},en:{
+image:(p)=>["IMAGE PROMPT — DRAFT","Subject / message: "+p.idea,"Audience: "+p.audience,"Style: "+p.style,"Scene: fitting context, strong visual details and a clear focal point.","Lighting: natural, balanced composition.","Aspect ratio: "+p.ratio,"Avoid: spelling mistakes, distortions, stray objects, watermarks.","Review details before sending to an image model."].join("\n"),
+video:(p)=>{const beats=["Opening: establish setting and hook","Reveal viewer need or problem","Introduce the main idea or solution","Emphasize a credible benefit or detail","Closing result and call to action"];return ["STORYBOARD — FIVE 6-SECOND SCENES","Topic: "+p.idea,"Audience: "+p.audience,"Style: "+p.style,"Aspect ratio: "+p.ratio,""].concat(beats.map((b,i)=>"Scene "+(i+1)+" (6s)\nEvent: "+b+"\nFrame: feature "+p.idea+"\nImage prompt: "+p.style+", "+p.ratio+", scene "+(i+1)+"\nMotion prompt: subtle smooth movement, no flicker\n")).join("\n")},
+ads:(p)=>["AD COPY OUTLINE — DRAFT","Topic: "+p.idea,"Audience: "+p.audience,"Tone: "+p.style,"","1. Hook: state a real need or desired result.","2. Benefits: insert 2–3 verifiable benefits.","3. Proof: add actual examples or authorized testimonials.","4. CTA: invite a clear next step.","5. Adapt the post for the channel; visual ratio "+p.ratio+".","Avoid invented endorsements or claims."].join("\n")
+}};
+get("maker").addEventListener("submit",function(e){
+e.preventDefault();
+const idea=get("idea").value.trim();
+if(!idea){get("idea").focus();return;}
+const p={idea,audience:get("audience").value.trim()||"Chưa xác định / not specified",style:get("style").value,ratio:get("ratio").value};
+latest=text[get("lang").value][get("kind").value](p);
+get("output").textContent=latest;
+get("result").hidden=false;
+get("status").textContent="";
+get("result").scrollIntoView({behavior:"smooth",block:"nearest"});
+});
+get("maker").addEventListener("reset",function(){latest="";get("result").hidden=true;get("status").textContent=""});
+get("copy").addEventListener("click",async function(){
+try {
+if(navigator.clipboard && window.isSecureContext){await navigator.clipboard.writeText(latest)}
+else {const temp=document.createElement("textarea");temp.value=latest;document.body.appendChild(temp);temp.select();if(!document.execCommand("copy"))throw Error("unsupported");temp.remove()}
+get("status").textContent="Đã sao chép.";
+}catch(e){get("status").textContent="Không thể sao chép tự động. Hãy chọn và sao chép nội dung bên trên."}
+});
+get("download").addEventListener("click",function(){
+if(!latest)return;
+const u=URL.createObjectURL(new Blob([latest],{type:"text/plain;charset=utf-8"}));
+const a=document.createElement("a");a.href=u;a.download="zunva-ban-nhap.txt";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1000);
+});
+})();
+</script>
+</body>
+</html>
