@@ -143,7 +143,7 @@ Sơ đồ 4 tầng (từ trên xuống, tầng trên gọi xuống tầng dướ
 3. **Dịch vụ chạy trên máy người dùng**: Hiểu ý tưởng (từ khóa / AI của bạn) · Lưu trữ + file .zunva · Xuất PNG, JPG, PDF
 4. **Đóng gói thành bản cài**: Web (PWA) · Capacitor (Android, iOS, iPadOS) · Tauri (Windows, macOS)
 
-**Lõi vẽ — CHƯA RÕ, chờ Council:** lõi tự viết hiện tại (canvas thuần, không thư viện) đã làm được kéo thả, đổi cỡ, đường căn, lớp, hoàn tác. Để có xoay, cắt ảnh, sửa chữ trực tiếp, nhóm, Claude đề xuất làm thử cùng một màn hình bằng Fabric.js trong giai đoạn G1, so trên điện thoại thật, rồi mới chọn. Dù chọn bên nào, dữ liệu thiết kế giữ dạng riêng của ZUNVA để đổi lõi sau này không mất dự án.
+**Lõi vẽ — CHƯA RÕ, chờ Council:** lõi tự viết trong repo (canvas thuần, không thư viện) mới có kéo thả chữ và ảnh, danh sách lớp, hoàn tác; chỉ có phông Arial, chữ một dòng, chưa có tay nắm đổi cỡ, đường căn, xoay, cắt ảnh (Kiro kiểm chứng từ mã). Tay nắm và đường căn mới chỉ có trong bản thử riêng của Claude. Để có xoay, cắt ảnh, sửa chữ trực tiếp, nhóm, Claude đề xuất làm thử cùng một màn hình bằng Fabric.js trong giai đoạn G1, so trên điện thoại thật, rồi mới chọn. Dù chọn bên nào, dữ liệu thiết kế giữ dạng riêng của ZUNVA để đổi lõi sau này không mất dự án.
 
 Giữ JavaScript thuần như hiện nay, thêm công cụ build nhẹ (Vite) để chia mã thành nhiều file. Không chuyển sang React hay Vue (ĐỀ XUẤT, khớp quyết định cũ: không viết lại từ đầu).
 
