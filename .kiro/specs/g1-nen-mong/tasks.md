@@ -98,7 +98,7 @@ Nhánh: `feat/g1-6-zunva-file`. File để lưu ra máy, gửi người khác, m
 - [ ] 6.5 Bộ nhập dự án v1.5: **ưu tiên thấp** (G1-0: không có dự án cần giữ) — chưa làm.
 - Đạt: CI xanh; lõi vẫn qua luật không gọi React/DOM.
 
-## G1-7 — APK C87 có giao diện thật + nghiệm thu G1
+## G1-7 — APK C87 có giao diện thật + nghiệm thu G1 — XONG (PR #42, #43, #44)
 Mục tiêu: founder cài một APK ký bằng khóa C87 (`vn.c87.lsc`) lên S24+, mở ra là app mới (`zunva/apps/web`), tạo/lưu dự án, lưu và mở file `.zunva`.
 
 ### Chọn vỏ Android — dùng **A** (founder chưa chọn ngày 11/11, Claude theo phương án đề xuất; founder đổi ý thì báo trước khi Kiro làm)
@@ -120,25 +120,27 @@ Phần dưới viết theo **A**. Nếu founder chọn B, Claude viết lại m�
 Hợp đồng giữa hai bên (JavaScript gọi Java): `window.AndroidFileSaver.saveBytes(fileName, mimeType, base64)` → trả chuỗi JSON `{"ok":true,"location":"Tải xuống/C87"}` hoặc `{"ok":false,"error":"..."}`.
 
 ### Kiro (dự toán 40–90 credit), nhánh `feat/g1-7-vo-android`
-- [ ] 7.0 `AndroidManifest.xml`: `android:label="C87"`.
-- [ ] 7.1 `MainActivity`: phục vụ **mọi file trong `assets/`** của bản build (không chỉ 5 file v1.5): chặn `..`, `\`, đường dẫn rỗng; trả đúng kiểu file (html, js, css, svg, png, jpg, webp, woff2, json, ico); `/` và đường dẫn không có đuôi → `index.html`. Giữ: chặn trang ngoài, không cho truy cập file máy.
-- [ ] 7.2 Cầu nối `AndroidFileSaver.saveBytes(fileName, mimeType, base64)` ghi vào `MediaStore.Downloads` thư mục `Download/C87` (Android 10+), chạy nền, trả JSON như hợp đồng. Giữ `AndroidImageSaver`, đổi thư mục ảnh thành `Pictures/C87`.
-- [ ] 7.3 `android/app/build.gradle`: task chép `zunva/apps/web/dist/**` vào assets trước khi build; báo lỗi rõ nếu `dist` chưa có. `versionCode 16`, `versionName '1.0.0-g1'`.
-- [ ] 7.4 Workflow `android-release-apk.yml`: thêm bước cài Node 22 + pnpm 10.28.0, `pnpm install --frozen-lockfile` và `pnpm build` trong `zunva/` **trước** bước build Android. Giữ nguyên mọi bước ký.
-- [ ] 7.5 Terminal hỏng thì chỉ sửa file; Claude đẩy lên và chạy workflow trên nhánh để thử.
+- [x] 7.0 `AndroidManifest.xml`: `android:label="C87"`.
+- [x] 7.1 `MainActivity`: phục vụ **mọi file trong `assets/`** của bản build (không chỉ 5 file v1.5): chặn `..`, `\`, đường dẫn rỗng; trả đúng kiểu file (html, js, css, svg, png, jpg, webp, woff2, json, ico); `/` và đường dẫn không có đuôi → `index.html`. Giữ: chặn trang ngoài, không cho truy cập file máy.
+- [x] 7.2 Cầu nối `AndroidFileSaver.saveBytes(fileName, mimeType, base64)` ghi vào `MediaStore.Downloads` thư mục `Download/C87` (Android 10+), chạy nền, trả JSON như hợp đồng. Giữ `AndroidImageSaver`, đổi thư mục ảnh thành `Pictures/C87`.
+- [x] 7.3 `android/app/build.gradle`: task chép `zunva/apps/web/dist/**` vào assets trước khi build; báo lỗi rõ nếu `dist` chưa có. `versionCode 16`, `versionName '1.0.0-g1'`.
+- [x] 7.4 Workflow `android-release-apk.yml`: thêm bước cài Node 22 + pnpm 10.28.0, `pnpm install --frozen-lockfile` và `pnpm build` trong `zunva/` **trước** bước build Android. Giữ nguyên mọi bước ký.
+- [x] 7.5 Terminal hỏng thì chỉ sửa file; Claude đẩy lên và chạy workflow trên nhánh để thử.
 
 ### Claude, nhánh `feat/g1-7-zunva-file-ui`
-- [ ] 7.5b `PRODUCT_NAME = 'C87'` trong `packages/core/src/brand.ts`.
-- [ ] 7.6 `createAndroidPlatform()` trong `@zunva/platform`: dùng `window.AndroidFileSaver` khi có, ngược lại dùng bản web.
-- [ ] 7.7 Tab Dự án: mỗi dự án có nút **"Lưu file .zunva"** (gói thiết kế + ảnh từ kho); nút **"Mở file .zunva"** (chọn file → kiểm tra → lưu vào kho; trùng ID thì thêm thành bản sao, không ghi đè).
-- [ ] 7.8 Test: Playwright lưu file → xóa dự án → mở lại file → dự án trở lại.
+- [x] 7.5b `PRODUCT_NAME = 'C87'` trong `packages/core/src/brand.ts`.
+- [x] 7.6 `createAndroidPlatform()` trong `@zunva/platform`: dùng `window.AndroidFileSaver` khi có, ngược lại dùng bản web.
+- [x] 7.7 Tab Dự án: mỗi dự án có nút **"Lưu file .zunva"** (gói thiết kế + ảnh từ kho); nút **"Mở file .zunva"** (chọn file → kiểm tra → lưu vào kho; trùng ID thì thêm thành bản sao, không ghi đè).
+- [x] 7.8 Test: Playwright lưu file → xóa dự án → mở lại file → dự án trở lại.
 
 ### Nghiệm thu G1 (founder trên S24+)
-- [ ] Cài APK, mở ra thấy trang chủ app mới, 5 tab.
-- [ ] Tạo 3 dự án, tắt hẳn app, mở lại vẫn còn.
-- [ ] Lưu một dự án ra file `.zunva` → thấy file trong Tải xuống/C87.
-- [ ] Xóa dự án đó, mở lại file `.zunva` → dự án trở lại.
-- [ ] Gỡ app thử G1-1 nếu còn.
+- [x] Cài APK, mở ra thấy trang chủ app mới, 5 tab.
+- [x] Tạo 3 dự án, tắt hẳn app, mở lại vẫn còn.
+- [x] Lưu một dự án ra file `.zunva` → thấy file trong Tải xuống/C87.
+- [x] Xóa dự án đó, mở lại file `.zunva` → dự án trở lại.
+- [x] Gỡ app thử G1-1 nếu còn (APK G1-7 cùng tên gói, cùng khóa nên cập nhật đè lên).
+- **Kết quả (founder quay video trên S24+, 11/11/2026 19:58): ĐẠT cả 4 mục.** APK run 43018821232, chứng chỉ `248a14eb…e61bbf`. G1 XONG.
+- Ghi lại cho G2: thay hộp hỏi xóa mặc định của Android (hiện dòng "Trang tại https://appassets…") bằng hộp riêng của C87; nút "Mở file" nên mở thẳng thư mục Tải xuống/C87 hoặc hiện danh sách file `.zunva` trong app; lưu cùng tên nhiều lần Android tự thêm "(1)".
 
 **Tên app: "C87"** (founder chốt 11/11/2026): `android:label="C87"`; `PRODUCT_NAME = 'C87'` (tên hiển thị trong app). Không đổi tên gói mã nội bộ `@zunva/*`, tên repo, tên định dạng `.zunva`.
 
