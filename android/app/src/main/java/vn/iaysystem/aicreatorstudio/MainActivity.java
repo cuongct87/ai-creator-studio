@@ -24,8 +24,13 @@ public class MainActivity extends Activity {
     private static final int PICK_FILE = 100;
     private static final String HOST = "appassets.androidplatform.net";
     private static final String HOME = "https://" + HOST + "/assets/index.html";
-    /** Max decoded size for AndroidFileSaver (same limit as a .zunva file). */
-    private static final int MAX_SAVE_BYTES = 300 * 1024 * 1024;
+    /**
+     * Max decoded size for AndroidFileSaver. The file crosses the JS bridge as one base64 string
+     * (about 4/3 of the size, held twice in memory), so keep this well below the WebView heap.
+     */
+    private static final int MAX_SAVE_BYTES = 100 * 1024 * 1024;
+    private static final String TOO_LARGE = "File quá lớn để lưu trên điện thoại (tối đa 100 MB).";
+    private static final String OUT_OF_MEMORY = "File quá lớn, bộ nhớ máy không đủ để xử lý. Hãy đóng bớt ứng dụng rồi thử lại.";
 
     /** Saves rendered images to the gallery (Pictures/C87). Kept from v1.5. */
     public class ImageSaver {
@@ -39,8 +44,8 @@ public class MainActivity extends Activity {
                     String mime = header.contains("image/jpeg") ? "image/jpeg" : header.contains("image/webp") ? "image/webp" : "image/png";
                     String ext = mime.equals("image/jpeg") ? ".jpg" : mime.equals("image/webp") ? ".webp" : ".png";
                     byte[] bytes = Base64.decode(dataUrl.substring(comma + 1), Base64.DEFAULT);
-                    String safeName = fileName == null ? "c87" : fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
-                    if (!safeName.endsWith(ext)) safeName = "c87" + ext;
+                    String safeName = safeFileName(fileName);
+                    if (!safeName.toLowerCase(Locale.ROOT).endsWith(ext)) safeName = safeName + ext;
                     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                         throw new IOException("Android 10+ required for direct gallery save");
                     }
@@ -64,6 +69,8 @@ public class MainActivity extends Activity {
                         throw e;
                     }
                     runOnUiThread(() -> Toast.makeText(MainActivity.this, "Đã lưu vào Ảnh / C87", Toast.LENGTH_LONG).show());
+                } catch (OutOfMemoryError e) {
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, OUT_OF_MEMORY, Toast.LENGTH_LONG).show());
                 } catch (Exception e) {
                     runOnUiThread(() -> Toast.makeText(MainActivity.this, "Lưu ảnh thất bại: " + e.getMessage(), Toast.LENGTH_LONG).show());
                 }
@@ -84,12 +91,14 @@ public class MainActivity extends Activity {
             }
             if (base64 == null || base64.isEmpty()) return error("Không có dữ liệu để lưu.");
             // Base64 is ~4/3 of the real size: reject huge input before decoding into memory.
-            if ((long) base64.length() * 3 / 4 > MAX_SAVE_BYTES) return error("File quá lớn (tối đa 300 MB).");
+            if ((long) base64.length() * 3 / 4 > MAX_SAVE_BYTES) return error(TOO_LARGE);
             byte[] bytes;
             try {
                 bytes = Base64.decode(base64, Base64.DEFAULT);
             } catch (IllegalArgumentException e) {
                 return error("Dữ liệu file không hợp lệ.");
+            } catch (OutOfMemoryError e) {
+                return error(OUT_OF_MEMORY);
             }
             String name = safeFileName(fileName);
             String mime = safeMimeType(mimeType);
@@ -113,9 +122,9 @@ public class MainActivity extends Activity {
                 ContentValues done = new ContentValues();
                 done.put(MediaStore.Downloads.IS_PENDING, 0);
                 getContentResolver().update(uri, done, null, null);
-            } catch (Exception e) {
+            } catch (Exception | OutOfMemoryError e) {
                 try { getContentResolver().delete(uri, null, null); } catch (Exception ignored) {}
-                return error("Không ghi được file. Có thể máy đã hết chỗ lưu.");
+                return error(e instanceof OutOfMemoryError ? OUT_OF_MEMORY : "Không ghi được file. Có thể máy đã hết chỗ lưu.");
             }
             return ok("Tải xuống/C87");
         }
@@ -177,6 +186,14 @@ public class MainActivity extends Activity {
             case "jpg": case "jpeg": return "image/jpeg";
             case "webp": return "image/webp";
             case "woff2": return "font/woff2";
+            case "woff": return "font/woff";
+            case "ttf": return "font/ttf";
+            case "otf": return "font/otf";
+            case "gif": return "image/gif";
+            case "avif": return "image/avif";
+            case "mjs": return "application/javascript";
+            case "txt": return "text/plain";
+            case "wasm": return "application/wasm";
             case "json": return "application/json";
             case "ico": return "image/x-icon";
             default: return null;

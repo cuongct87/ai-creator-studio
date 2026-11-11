@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createAndroidPlatform, toBase64 } from './android-platform';
+import { ANDROID_MAX_SAVE_BYTES, createAndroidPlatform, toBase64 } from './android-platform';
 import type { AndroidBridgeWindow } from './android-platform';
 
 const fakeDoc = {} as Document;
@@ -52,6 +52,14 @@ describe('nền tảng Android (cầu nối Java)', () => {
       fakeDoc,
     ).files.saveBytes('a', 'b', new Uint8Array(1));
     expect(thrown.ok).toBe(false);
+  });
+
+  it('file quá 100 MB bị từ chối trước khi gửi sang Java', async () => {
+    const { win, calls } = bridge('{"ok":true,"location":"Tải xuống/C87"}');
+    const big = { length: ANDROID_MAX_SAVE_BYTES + 1 } as unknown as Uint8Array;
+    const r = await createAndroidPlatform(win, fakeDoc).files.saveBytes('to.zunva', 'application/octet-stream', big);
+    expect(r).toEqual({ ok: false, error: 'File quá lớn để lưu trên điện thoại (tối đa 100 MB).' });
+    expect(calls).toHaveLength(0);
   });
 
   it('không có cầu nối thì dùng bản web', () => {
