@@ -101,7 +101,7 @@ Nhánh: `feat/g1-6-zunva-file`. File để lưu ra máy, gửi người khác, m
 ## G1-7 — APK C87 có giao diện thật + nghiệm thu G1
 Mục tiêu: founder cài một APK ký bằng khóa C87 (`vn.c87.lsc`) lên S24+, mở ra là app mới (`zunva/apps/web`), tạo/lưu dự án, lưu và mở file `.zunva`.
 
-### Chọn vỏ Android — CHỜ FOUNDER CHỌN
+### Chọn vỏ Android — dùng **A** (founder chưa chọn ngày 11/11, Claude theo phương án đề xuất; founder đổi ý thì báo trước khi Kiro làm)
 | | A. Dùng lại vỏ WebView đang có (`android/`) — **đề xuất** | B. Chuyển sang Capacitor ngay |
 | --- | --- | --- |
 | Làm gì | Sửa `MainActivity` cho phục vụ mọi file của bản build web; thêm cầu nối lưu file | Tạo dự án Android mới bằng Capacitor, chép lại cầu nối |
@@ -120,6 +120,7 @@ Phần dưới viết theo **A**. Nếu founder chọn B, Claude viết lại m�
 Hợp đồng giữa hai bên (JavaScript gọi Java): `window.AndroidFileSaver.saveBytes(fileName, mimeType, base64)` → trả chuỗi JSON `{"ok":true,"location":"Tải xuống/C87"}` hoặc `{"ok":false,"error":"..."}`.
 
 ### Kiro (dự toán 40–90 credit), nhánh `feat/g1-7-vo-android`
+- [ ] 7.0 `AndroidManifest.xml`: `android:label="C87"`.
 - [ ] 7.1 `MainActivity`: phục vụ **mọi file trong `assets/`** của bản build (không chỉ 5 file v1.5): chặn `..`, `\`, đường dẫn rỗng; trả đúng kiểu file (html, js, css, svg, png, jpg, webp, woff2, json, ico); `/` và đường dẫn không có đuôi → `index.html`. Giữ: chặn trang ngoài, không cho truy cập file máy.
 - [ ] 7.2 Cầu nối `AndroidFileSaver.saveBytes(fileName, mimeType, base64)` ghi vào `MediaStore.Downloads` thư mục `Download/C87` (Android 10+), chạy nền, trả JSON như hợp đồng. Giữ `AndroidImageSaver`, đổi thư mục ảnh thành `Pictures/C87`.
 - [ ] 7.3 `android/app/build.gradle`: task chép `zunva/apps/web/dist/**` vào assets trước khi build; báo lỗi rõ nếu `dist` chưa có. `versionCode 16`, `versionName '1.0.0-g1'`.
@@ -127,6 +128,7 @@ Hợp đồng giữa hai bên (JavaScript gọi Java): `window.AndroidFileSaver.
 - [ ] 7.5 Terminal hỏng thì chỉ sửa file; Claude đẩy lên và chạy workflow trên nhánh để thử.
 
 ### Claude, nhánh `feat/g1-7-zunva-file-ui`
+- [ ] 7.5b `PRODUCT_NAME = 'C87'` trong `packages/core/src/brand.ts`.
 - [ ] 7.6 `createAndroidPlatform()` trong `@zunva/platform`: dùng `window.AndroidFileSaver` khi có, ngược lại dùng bản web.
 - [ ] 7.7 Tab Dự án: mỗi dự án có nút **"Lưu file .zunva"** (gói thiết kế + ảnh từ kho); nút **"Mở file .zunva"** (chọn file → kiểm tra → lưu vào kho; trùng ID thì thêm thành bản sao, không ghi đè).
 - [ ] 7.8 Test: Playwright lưu file → xóa dự án → mở lại file → dự án trở lại.
@@ -138,7 +140,7 @@ Hợp đồng giữa hai bên (JavaScript gọi Java): `window.AndroidFileSaver.
 - [ ] Xóa dự án đó, mở lại file `.zunva` → dự án trở lại.
 - [ ] Gỡ app thử G1-1 nếu còn.
 
-Câu hỏi founder: tên app hiện dưới biểu tượng trên điện thoại — giữ "AI Creator Studio" hay đổi thành **"C87"**? (Đổi tên hiển thị trong app — `PRODUCT_NAME` — cũng cần founder duyệt.)
+**Tên app: "C87"** (founder chốt 11/11/2026): `android:label="C87"`; `PRODUCT_NAME = 'C87'` (tên hiển thị trong app). Không đổi tên gói mã nội bộ `@zunva/*`, tên repo, tên định dạng `.zunva`.
 
 ## Ý tưởng chờ (chưa thuộc G1)
 - Trang chủ G2: học cách bố trí từ video Canva founder quay 11/11 (một câu hỏi lớn + ô nhập, "Tiếp tục thiết kế", nút tròn theo mục đích, 5 tab, AI dạng trò chuyện có báo tiến độ, mẫu theo dịp Việt Nam, ô xám khi đang tải). **Không** dùng màu tím, logo, mẫu của Canva.
