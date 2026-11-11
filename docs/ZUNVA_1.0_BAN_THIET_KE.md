@@ -219,6 +219,44 @@ Thời gian theo ngày: CHƯA RÕ — phụ thuộc tốc độ của AI và l�
 4. Cách chuyển dữ liệu (nhất là Android) có lỗ hổng nào?
 5. Ước tính khối lượng G1 mới: danh sách task và credit.
 
+## Định hướng sản phẩm C87 (founder chốt 11/11/2026, tối)
+
+Thương hiệu đã đổi từ ZUNVA sang **C87** (tên trong mã vẫn giữ ZUNVA lúc này), tên gói `vn.c87.lsc`. Mọi phương án ở vòng 2 phải khớp với các nguyên tắc dưới đây.
+
+**1. Quen thuộc như Canva, nhưng là của C87 (ĐÃ CHỐT)**
+
+- Người dùng mở C87 phải thấy dễ dùng và quen tay như khi dùng Canva: màn hình chính rõ việc cần làm, kéo thả, chạm vào chữ để sửa, thanh công cụ quen thuộc. Đây là những thói quen chung của ứng dụng thiết kế, được phép học theo.
+- **Logo tuyệt đối không giống Canva.** Màu thương hiệu: hồng pastel hoặc xanh nhạt, không dùng tím. Phông, biểu tượng, tên tính năng, mẫu và hình ảnh do C87 tự làm.
+- Bố cục không được giống đến mức đặt cạnh Canva mà người ta nhầm. Cách kiểm tra: người lạ nói "dễ dùng như Canva" là đạt; người lạ hỏi "đây là Canva à?" là không đạt.
+
+**2. Điểm khác biệt: chụp ảnh, quay video kiểu TikTok (ĐÃ CHỐT)**
+
+- Trong C87 có chụp ảnh và quay video ngay trong app, chỉnh sửa được trên **cả Android và iOS**.
+- **C87 không lưu và không đăng video của người dùng lên máy chủ của mình.** Video được đưa sang các nền tảng khác (TikTok, YouTube, Facebook, Instagram, Zalo…) để người dùng đăng ở đó. Không cần máy chủ video, không tốn phí lưu trữ.
+
+**3. Cách nối với các nền tảng video (ĐỀ XUẤT)**
+
+| Mức | Cách làm | Cần nền tảng duyệt? | Khi nào |
+| --- | --- | --- | --- |
+| 1 | Nút "Chia sẻ" của hệ điều hành: mở app TikTok/YouTube/Zalo… với video sẵn, người dùng tự bấm đăng | Không (dùng tính năng có sẵn của Android/iOS) — cần kiểm chứng trên máy thật | Ngay từ bản đầu |
+| 2 | Đăng thẳng từ C87 qua API chính thức | Có, từng nền tảng | Khi C87 có người dùng thật |
+
+Điều kiện của mức 2 (đã tra tài liệu chính thức ngày 11/11/2026, cần kiểm lại lúc làm):
+
+- TikTok Content Posting API: app chưa qua kiểm duyệt chỉ đăng được ở chế độ riêng tư, tối đa 5 người dùng/24 giờ. TikTok cấm app chèn logo/watermark quảng cáo vào video người dùng — vậy video xuất ra để đăng TikTok không được tự gắn logo C87.
+- YouTube Data API: dự án chưa qua kiểm duyệt thì video tải lên bị khóa ở chế độ riêng tư.
+- Instagram: người dùng phải có tài khoản chuyên nghiệp; app cần App Review và xác minh doanh nghiệp (CHƯA RÕ: có cần công ty đăng ký pháp nhân không).
+
+**4. Chuẩn bị để hợp tác với nền tảng lớn (ĐỀ XUẤT)**
+
+Khi C87 có nhiều người dùng, các nền tảng sẽ có lợi khi mở đường tích hợp cho C87 (thêm nội dung cho họ). Để có số liệu đi đàm phán, C87 đếm **số lần chia sẻ sang từng nền tảng** ngay từ đầu — chỉ đếm số lượng, không đọc nội dung, không gửi dữ liệu cá nhân.
+
+**Câu hỏi thêm cho GPT, Gemini, Kiro (bổ sung vòng 2):**
+
+6. Capacitor có đủ tốt cho camera, quay video và chỉnh video trên cả Android và iOS không? Nếu không, phương án nào (plugin gốc, React Native, Flutter…) và đổi lại mất gì? Dẫn chứng.
+7. Chia sẻ video qua nút "Chia sẻ" của hệ điều hành sang TikTok/YouTube/Zalo có bẫy nào (định dạng, dung lượng, iOS)?
+8. Kiến trúc mô-đun cần gì để thêm "đăng thẳng" từng nền tảng sau này mà không sửa lõi?
+
 ## Đề bài phản biện cho GPT, Gemini, Kiro
 
 Mỗi AI đọc toàn bộ tài liệu này và trả lời độc lập, chưa xem ý kiến của bên khác. Trả lời theo mẫu của Giao thức Council: lập trường, dẫn chứng, rủi ro, ước tính chi phí, mức tự tin, điều chưa biết.
