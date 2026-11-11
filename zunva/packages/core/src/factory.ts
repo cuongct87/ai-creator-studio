@@ -107,7 +107,7 @@ export function createDocument(
   id: Id,
   firstPage: Page,
   now: number,
-  init: Partial<Pick<DesignDocument, 'name' | 'dpi' | 'meta'>> = {},
+  init: Partial<Pick<DesignDocument, 'name' | 'dpi' | 'meta' | 'assets'>> = {},
 ): DesignDocument {
   return {
     schemaVersion: SCHEMA_VERSION,
@@ -117,7 +117,7 @@ export function createDocument(
     updatedAt: now,
     dpi: init.dpi ?? 300,
     pages: [firstPage],
-    assets: {},
+    assets: init.assets ?? {},
     meta: init.meta ?? { kind: null, locale: 'vi', templateId: null },
   };
 }

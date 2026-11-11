@@ -231,10 +231,21 @@ describe('thao tác bị từ chối khi sai', () => {
   });
   it('ID trùng tên thuộc tính sẵn có của JavaScript không làm lệch kiểm tra', () => {
     expect(run({ op: 'addLayer', pageId: 'page_1', index: 0, layer: createImageLayer('img_x', 'toString') })).toThrow(/tài nguyên/);
-    const added = execute(h, 'thêm', [{ op: 'addLayer', pageId: 'page_1', index: 0, layer: createTextLayer('constructor') }]);
-    expect(added.doc.pages[0]!.layers[0]!.id).toBe('constructor');
+    const added = execute(h, 'thêm', [{ op: 'addLayer', pageId: 'page_1', index: 0, layer: createTextLayer('toString') }]);
+    expect(added.doc.pages[0]!.layers[0]!.id).toBe('toString');
+    expect(run({ op: 'addLayer', pageId: 'page_1', index: 0, layer: createTextLayer('constructor') })).toThrow(/dành riêng/);
+    expect(run({ op: 'addLayer', pageId: 'page_1', index: 0, layer: createTextLayer('__proto__') })).toThrow(/dành riêng/);
     expect(run({ op: 'updateLayer', pageId: 'page_1', layerId: 'layer_box', set: { toString: 'x' } as never })).toThrow(/không có trường/);
     expect(run({ op: 'removeAsset', assetId: 'hasOwnProperty' })).toThrow(/Không có tài nguyên/);
+  });
+  it('trang mới chứa 2 lớp trùng ID bị từ chối', () => {
+    const page = createPage('page_2', 1080, 1080, { layers: [createTextLayer('dup'), createShapeLayer('dup')] });
+    expect(run({ op: 'addPage', index: 1, page })).toThrow(/"dup" đã tồn tại/);
+    const self = createPage('page_3', 1080, 1080, { layers: [createTextLayer('page_3')] });
+    expect(run({ op: 'addPage', index: 1, page: self })).toThrow(/"page_3" đã tồn tại/);
+  });
+  it('đổi tên bằng giá trị không phải chuỗi bị từ chối', () => {
+    expect(run({ op: 'rename', name: 42 as never })).toThrow(/phải là chuỗi/);
   });
   it('vị trí lớp ngoài phạm vi', () => {
     expect(run({ op: 'moveLayer', pageId: 'page_1', layerId: 'layer_box', toIndex: 9 })).toThrow(/không hợp lệ/);
