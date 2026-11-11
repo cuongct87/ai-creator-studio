@@ -134,6 +134,29 @@ describe('lịch sử hoàn tác theo lệnh', () => {
     expect(h.doc).toEqual(initial);
   });
 
+  it('kéo 120 lần: gộp còn 1 thao tác, hoàn tác chạy 1 bước, về đúng chỗ cũ', () => {
+    const initial = baseDoc();
+    let h = createHistory(initial);
+    for (let i = 1; i <= 120; i++) {
+      h = execute(h, 'Kéo hình', [{ op: 'updateLayer', pageId: 'page_1', layerId: 'layer_box', set: { x: i, y: i * 2 } }], {
+        mergeKey: 'drag:layer_box',
+      });
+    }
+    // Lần cuối đổi thêm góc xoay: lệnh đảo ngược phải nhớ cả góc cũ.
+    h = execute(h, 'Kéo hình', [{ op: 'updateLayer', pageId: 'page_1', layerId: 'layer_box', set: { rotation: 30 } }], {
+      mergeKey: 'drag:layer_box',
+    });
+    const tx = h.undoStack[0]!;
+    expect(h.undoStack).toHaveLength(1);
+    expect(tx.ops).toHaveLength(1);
+    expect(tx.inverses).toHaveLength(1);
+    const final = h.doc;
+    h = undo(h);
+    expect(h.doc).toEqual(initial);
+    h = redo(h);
+    expect(h.doc).toEqual(final);
+  });
+
   it('closeMerge tách lần kéo sau thành bước mới', () => {
     let h = createHistory(baseDoc());
     const drag = (x: number) =>
@@ -198,6 +221,20 @@ describe('thao tác bị từ chối khi sai', () => {
   });
   it('xóa trang cuối cùng', () => {
     expect(run({ op: 'removePage', pageId: 'page_1' })).toThrow(/ít nhất 1 trang/);
+  });
+  it('giá trị sai bị chặn ngay khi thao tác (không chờ tới lúc lưu)', () => {
+    expect(run({ op: 'updateLayer', pageId: 'page_1', layerId: 'layer_box', set: { width: -50 } })).toThrow(/width/);
+    expect(run({ op: 'updateLayer', pageId: 'page_1', layerId: 'layer_box', set: { opacity: 99 } })).toThrow(/opacity/);
+    expect(run({ op: 'updateLayer', pageId: 'page_1', layerId: 'layer_box', set: { x: Number.NaN } })).toThrow(/x/);
+    expect(run({ op: 'updateLayer', pageId: 'page_1', layerId: 'layer_title', set: { color: 'đỏ' } })).toThrow(/color/);
+    expect(run({ op: 'updatePage', pageId: 'page_1', set: { width: 0 } })).toThrow(/width/);
+  });
+  it('ID trùng tên thuộc tính sẵn có của JavaScript không làm lệch kiểm tra', () => {
+    expect(run({ op: 'addLayer', pageId: 'page_1', index: 0, layer: createImageLayer('img_x', 'toString') })).toThrow(/tài nguyên/);
+    const added = execute(h, 'thêm', [{ op: 'addLayer', pageId: 'page_1', index: 0, layer: createTextLayer('constructor') }]);
+    expect(added.doc.pages[0]!.layers[0]!.id).toBe('constructor');
+    expect(run({ op: 'updateLayer', pageId: 'page_1', layerId: 'layer_box', set: { toString: 'x' } as never })).toThrow(/không có trường/);
+    expect(run({ op: 'removeAsset', assetId: 'hasOwnProperty' })).toThrow(/Không có tài nguyên/);
   });
   it('vị trí lớp ngoài phạm vi', () => {
     expect(run({ op: 'moveLayer', pageId: 'page_1', layerId: 'layer_box', toIndex: 9 })).toThrow(/không hợp lệ/);

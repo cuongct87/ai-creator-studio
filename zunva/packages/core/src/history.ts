@@ -59,7 +59,7 @@ export function execute(state: HistoryState, label: string, ops: Op[], options: 
   const top = state.undoStack[state.undoStack.length - 1];
   let undoStack: Transaction[];
   if (mergeKey !== null && top && top.mergeKey === mergeKey) {
-    const merged: Transaction = {
+    const merged: Transaction = compactUpdate(top, ops, inverses) ?? {
       label: top.label,
       ops: [...top.ops, ...ops],
       inverses: [...inverses, ...top.inverses],
@@ -72,6 +72,28 @@ export function execute(state: HistoryState, label: string, ops: Op[], options: 
   }
 
   return { ...state, doc, undoStack, redoStack: [], version: state.version + 1 };
+}
+
+/**
+ * Thu gọn khi gộp: nếu bước trước và lần mới đều là MỘT lệnh sửa cùng một lớp (hay gặp khi kéo),
+ * chỉ giữ một lệnh với giá trị mới nhất; lệnh đảo ngược giữ giá trị CŨ NHẤT. Nhờ vậy kéo 120 lần
+ * vẫn chỉ là 1 thao tác, hoàn tác chạy 1 bước.
+ */
+function compactUpdate(top: Transaction, ops: Op[], inverses: Op[]): Transaction | null {
+  const [a] = top.ops;
+  const [b] = ops;
+  const [invA] = top.inverses;
+  const [invB] = inverses;
+  if (top.ops.length !== 1 || ops.length !== 1 || !a || !b || !invA || !invB) return null;
+  if (a.op !== 'updateLayer' || b.op !== 'updateLayer' || invA.op !== 'updateLayer' || invB.op !== 'updateLayer') return null;
+  if (a.pageId !== b.pageId || a.layerId !== b.layerId) return null;
+  return {
+    label: top.label,
+    ops: [{ ...a, set: { ...a.set, ...b.set } }],
+    // Trường mới xuất hiện ở lần sau lấy giá trị cũ từ invB; trường đã có giữ giá trị cũ nhất từ invA.
+    inverses: [{ ...invA, set: { ...invB.set, ...invA.set } }],
+    mergeKey: top.mergeKey,
+  };
 }
 
 /** Kết thúc chuỗi gộp: lần execute sau dù cùng mergeKey cũng thành bước mới (ví dụ khi thả tay). */

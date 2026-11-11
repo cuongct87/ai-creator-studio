@@ -13,6 +13,7 @@ export type ValidationResult =
 
 type Obj = Record<string, unknown>;
 
+const has = (o: object, k: string): boolean => Object.hasOwn(o, k);
 const isObj = (v: unknown): v is Obj => typeof v === 'object' && v !== null && !Array.isArray(v);
 const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 const isStr = (v: unknown): v is string => typeof v === 'string';
@@ -149,6 +150,57 @@ function checkId(c: Checker, o: Obj, path: string, seen: Set<string>): void {
   seen.add(id);
 }
 
+/** Lỗi của MỘT lớp (dùng khi áp dụng thao tác, không chờ tới lúc lưu). */
+export function layerErrors(layer: unknown, assetIds: ReadonlySet<string>, path = 'layer'): string[] {
+  const c = new Checker();
+  checkLayer(c, layer, path, new Set(assetIds), new Set());
+  return c.errors;
+}
+
+/** Lỗi của phần thông tin trang (không gồm các lớp bên trong). */
+export function pageInfoErrors(page: unknown, assetIds: ReadonlySet<string>, path = 'page'): string[] {
+  const c = new Checker();
+  if (!isObj(page)) return [`${path}: phải là object`];
+  checkPageInfo(c, page, path, new Set(assetIds));
+  return c.errors;
+}
+
+/** Lỗi của một tài nguyên. */
+export function assetErrors(asset: unknown, path = 'asset'): string[] {
+  const c = new Checker();
+  if (!isObj(asset)) return [`${path}: phải là object`];
+  checkAssetFields(c, asset, path);
+  return c.errors;
+}
+
+function checkAssetFields(c: Checker, a: Obj, p: string): void {
+  c.oneOf(a, 'kind', p, ['image', 'font']);
+  c.str(a, 'mimeType', p, { nonEmpty: true });
+  c.strOrNull(a, 'name', p);
+  c.strOrNull(a, 'hash', p);
+  c.numOrNull(a, 'width', p, { gt: 0 });
+  c.numOrNull(a, 'height', p, { gt: 0 });
+  if (!isStr(a.id) || a.id === '') c.fail(`${p}.id`, 'phải là chuỗi không rỗng');
+}
+
+function checkPageInfo(c: Checker, pg: Obj, p: string, assetIds: Set<string>): void {
+  c.num(pg, 'width', p, { gt: 0 });
+  c.num(pg, 'height', p, { gt: 0 });
+  c.numOrNull(pg, 'duration', p, { gt: 0 });
+  const bg = pg.background;
+  if (!isObj(bg)) {
+    c.fail(`${p}.background`, 'phải là object');
+  } else {
+    c.color(bg, 'color', `${p}.background`);
+    c.num(bg, 'imageOpacity', `${p}.background`, { min: 0, max: 1 });
+    if (bg.imageAssetId !== null) {
+      if (!isStr(bg.imageAssetId) || !assetIds.has(bg.imageAssetId)) {
+        c.fail(`${p}.background.imageAssetId`, 'phải là null hoặc ID tài nguyên có thật');
+      }
+    }
+  }
+}
+
 export function validateDocument(input: unknown): ValidationResult {
   const c = new Checker();
   if (!isObj(input)) return { ok: false, errors: ['(gốc): phải là object'] };
@@ -169,6 +221,7 @@ export function validateDocument(input: unknown): ValidationResult {
     c.fail('assets', 'phải là object { id: tài nguyên }');
   } else {
     for (const [key, a] of Object.entries(d.assets)) {
+      if (!has(d.assets, key)) continue;
       const p = `assets["${key}"]`;
       if (!isObj(a)) {
         c.fail(p, 'phải là object');
@@ -176,12 +229,7 @@ export function validateDocument(input: unknown): ValidationResult {
       }
       checkId(c, a, p, seen);
       if (a.id !== key) c.fail(`${p}.id`, 'phải trùng với khóa');
-      c.oneOf(a, 'kind', p, ['image', 'font']);
-      c.str(a, 'mimeType', p, { nonEmpty: true });
-      c.strOrNull(a, 'name', p);
-      c.strOrNull(a, 'hash', p);
-      c.numOrNull(a, 'width', p, { gt: 0 });
-      c.numOrNull(a, 'height', p, { gt: 0 });
+      checkAssetFields(c, a, p);
       assetIds.add(key);
     }
   }
@@ -193,21 +241,7 @@ export function validateDocument(input: unknown): ValidationResult {
       const p = `pages[${i}]`;
       if (!isObj(pg)) return c.fail(p, 'phải là object');
       checkId(c, pg, p, seen);
-      c.num(pg, 'width', p, { gt: 0 });
-      c.num(pg, 'height', p, { gt: 0 });
-      c.numOrNull(pg, 'duration', p, { gt: 0 });
-      const bg = pg.background;
-      if (!isObj(bg)) {
-        c.fail(`${p}.background`, 'phải là object');
-      } else {
-        c.color(bg, 'color', `${p}.background`);
-        c.num(bg, 'imageOpacity', `${p}.background`, { min: 0, max: 1 });
-        if (bg.imageAssetId !== null) {
-          if (!isStr(bg.imageAssetId) || !assetIds.has(bg.imageAssetId)) {
-            c.fail(`${p}.background.imageAssetId`, 'phải là null hoặc ID tài nguyên có thật');
-          }
-        }
-      }
+      checkPageInfo(c, pg, p, assetIds);
       if (!Array.isArray(pg.layers)) {
         c.fail(`${p}.layers`, 'phải là danh sách');
       } else {

@@ -1,4 +1,5 @@
 import type { Asset, Background, DesignDocument, Id, ImageLayer, Layer, Page, ShapeLayer, TextLayer } from './model';
+import { assetErrors, layerErrors, pageInfoErrors } from './validate';
 
 /**
  * Thao tác (op) là đơn vị thay đổi nhỏ nhất, có thể đảo ngược.
@@ -47,6 +48,16 @@ export interface OpResult {
   inverse: Op;
 }
 
+/** Kiểm tra khóa là thuộc tính riêng (không lẫn `toString`, `constructor`… của JavaScript). */
+const hasOwn = (o: object, key: string): boolean => Object.hasOwn(o, key);
+
+const assetIdSet = (doc: DesignDocument): Set<string> => new Set(Object.keys(doc.assets));
+
+/** Ném lỗi nếu phần tử mới không hợp lệ: chặn dữ liệu hỏng ngay khi thao tác, không chờ tới lúc lưu. */
+function ensureValid(errors: string[]): void {
+  if (errors.length > 0) throw new OpError(`Dữ liệu không hợp lệ: ${errors.slice(0, 3).join('; ')}`);
+}
+
 function pageIndex(doc: DesignDocument, pageId: Id): number {
   const i = doc.pages.findIndex((p) => p.id === pageId);
   if (i < 0) throw new OpError(`Không có trang "${pageId}"`);
@@ -60,7 +71,7 @@ function layerIndex(page: Page, layerId: Id): number {
 }
 
 function idExists(doc: DesignDocument, id: Id): boolean {
-  if (doc.id === id || id in doc.assets) return true;
+  if (doc.id === id || hasOwn(doc.assets, id)) return true;
   return doc.pages.some((p) => p.id === id || p.layers.some((l) => l.id === id));
 }
 
@@ -91,9 +102,10 @@ export function applyOp(doc: DesignDocument, op: Op): OpResult {
       const page = doc.pages[pi]!;
       checkIndex(op.index, page.layers.length, 'lớp');
       if (idExists(doc, op.layer.id)) throw new OpError(`ID "${op.layer.id}" đã tồn tại`);
-      if (op.layer.type === 'image' && !(op.layer.assetId in doc.assets)) {
+      if (op.layer.type === 'image' && !hasOwn(doc.assets, op.layer.assetId)) {
         throw new OpError(`Không có tài nguyên "${op.layer.assetId}"`);
       }
+      ensureValid(layerErrors(op.layer, assetIdSet(doc)));
       const layers = page.layers.slice();
       layers.splice(op.index, 0, op.layer);
       return {
@@ -123,15 +135,16 @@ export function applyOp(doc: DesignDocument, op: Op): OpResult {
       const prev: Record<string, unknown> = {};
       const current = layer as unknown as Record<string, unknown>;
       for (const key of Object.keys(op.set)) {
-        if (key === 'id' || key === 'type' || !(key in layer)) {
+        if (key === 'id' || key === 'type' || !hasOwn(layer, key)) {
           throw new OpError(`Lớp "${layer.type}" không có trường "${key}" để sửa`);
         }
         prev[key] = current[key];
       }
-      if (op.set.assetId !== undefined && !(op.set.assetId in doc.assets)) {
+      if (op.set.assetId !== undefined && !hasOwn(doc.assets, op.set.assetId)) {
         throw new OpError(`Không có tài nguyên "${op.set.assetId}"`);
       }
       const next = { ...layer, ...op.set } as Layer;
+      ensureValid(layerErrors(next, assetIdSet(doc)));
       const layers = page.layers.slice();
       layers[li] = next;
       return {
@@ -160,6 +173,8 @@ export function applyOp(doc: DesignDocument, op: Op): OpResult {
       for (const l of op.page.layers) {
         if (idExists(doc, l.id)) throw new OpError(`ID "${l.id}" đã tồn tại`);
       }
+      ensureValid(pageInfoErrors(op.page, assetIdSet(doc)));
+      for (const l of op.page.layers) ensureValid(layerErrors(l, assetIdSet(doc)));
       const pages = doc.pages.slice();
       pages.splice(op.index, 0, op.page);
       return { doc: { ...doc, pages }, inverse: { op: 'removePage', pageId: op.page.id } };
@@ -185,16 +200,17 @@ export function applyOp(doc: DesignDocument, op: Op): OpResult {
         }
         prev[key] = current[key];
       }
-      const bgAsset = op.set.background?.imageAssetId;
-      if (bgAsset && !(bgAsset in doc.assets)) throw new OpError(`Không có tài nguyên "${bgAsset}"`);
+      const nextPage = { ...page, ...op.set };
+      ensureValid(pageInfoErrors(nextPage, assetIdSet(doc)));
       return {
-        doc: withPage(doc, pi, { ...page, ...op.set }),
+        doc: withPage(doc, pi, nextPage),
         inverse: { op: 'updatePage', pageId: op.pageId, set: prev as PagePatch },
       };
     }
 
     case 'addAsset': {
       if (idExists(doc, op.asset.id)) throw new OpError(`ID "${op.asset.id}" đã tồn tại`);
+      ensureValid(assetErrors(op.asset));
       return {
         doc: { ...doc, assets: { ...doc.assets, [op.asset.id]: op.asset } },
         inverse: { op: 'removeAsset', assetId: op.asset.id },
@@ -202,7 +218,7 @@ export function applyOp(doc: DesignDocument, op: Op): OpResult {
     }
 
     case 'removeAsset': {
-      const asset = doc.assets[op.assetId];
+      const asset = hasOwn(doc.assets, op.assetId) ? doc.assets[op.assetId] : undefined;
       if (!asset) throw new OpError(`Không có tài nguyên "${op.assetId}"`);
       if (assetInUse(doc, op.assetId)) throw new OpError(`Tài nguyên "${op.assetId}" đang được dùng`);
       const assets = { ...doc.assets };

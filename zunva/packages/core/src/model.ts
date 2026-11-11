@@ -133,6 +133,11 @@ export interface DesignDocument {
   name: string;
   /** Mốc thời gian, mili giây kể từ 1970 (UTC). */
   createdAt: number;
+  /**
+   * Lần LƯU gần nhất. Do tầng lưu trữ (G1-5) ghi khi tự lưu, không phải thao tác
+   * chỉnh sửa: vì vậy thao tác và hoàn tác không đổi trường này, và hoàn tác hết
+   * vẫn trả tài liệu về đúng nội dung ban đầu.
+   */
   updatedAt: number;
   /** DPI tham chiếu để quy đổi px ↔ mm khi in. */
   dpi: number;
