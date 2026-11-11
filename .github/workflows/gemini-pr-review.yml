@@ -69,7 +69,8 @@ jobs:
           if [ "$EVENT_NAME" = "issue_comment" ]; then
             # Chế độ thảo luận: đọc các bình luận gần nhất, trả lời bình luận gọi @gemini.
             QUESTION=$(gh api "repos/$GH_REPO/issues/comments/$COMMENT_ID" --jq .body | head -c 8000)
-            THREAD=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER/comments?per_page=100" \
+            # --paginate: đọc hết mọi trang, rồi giữ phần mới nhất (tail).
+            THREAD=$(gh api --paginate "repos/$GH_REPO/issues/$PR_NUMBER/comments?per_page=100" \
               --jq '.[] | "----- [" + .created_at + "] " + .user.login + ":\n" + .body' | tail -c 70000)
             PROMPT=$(cat <<EOF
           Bạn là Gemini, thành viên phản biện độc lập của ZUNVA AI Council, đang thảo luận trên #${PR_NUMBER}: "${TITLE}".
