@@ -145,7 +145,7 @@ Sơ đồ 4 tầng (từ trên xuống, tầng trên gọi xuống tầng dướ
 
 **Lõi vẽ — CHƯA RÕ, chờ Council:** lõi tự viết trong repo (canvas thuần, không thư viện) mới có kéo thả chữ và ảnh, danh sách lớp, hoàn tác; chỉ có phông Arial, chữ một dòng, chưa có tay nắm đổi cỡ, đường căn, xoay, cắt ảnh (Kiro kiểm chứng từ mã). Tay nắm và đường căn mới chỉ có trong bản thử riêng của Claude. Để có xoay, cắt ảnh, sửa chữ trực tiếp, nhóm, Claude đề xuất làm thử cùng một màn hình bằng Fabric.js trong giai đoạn G1, so trên điện thoại thật, rồi mới chọn. Dù chọn bên nào, dữ liệu thiết kế giữ dạng riêng của ZUNVA để đổi lõi sau này không mất dự án.
 
-Giữ JavaScript thuần như hiện nay, thêm công cụ build nhẹ (Vite) để chia mã thành nhiều file. Không chuyển sang React hay Vue (ĐỀ XUẤT, khớp quyết định cũ: không viết lại từ đầu).
+~~Giữ JavaScript thuần, không chuyển sang React hay Vue.~~ Đã thay bằng đề xuất ở mục **Vòng 2: Chọn nền móng**, sau quyết định của founder ngày 11/11.
 
 ## Lộ trình và nghiệm thu
 
@@ -160,6 +160,64 @@ Năm giai đoạn G1–G5 (ĐỀ XUẤT), mỗi giai đoạn kết thúc bằng 
 | G5 · Bản cài Apple | iOS, iPadOS, macOS; đưa lên App Store | Founder duyệt phí Apple trước khi làm |
 
 Chưa ghi thời gian cho từng giai đoạn: Kiro sẽ ước tính khi chia task (đề bài số 6 bên dưới). Tiêu chí chung cho mọi giai đoạn: chạy trên điện thoại thật của founder, không nút chết, không mất dữ liệu khi đổi ngôn ngữ, báo test kèm lệnh và kết quả, PR riêng chờ founder duyệt.
+
+## Vòng 2: Chọn nền móng
+
+**Founder quyết định (ĐÃ CHỐT, 11/11/2026):** không bắt buộc giữ mã nguồn hiện tại; chọn nền móng tốt nhất cho ZUNVA, kể cả viết lại. Chưa sửa mã cho đến khi các phương án được phản biện và founder duyệt.
+
+**Claude đề xuất phương án C — xây lại nền móng có kiểm soát:** dựng khung mới, mang theo phần đáng giữ, và chuyển dữ liệu cũ sang. Lý do chính: mã hiện tại nhỏ (khoảng 1.500 dòng trong 5 file, đã kiểm chứng), và mọi tính năng 1.0 (phông tiếng Việt, chữ nhiều dòng, xoay, cắt ảnh, nhiều trang, PDF) đều buộc phải viết lại lõi vẽ — giữ lại khung cũ không tiết kiệm được bao nhiêu.
+
+| | A. Giữ nguyên, vá thêm | B. Cải tổ từng phần | C. Xây lại nền móng |
+| --- | --- | --- | --- |
+| Làm gì | Thêm tính năng vào 5 file JS hiện có | Viết lõi mới cạnh lõi cũ, thay dần từng màn hình | Dựng khung mới, chuyển phần đáng giữ sang |
+| Chi phí ban đầu | Thấp nhất | Trung bình | Cao nhất |
+| Chi phí về sau | Cao nhất: tính năng nào cũng đụng cả 5 file | Trung bình: nuôi 2 hệ song song | Thấp nhất |
+| Nhiều công cụ, 6 nền tảng | Kém: không có mô-đun, Android chỉ nhận 5 file | Được nhưng chậm | Tốt nhất |
+| Rủi ro chính | Kẹt kỹ thuật; nhiều AI cùng sửa dễ đụng nhau | Lỗi ở chỗ nối cũ–mới | Mất thời gian đầu trước khi có bản dùng; phải chuyển dữ liệu |
+| Chuyển dữ liệu | Không cần | Dễ (cùng app) | Cần bộ nhập dự án cũ (bên dưới) |
+
+Thời gian theo ngày: CHƯA RÕ — phụ thuộc tốc độ của AI và lịch thử của founder; Kiro và GPT ước tính theo từng task.
+
+**Công nghệ đề xuất (ĐỀ XUẤT, chờ phản biện):**
+
+| Phần | Chọn | Vì sao | Phương án thay thế |
+| --- | --- | --- | --- |
+| Ngôn ngữ | TypeScript | Bắt lỗi sớm khi nhiều AI cùng viết mã | JavaScript thuần |
+| Giao diện | React + Vite | Hệ sinh thái lớn nhất, AI viết tốt nhất, nhiều trình chỉnh sửa mẫu để học | Vue, Svelte |
+| Lõi vẽ | Konva.js (react-konva) | Có sẵn xoay và đổi cỡ, cảm ứng tốt, hợp với dữ liệu JSON riêng | Fabric.js (có sẵn sửa chữ trực tiếp) — so thử trên S24+ và một máy yếu ở G1 |
+| Dữ liệu thiết kế | Mô hình JSON riêng của ZUNVA, có số phiên bản | Đổi lõi vẽ sau này không mất dự án | — |
+| Hoàn tác | Ghi từng lệnh thay đổi | Nhẹ, không chụp lại cả thiết kế mỗi lần | Chụp toàn bộ |
+| Lưu trên máy | IndexedDB; file `.zunva` nén (JSON + ảnh) | Hết giới hạn 12 dự án, ảnh lưu riêng | — |
+| Xuất PDF | pdf-lib | Đúng khổ mm, lề xén | jsPDF |
+| Đa ngôn ngữ | i18next, mỗi ngôn ngữ một file | Mang 147 khóa dịch hiện có sang | — |
+| Đóng gói | Capacitor (Android, iOS, iPadOS); Tauri 2 (Windows, macOS) | Một bộ mã web cho 6 nền tảng | Flutter (bỏ: viết lại hết, editor trên web yếu) |
+| Máy chủ | Chưa cần ở 1.0 | Lưu trên máy, 0 đồng | Sau 1.0: cộng đồng, sao lưu (CHƯA RÕ) |
+
+**Kiến trúc mô-đun:**
+
+- **Lõi (core):** dữ liệu thiết kế, lệnh, lịch sử, lưu trữ. Không phụ thuộc giao diện hay lõi vẽ.
+- **Công cụ:** mỗi công cụ là một gói tự khai báo tên, biểu tượng, dùng cho loại lớp nào, hiện ở Phổ thông hay Chuyên nghiệp, và bảng điều khiển của nó. Thêm công cụ = thêm gói, không sửa lõi.
+- **AI chọn công cụ:** nhận câu mô tả, trả về công cụ + mẫu + nội dung điền sẵn. Mức 1 hiểu bằng từ khóa trên máy (miễn phí); mức 2 gọi AI bằng khóa của người dùng. Hai mức cùng một đầu ra, nên trang chủ chỉ cần một ô ý tưởng.
+- **Vỏ ứng dụng:** web, di động (Capacitor), máy tính (Tauri) chỉ là lớp bọc ngoài.
+- **Sau 1.0:** gói video (dòng thời gian), cộng đồng cắm vào cùng lõi.
+
+**Chuyển dữ liệu cũ (bắt buộc trước khi phát hành):**
+
+1. Bộ nhập dự án v1.5 (localStorage) sang định dạng mới, kiểm thử bằng bản lưu thật trên S24+.
+2. Android: dữ liệu cũ gắn với địa chỉ `appassets.androidplatform.net` (Kiro kiểm chứng). CHƯA RÕ app mới có giữ được cùng tên gói và cùng địa chỉ để đọc tiếp dữ liệu cũ không — kiểm ở G1. Nếu không được: phát hành bản v1.5.x cuối có nút "Xuất tất cả dự án" trước khi cập nhật.
+3. Trong lúc xây, bản v1.5 giữ nguyên để không gián đoạn.
+
+**Mang theo từ mã cũ:** 147 khóa dịch; logic Prompt Studio, Storyboard, Image Toolkit và kết nối AI (viết lại thành mô-đun); cầu nối lưu ảnh vào Thư viện trên Android; `tools/check.js` (chuyển thành bộ kiểm thử); CI và Gemini tự nhận xét PR.
+
+**Ảnh hưởng lộ trình:** G1 đổi thành "Khung mới + lõi vẽ + chuyển dữ liệu"; G2–G5 giữ nguyên.
+
+**Câu hỏi vòng 2 cho GPT, Gemini, Kiro:**
+
+1. Đồng ý phương án C không? Nếu chọn A hoặc B, nêu lý do cụ thể.
+2. React + Konva có phải lựa chọn tốt nhất? So với Vue/Svelte và Fabric.js, dẫn chứng.
+3. Kiến trúc mô-đun trên còn thiếu gì để sau này thêm video, cộng đồng, nhiều công cụ AI mà không phá hệ thống?
+4. Cách chuyển dữ liệu (nhất là Android) có lỗ hổng nào?
+5. Ước tính khối lượng G1 mới: danh sách task và credit.
 
 ## Đề bài phản biện cho GPT, Gemini, Kiro
 
