@@ -1,12 +1,15 @@
 name: Gemini PR Review
 
 # Gemini đọc phần thay đổi của PR và đăng nhận xét bằng tiếng Việt.
+# Gọi Gemini tham gia thảo luận: viết bình luận có chữ @gemini trong PR hoặc Issue.
 # Cần secret GEMINI_API_KEY (founder tự thêm trong Settings > Secrets and variables > Actions).
 # Không bao giờ ghi khóa API vào file này.
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  issue_comment:
+    types: [created]
   workflow_dispatch:
     inputs:
       pr_number:
@@ -17,14 +20,21 @@ on:
 permissions:
   contents: read
   pull-requests: write
+  issues: write
 
 # Mỗi PR chỉ chạy một lượt; lượt cũ bị hủy khi có commit mới (tiết kiệm hạn mức API).
 concurrency:
-  group: gemini-review-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
-  cancel-in-progress: true
+  group: gemini-review-${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr_number }}
+  cancel-in-progress: ${{ github.event_name != 'issue_comment' }}
 
 jobs:
   review:
+    # Với bình luận: chỉ chạy khi có chữ @gemini, do chủ kho hoặc cộng tác viên viết, không phải bot.
+    if: >-
+      github.event_name != 'issue_comment' ||
+      (contains(github.event.comment.body, '@gemini') &&
+       github.event.comment.user.type != 'Bot' &&
+       contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association))
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -36,7 +46,10 @@ jobs:
           # Model mặc định do Google gợi ý (11/2026). Muốn đổi mà không sửa code:
           # Settings > Secrets and variables > Actions > tab Variables > thêm biến GEMINI_MODEL.
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.8-flash' }}
-          PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr_number }}
+          EVENT_NAME: ${{ github.event_name }}
+          IS_PR: ${{ github.event_name != 'issue_comment' || github.event.issue.pull_request != null }}
+          COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           set -euo pipefail
 
@@ -45,20 +58,52 @@ jobs:
             exit 1
           fi
 
-          DIFF=$(gh pr diff "$PR_NUMBER")
-          if [ -z "$DIFF" ]; then
-            echo "PR không có thay đổi."
-            exit 0
+          # Lấy nội dung: diff (nếu là PR), tiêu đề, mô tả.
+          DIFF_SUBSET=""
+          if [ "$IS_PR" = "true" ]; then
+            DIFF_SUBSET=$(gh pr diff "$PR_NUMBER" | head -c 60000 || true)
           fi
-          DIFF_SUBSET=$(printf '%s' "$DIFF" | head -c 60000)
-          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq .title)
-          PR_BODY=$(gh pr view "$PR_NUMBER" --json body --jq .body | head -c 6000)
+          TITLE=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER" --jq .title)
+          BODY_TEXT=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER" --jq '.body // ""' | head -c 6000)
 
-          PROMPT=$(cat <<EOF
-          Bạn là thành viên phản biện của ZUNVA AI Council. Hãy nhận xét PR #${PR_NUMBER}: "${PR_TITLE}".
+          if [ "$EVENT_NAME" = "issue_comment" ]; then
+            # Chế độ thảo luận: đọc các bình luận gần nhất, trả lời bình luận gọi @gemini.
+            QUESTION=$(gh api "repos/$GH_REPO/issues/comments/$COMMENT_ID" --jq .body | head -c 8000)
+            THREAD=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER/comments?per_page=100" \
+              --jq '.[] | "----- [" + .created_at + "] " + .user.login + ":\n" + .body' | tail -c 70000)
+            PROMPT=$(cat <<EOF
+          Bạn là Gemini, thành viên phản biện độc lập của ZUNVA AI Council, đang thảo luận trên #${PR_NUMBER}: "${TITLE}".
+          Thành viên khác: Claude, GPT, Kiro, và founder (người quyết định cuối). Bình luận có thể cùng tên tài khoản founder; hãy dựa vào tiêu đề trong bình luận để biết ai viết.
+
+          Mô tả:
+          ${BODY_TEXT}
+
+          Các bình luận trước đó (cũ đến mới, có thể đã bị cắt bớt phần đầu):
+          ${THREAD}
+
+          BÌNH LUẬN CẦN TRẢ LỜI (người này gọi @gemini):
+          ${QUESTION}
+
+          Yêu cầu:
+          - Trả lời đúng bình luận trên, bằng tiếng Việt dễ hiểu với người không phải lập trình viên.
+          - Nêu rõ bạn đồng ý hay không đồng ý với từng điểm của Claude, GPT, Kiro (nếu bình luận hỏi), kèm lý do.
+          - Không lặp lại nhận xét bạn đã đăng trước đó; chỉ nêu điểm mới hoặc thay đổi lập trường.
+          - Tách rõ điều chắc chắn và điều phỏng đoán. Không bịa dữ kiện. Ngắn gọn.
+
+          Phần thay đổi của PR (nếu có):
+          ${DIFF_SUBSET}
+          EOF
+            )
+          else
+            if [ -z "$DIFF_SUBSET" ]; then
+              echo "PR không có thay đổi."
+              exit 0
+            fi
+            PROMPT=$(cat <<EOF
+          Bạn là thành viên phản biện của ZUNVA AI Council. Hãy nhận xét PR #${PR_NUMBER}: "${TITLE}".
 
           Mô tả PR (có thể chứa đề bài phản biện, hãy trả lời đề bài nếu có):
-          ${PR_BODY}
+          ${BODY_TEXT}
 
           Yêu cầu:
           - Trả lời bằng tiếng Việt, dễ hiểu với người không phải lập trình viên.
@@ -70,7 +115,8 @@ jobs:
           Phần thay đổi (diff):
           ${DIFF_SUBSET}
           EOF
-          )
+            )
+          fi
 
           PAYLOAD=$(jq -n --arg prompt "$PROMPT" '{contents: [{parts: [{text: $prompt}]}]}')
 
@@ -99,11 +145,15 @@ jobs:
 
           BODY_FILE=$(mktemp)
           {
-            echo "### Gemini nhận xét (gọi tự động qua API, model \`${GEMINI_MODEL}\`)"
+            if [ "$EVENT_NAME" = "issue_comment" ]; then
+              echo "### Gemini trả lời thảo luận (gọi bằng @gemini, model \`${GEMINI_MODEL}\`)"
+            else
+              echo "### Gemini nhận xét (gọi tự động qua API, model \`${GEMINI_MODEL}\`)"
+            fi
             echo
             printf '%s\n' "$REVIEW_TEXT"
             echo
             echo "---"
             echo "_Ý kiến của Gemini, chưa được founder duyệt. Theo Giao thức AI Council: transport=tool (GitHub Actions)._"
           } > "$BODY_FILE"
-          gh pr comment "$PR_NUMBER" --body-file "$BODY_FILE"
+          gh api "repos/$GH_REPO/issues/$PR_NUMBER/comments" -F "body=@$BODY_FILE" --jq .html_url
