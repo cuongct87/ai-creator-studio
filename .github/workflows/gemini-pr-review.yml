@@ -26,7 +26,7 @@ concurrency:
 jobs:
   review:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Gemini nhận xét PR
         env:
@@ -75,13 +75,19 @@ jobs:
           PAYLOAD=$(jq -n --arg prompt "$PROMPT" '{contents: [{parts: [{text: $prompt}]}]}')
 
           # Khóa gửi qua header, không nằm trên URL.
-          RESPONSE=$(curl -sS -X POST \
-            "https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent" \
-            -H "Content-Type: application/json" \
-            -H "x-goog-api-key: ${GEMINI_API_KEY}" \
-            -d "$PAYLOAD")
-
-          REVIEW_TEXT=$(printf '%s' "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // empty')
+          # Google đôi khi báo quá tải tạm thời: thử lại tối đa 4 lần, chờ 30, 60, 90 giây.
+          REVIEW_TEXT=""
+          for attempt in 1 2 3 4; do
+            RESPONSE=$(curl -sS -X POST \
+              "https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent" \
+              -H "Content-Type: application/json" \
+              -H "x-goog-api-key: ${GEMINI_API_KEY}" \
+              -d "$PAYLOAD" || true)
+            REVIEW_TEXT=$(printf '%s' "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // empty' 2>/dev/null || true)
+            [ -n "$REVIEW_TEXT" ] && break
+            echo "Lần $attempt chưa được: $(printf '%s' "$RESPONSE" | jq -r '.error.message // "không rõ"' 2>/dev/null | head -c 200)"
+            [ "$attempt" -lt 4 ] && sleep $((attempt * 30))
+          done
           if [ -z "$REVIEW_TEXT" ]; then
             echo "Không nhận được nhận xét từ Gemini. Lỗi trả về:"
             printf '%s' "$RESPONSE" | jq -r '.error.message // "không rõ"'
