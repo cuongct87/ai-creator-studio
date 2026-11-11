@@ -232,7 +232,7 @@ Thương hiệu đã đổi từ ZUNVA sang **C87** (tên trong mã vẫn giữ 
 **2. Điểm khác biệt: chụp ảnh, quay video kiểu TikTok (ĐÃ CHỐT)**
 
 - Trong C87 có chụp ảnh và quay video ngay trong app, chỉnh sửa được trên **cả Android và iOS**.
-- **C87 không lưu và không đăng video của người dùng lên máy chủ của mình.** Video được đưa sang các nền tảng khác (TikTok, YouTube, Facebook, Instagram, Zalo…) để người dùng đăng ở đó. Không cần máy chủ video, không tốn phí lưu trữ.
+- **Ở tầng 1 (bản phát hành đầu), C87 không lưu và không đăng video của người dùng lên máy chủ của mình.** Video được đưa sang các nền tảng khác (TikTok, YouTube, Facebook, Instagram, Zalo…) để người dùng đăng ở đó. Không cần máy chủ video, không tốn phí lưu trữ. Bảng tin video ngay trên C87 thuộc tầng 2 (xem lộ trình 3 tầng bên dưới).
 
 **3. Cách nối với các nền tảng video (ĐỀ XUẤT)**
 
@@ -251,11 +251,26 @@ Thương hiệu đã đổi từ ZUNVA sang **C87** (tên trong mã vẫn giữ 
 
 Khi C87 có nhiều người dùng, các nền tảng sẽ có lợi khi mở đường tích hợp cho C87 (thêm nội dung cho họ). Để có số liệu đi đàm phán, C87 đếm **số lần chia sẻ sang từng nền tảng** ngay từ đầu — chỉ đếm số lượng, không đọc nội dung, không gửi dữ liệu cá nhân.
 
+**5. Tầm nhìn đầy đủ và lộ trình 3 tầng (founder nêu 11/11 tối; chia tầng là ĐỀ XUẤT, founder đồng ý ghi vào đây)**
+
+Tầm nhìn của founder (ĐÃ CHỐT): C87 là nơi người ta mở lên thấy thích thú; có mục tùy chỉnh theo ý mình; ai có ý tưởng mà không biết bắt đầu thì nói bằng một câu (prompt) để nền tảng hiện thực; chụp ảnh, quay video (khi đi du lịch, bằng C87 hay điện thoại), chỉnh rồi đăng lên C87 hoặc qua C87 lên TikTok/YouTube/Facebook; AI giúp viết câu chuyện; lớp học cho người chưa biết chỉnh sửa; công cụ đủ mạnh cho người thiết kế chuyên nghiệp; nơi người có ý tưởng gặp người cần ý tưởng để hợp tác; bán sản phẩm sáng tạo cho nhau; cuộc thi sáng tác; về sau làm cầu nối để công ty tìm người làm việc. AI: bản miễn phí hướng dẫn người dùng dùng khóa API của họ; khi có thu nhập sẽ đầu tư AI của nền tảng và có gói trả phí. Phát hành chính thức khi đã có một nền tảng đủ chức năng để người dùng đánh giá, sau đó nâng cấp theo góp ý.
+
+Nguyên tắc: **tầng sau chỉ xây khi tầng trước đã có người dùng và có tiền.** Nền móng (lõi, mô-đun, dữ liệu) phải chừa sẵn chỗ cho tầng 2 và 3 ngay từ đầu, dù chưa làm.
+
+| Tầng | Gồm | Máy chủ / chi phí | Khi nào |
+| --- | --- | --- | --- |
+| 1. Công cụ | Trang chủ gợi ý ý tưởng, không bao giờ trống; nói ý tưởng → ra thiết kế; mẫu; chụp, quay, chỉnh ảnh/video; chia sẻ ra nền tảng khác; AI bằng khóa của người dùng + hướng dẫn lấy khóa; lớp học trong app (bài học dạng mẫu, chạy offline); cuộc thi qua hashtag trên TikTok/YouTube | Không cần máy chủ; dữ liệu trên máy người dùng | Bản phát hành chính thức ("hoàn chỉnh" = tầng 1 trọn vẹn, đẹp) |
+| 2. Cộng đồng | Tài khoản; bảng tin ảnh/video trên C87; đăng thẳng lên TikTok/YouTube/Facebook (sau khi được duyệt); gói trả phí dùng AI của nền tảng; cuộc thi trên C87 | Cần đám mây (lưu trữ, CPU/GPU thuê); tiền gói trả phí bù chi phí | Khi tầng 1 có người dùng đều đặn |
+| 3. Kết nối nghề | Chợ bán mẫu/sản phẩm; ghép người có ý tưởng với người cần ý tưởng; cầu nối công ty – người sáng tạo; lớp học nâng cao | Thanh toán, thuế, pháp lý | Khi đã có thu nhập |
+
+Lý do không làm mạng xã hội ngay từ đầu: lúc chưa có người dùng, bảng tin sẽ trống — đúng cảm giác "vào không biết làm gì" mà founder muốn tránh. Tầng 1 tốt kéo người dùng đến; người dùng lấp đầy tầng 2.
+
 **Câu hỏi thêm cho GPT, Gemini, Kiro (bổ sung vòng 2):**
 
 6. Capacitor có đủ tốt cho camera, quay video và chỉnh video trên cả Android và iOS không? Nếu không, phương án nào (plugin gốc, React Native, Flutter…) và đổi lại mất gì? Dẫn chứng.
 7. Chia sẻ video qua nút "Chia sẻ" của hệ điều hành sang TikTok/YouTube/Zalo có bẫy nào (định dạng, dung lượng, iOS)?
 8. Kiến trúc mô-đun cần gì để thêm "đăng thẳng" từng nền tảng sau này mà không sửa lõi?
+9. Nền móng cần chừa sẵn gì ngay từ G1 để sau này thêm tài khoản, bảng tin, chợ mẫu (tầng 2–3) mà không phải viết lại? Gợi ý cách lưu trữ đám mây rẻ nhất khi đến tầng 2 (ước tính chi phí theo số người dùng).
 
 ## Đề bài phản biện cho GPT, Gemini, Kiro
 
