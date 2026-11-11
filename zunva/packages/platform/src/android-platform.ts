@@ -17,7 +17,11 @@ export interface AndroidBridgeWindow {
   AndroidImageSaver?: { saveImage(dataUrl: string, fileName: string): void };
 }
 
+/** Giới hạn khớp với MainActivity: file đi qua cầu nối dưới dạng một chuỗi base64 lớn. */
+export const ANDROID_MAX_SAVE_BYTES = 100 * 1024 * 1024;
+
 const MESSAGES = {
+  tooLarge: 'File quá lớn để lưu trên điện thoại (tối đa 100 MB).',
   bridgeFailed: 'Không lưu được file trên điện thoại. Hãy thử lại.',
   imageFailed: 'Không lưu được ảnh vào Thư viện. Hãy thử lại.',
 } as const;
@@ -54,6 +58,8 @@ export function createAndroidPlatform(win: AndroidBridgeWindow, doc?: Document):
   let files: FileSaver = web.files;
   if (fileBridge) {
     const saveBytes: FileSaver['saveBytes'] = async (fileName, mimeType, bytes) => {
+      // Chặn trước khi mã hóa base64, để không làm đầy bộ nhớ WebView vô ích.
+      if (bytes.length > ANDROID_MAX_SAVE_BYTES) return { ok: false, error: MESSAGES.tooLarge };
       try {
         return parseBridgeReply(fileBridge.saveBytes(fileName, mimeType, toBase64(bytes)));
       } catch {
