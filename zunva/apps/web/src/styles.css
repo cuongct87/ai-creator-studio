@@ -1,0 +1,98 @@
+:root {
+  --bg: #eef4f7;
+  --surface: #ffffff;
+  --ink: #0d1422;
+  --muted: #56677f;
+  --line: #cfdce6;
+  --accent: #0d8799;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1422;
+    --surface: #172339;
+    --ink: #eaf0fb;
+    --muted: #9eafcc;
+    --line: #334766;
+    --accent: #16a6bd;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.app {
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.top {
+  padding: 16px max(16px, env(safe-area-inset-left, 0px));
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.06em;
+}
+
+.content {
+  padding: 8px 16px;
+  min-width: 0;
+}
+
+.content h1 {
+  font-size: 24px;
+  line-height: 1.25;
+  margin: 8px 0;
+}
+
+.tabs {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  background: var(--surface);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tabs button {
+  min-height: 56px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 2px;
+  overflow-wrap: anywhere;
+}
+
+.tabs button[aria-current='page'] {
+  color: var(--accent);
+}
+
+.tabs button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
