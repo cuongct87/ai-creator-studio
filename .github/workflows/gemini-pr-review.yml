@@ -33,8 +33,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          # Đổi tên model ở đây nếu Google ngừng hỗ trợ model này.
-          GEMINI_MODEL: gemini-2.5-flash
+          # Model mặc định do Google gợi ý (11/2026). Muốn đổi mà không sửa code:
+          # Settings > Secrets and variables > Actions > tab Variables > thêm biến GEMINI_MODEL.
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.8-flash' }}
           PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
         run: |
           set -euo pipefail
