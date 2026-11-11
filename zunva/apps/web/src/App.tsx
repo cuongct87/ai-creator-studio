@@ -1,5 +1,10 @@
 import { useState } from 'react';
 import { PRODUCT_NAME } from '@zunva/core';
+import { createIndexedDbProjectStore } from '@zunva/platform';
+import { Projects } from './Projects';
+
+/** One store for the whole app (IndexedDB database "c87"). */
+const projectStore = createIndexedDbProjectStore();
 
 type TabId = 'home' | 'projects' | 'templates' | 'ai' | 'account';
 
@@ -11,7 +16,7 @@ const TABS: ReadonlyArray<{ id: TabId; label: string }> = [
   { id: 'account', label: 'Tài khoản' },
 ];
 
-/** Khung nội bộ G1-2: chỉ có bố cục, chưa có chức năng. Chưa phát hành. */
+/** Khung nội bộ: G1-2 bố cục, G1-5 thêm tab Dự án lưu trên máy. Chưa phát hành. */
 export function App() {
   const [tab, setTab] = useState<TabId>('home');
   const current = TABS.find((t) => t.id === tab) ?? TABS[0]!;
@@ -25,6 +30,8 @@ export function App() {
       <main className="content">
         {tab === 'home' ? (
           <h1>Bạn muốn tạo gì hôm nay?</h1>
+        ) : tab === 'projects' ? (
+          <Projects store={projectStore} />
         ) : (
           <h1>{current.label}</h1>
         )}

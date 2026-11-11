@@ -8,5 +8,11 @@
   },
   "scripts": {
     "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@zunva/core": "workspace:*"
+  },
+  "devDependencies": {
+    "fake-indexeddb": "6.2.8"
   }
 }
