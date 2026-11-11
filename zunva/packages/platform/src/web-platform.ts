@@ -32,6 +32,27 @@ function sniffImageType(bytes: Uint8Array): string {
   return 'image/png';
 }
 
+const ascii = (bytes: Uint8Array, from: number, to: number): string =>
+  String.fromCharCode(...bytes.subarray(from, to));
+
+/**
+ * Nhận diện ảnh theo các byte đầu file, không tin đuôi file hay kiểu trình duyệt báo.
+ * Trả null nếu không phải ảnh quen thuộc (PNG, JPEG, WebP, GIF, HEIC/HEIF, AVIF).
+ */
+export function detectImageType(bytes: Uint8Array): string | null {
+  if (bytes.length < 12) return null;
+  if (bytes[0] === 0x89 && ascii(bytes, 1, 4) === 'PNG') return 'image/png';
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg';
+  if (ascii(bytes, 0, 4) === 'RIFF' && ascii(bytes, 8, 12) === 'WEBP') return 'image/webp';
+  if (ascii(bytes, 0, 4) === 'GIF8') return 'image/gif';
+  if (ascii(bytes, 4, 8) === 'ftyp') {
+    const brand = ascii(bytes, 8, 12);
+    if (brand === 'avif' || brand === 'avis') return 'image/avif';
+    if (['heic', 'heix', 'heim', 'heis', 'hevc', 'hevx', 'mif1', 'msf1'].includes(brand)) return 'image/heic';
+  }
+  return null;
+}
+
 export function createWebPlatform(doc: Document = document): Platform {
   function download(fileName: string, blob: Blob): PlatformResult<{ location: string }> {
     try {
@@ -89,7 +110,13 @@ export function createWebPlatform(doc: Document = document): Platform {
           if (file.size > MAX_IMAGE_BYTES) return finish({ ok: false, error: MESSAGES.tooLarge });
           file
             .arrayBuffer()
-            .then((buf) => finish({ ok: true, value: { name: file.name, mimeType: file.type, bytes: new Uint8Array(buf) } }))
+            .then((buf) => {
+              const bytes = new Uint8Array(buf);
+              // Đuôi file có thể bị đổi: kiểm tra byte thật, và dùng kiểu nhận diện được.
+              const mimeType = detectImageType(bytes);
+              if (mimeType === null) return finish({ ok: false, error: MESSAGES.notImage });
+              finish({ ok: true, value: { name: file.name, mimeType, bytes } });
+            })
             .catch(() => finish({ ok: false, error: MESSAGES.readFailed }));
         });
         doc.body.append(input);

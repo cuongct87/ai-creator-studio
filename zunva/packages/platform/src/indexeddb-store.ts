@@ -78,12 +78,7 @@ function openDatabase(factory: IDBFactory, name: string): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(PROJECTS)) db.createObjectStore(PROJECTS, { keyPath: 'id' });
       if (!db.objectStoreNames.contains(ASSETS)) db.createObjectStore(ASSETS, { keyPath: 'id' });
     };
-    req.onsuccess = () => {
-      const db = req.result;
-      // Another tab opened a newer version: close so it is not blocked.
-      db.onversionchange = () => db.close();
-      resolve(db);
-    };
+    req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(new StoreUnavailable(STORE_MESSAGES.openFailed));
   });
 }
@@ -177,7 +172,19 @@ export function createIndexedDbProjectStore(dbName = 'c87', options: IndexedDbSt
   function db(): Promise<IDBDatabase> {
     if (!factory) return Promise.reject(new StoreUnavailable(STORE_MESSAGES.noIndexedDb));
     if (!dbPromise) {
-      const opening = openDatabase(factory, dbName);
+      const opening: Promise<IDBDatabase> = openDatabase(factory, dbName).then((database) => {
+        // Tab khác nâng cấp cơ sở dữ liệu, hoặc trình duyệt tự đóng kết nối: đóng và quên
+        // kết nối cũ để lần thao tác sau tự mở lại, không bắt người dùng tải lại trang.
+        const forget = () => {
+          if (dbPromise === opening) dbPromise = null;
+        };
+        database.onversionchange = () => {
+          database.close();
+          forget();
+        };
+        database.onclose = forget;
+        return database;
+      });
       dbPromise = opening;
       opening.catch(() => {
         if (dbPromise === opening) dbPromise = null;
