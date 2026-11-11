@@ -14,7 +14,7 @@ Mã việc: ZAC-20261111-001 · Nguồn: PR #27 (vòng 2) · Founder duyệt 11/
 ## Phạm vi G1
 G1-0 founder tự kiểm (0 credit) → G1-1 khóa ký và tên gói → G1-2 khung repo → G1-3 lõi dữ liệu + hoàn tác → G1-4 thử lõi vẽ → G1-5 lưu trên máy + lớp nền tảng → G1-6 file `.zunva` + bộ nhập v1.5 → G1-7 APK G1 và nghiệm thu.
 
-**Đặc tả này chi tiết hóa G1-1 và G1-2.** G1-3 trở đi sẽ viết sau khi G1-2 được nghiệm thu.
+**Đặc tả này chi tiết hóa G1-1 và G1-2.** G1-3 → G1-6 ghi trực tiếp trong `tasks.md`.
 
 Ngoài phạm vi G1: gom 4 nơi dịch (G2), chia sẻ sang Zalo (G2), giao diện trình chỉnh sửa đầy đủ (G2), bản Apple (G5).
 
@@ -34,9 +34,9 @@ Ngoài phạm vi G1: gom 4 nơi dịch (G2), chia sẻ sang Zalo (G2), giao di�
 **R1.4 — KHÔNG CẦN (G1-0, 11/11/2026: không có dự án cần giữ, nút xuất JSON đã ra file trong Tải xuống).** Điều kiện cũ để tham khảo: chỉ làm nếu kết quả G1-0 cho thấy **có dự án cần giữ** và **nút "Xuất dự án JSON" không ra file trên S24+**: thêm cầu nối Java nhỏ (theo mẫu `AndroidImageSaver`) để lưu chuỗi JSON thành file trong thư mục Tải xuống; nút xuất của v1.5 dùng cầu nối khi có. Không sửa gì khác trong v1.5.
 
 ### Tiêu chí đạt G1-1
-- [ ] `git grep` không tìm thấy keystore, mật khẩu hay base64 của khóa trong repo.
-- [ ] 2 lần chạy workflow cho ra 2 APK có **cùng chứng chỉ SHA-256** (`apksigner verify --print-certs`).
-- [ ] APK cài được trên S24+.
+- [x] `git grep` không tìm thấy keystore, mật khẩu hay base64 của khóa trong repo.
+- [x] 2 lần chạy workflow cho ra 2 APK có **cùng chứng chỉ SHA-256** (`apksigner verify --print-certs`).
+- [x] APK cài được trên S24+.
 - [x] ~~(Nếu làm R1.4)~~ Không cần: founder xác nhận nút xuất JSON đã ra file. Bấm xuất trên S24+ → file `.json` xuất hiện trong Tải xuống, mở được.
 
 ## G1-2 — Khung repo mới
