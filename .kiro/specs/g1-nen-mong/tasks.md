@@ -21,8 +21,8 @@ Nhánh: `feat/g1-2-khung-zunva`
 - [ ] 2.6 `.github/workflows/zunva-ci.yml` theo R2.7.
 - [ ] 2.7 Kiểm tra tiêu chí đạt G1-2, mở PR, báo cáo.
 
-## G1-1 — Khóa ký và tên gói (dự toán 15–30 credit) — chờ founder chốt tên gói và G1-0
-Nhánh: `feat/g1-1-khoa-ky`
+## G1-1 — Khóa ký và tên gói (dự toán 15–30 credit) — tên gói đã chốt, 1.4 chờ G1-0
+Nhánh: `feat/g1-1-khoa-ky` · Tên gói chính thức: **`vn.c87.lsc`** (founder chốt 11/11/2026)
 - [ ] 1.1 Hướng dẫn founder từng lệnh `keytool` để tạo keystore **trên máy founder**, cách mã hóa base64 và dán 4 secret vào GitHub. Kiro không tự đọc hay in mật khẩu.
 - [ ] 1.2 Workflow `android-release-apk.yml` (chỉ `workflow_dispatch`): giải mã keystore từ secret, build release với tên gói đã chốt, ký, xuất artifact, xóa file khóa tạm.
 - [ ] 1.3 Chạy workflow 2 lần, so chứng chỉ SHA-256 hai APK.

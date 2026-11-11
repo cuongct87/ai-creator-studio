@@ -21,6 +21,7 @@ Ngoài phạm vi G1: gom 4 nơi dịch (G2), chia sẻ sang Zalo (G2), giao di�
 ## G1-1 — Khóa ký và tên gói chính thức
 
 **R1.1** Founder chốt **tên gói chính thức** (applicationId) trước khi bắt đầu. Kiro không tự chọn. Sau khi app lên cửa hàng, tên gói không đổi được nữa.
+- **ĐÃ CHỐT (founder, 11/11/2026): `vn.c87.lsc`.** Chỉ đổi `applicationId`; giữ nguyên `namespace 'vn.iaysystem.aicreatorstudio'` và thư mục Java.
 
 **R1.2** Tạo một **khóa ký phát hành** (keystore) duy nhất cho ZUNVA:
 - Tạo trên máy founder bằng `keytool`, thuật toán RSA 4096, hạn ≥ 25 năm.
