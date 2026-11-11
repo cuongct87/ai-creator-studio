@@ -143,9 +143,13 @@ function checkLayer(c: Checker, l: unknown, path: string, assetIds: Set<string>,
   }
 }
 
+/** ID trùng tên thuộc tính đặc biệt của JavaScript bị cấm, để kho tài nguyên dạng từ điển luôn an toàn. */
+const RESERVED_IDS = new Set(['__proto__', 'prototype', 'constructor']);
+
 function checkId(c: Checker, o: Obj, path: string, seen: Set<string>): void {
   const id = o.id;
   if (!isStr(id) || id === '') return c.fail(`${path}.id`, 'phải là chuỗi không rỗng');
+  if (RESERVED_IDS.has(id)) return c.fail(`${path}.id`, `không được dùng tên dành riêng "${id}"`);
   if (seen.has(id)) c.fail(`${path}.id`, `trùng ID "${id}"`);
   seen.add(id);
 }
@@ -181,6 +185,7 @@ function checkAssetFields(c: Checker, a: Obj, p: string): void {
   c.numOrNull(a, 'width', p, { gt: 0 });
   c.numOrNull(a, 'height', p, { gt: 0 });
   if (!isStr(a.id) || a.id === '') c.fail(`${p}.id`, 'phải là chuỗi không rỗng');
+  else if (RESERVED_IDS.has(a.id)) c.fail(`${p}.id`, `không được dùng tên dành riêng "${a.id}"`);
 }
 
 function checkPageInfo(c: Checker, pg: Obj, p: string, assetIds: Set<string>): void {

@@ -49,6 +49,12 @@ describe('kiểm tra dữ liệu thiết kế', () => {
     expect(errs).toContainEqual(expect.stringContaining('pages[0].layers[2].type'));
   });
 
+  it('tạo tài liệu kèm sẵn tài nguyên ảnh thì hợp lệ ngay', () => {
+    const asset = { id: 'a9', kind: 'image' as const, mimeType: 'image/png', name: null, hash: null, width: 10, height: 10 };
+    const page = createPage('p9', 100, 100, { layers: [createImageLayer('i9', 'a9')] });
+    expect(errorsOf(createDocument('d9', page, 0, { assets: { a9: asset } }))).toEqual([]);
+  });
+
   it('từ chối thứ không phải tài liệu', () => {
     expect(errorsOf(null)).toEqual(['(gốc): phải là object']);
     expect(errorsOf({})).not.toEqual([]);

@@ -170,8 +170,10 @@ export function applyOp(doc: DesignDocument, op: Op): OpResult {
     case 'addPage': {
       checkIndex(op.index, doc.pages.length, 'trang');
       if (idExists(doc, op.page.id)) throw new OpError(`ID "${op.page.id}" đã tồn tại`);
+      const seen = new Set<string>([op.page.id]);
       for (const l of op.page.layers) {
-        if (idExists(doc, l.id)) throw new OpError(`ID "${l.id}" đã tồn tại`);
+        if (seen.has(l.id) || idExists(doc, l.id)) throw new OpError(`ID "${l.id}" đã tồn tại`);
+        seen.add(l.id);
       }
       ensureValid(pageInfoErrors(op.page, assetIdSet(doc)));
       for (const l of op.page.layers) ensureValid(layerErrors(l, assetIdSet(doc)));
@@ -227,6 +229,7 @@ export function applyOp(doc: DesignDocument, op: Op): OpResult {
     }
 
     case 'rename': {
+      if (typeof op.name !== 'string') throw new OpError('Tên thiết kế phải là chuỗi');
       return { doc: { ...doc, name: op.name }, inverse: { op: 'rename', name: doc.name } };
     }
   }
