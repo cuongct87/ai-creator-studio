@@ -1,4 +1,4 @@
-import type { FileSaver, GallerySaver, ImagePicker, PickedImage, Platform, PlatformResult } from './index';
+import type { FileOpener, FileSaver, GallerySaver, ImagePicker, PickedFile, PickedImage, Platform, PlatformResult } from './index';
 
 /**
  * Bản cài đặt nền tảng cho trình duyệt (G1-5).
@@ -8,11 +8,14 @@ import type { FileSaver, GallerySaver, ImagePicker, PickedImage, Platform, Platf
  */
 
 const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
+const MAX_FILE_BYTES = 300 * 1024 * 1024;
 const DOWNLOAD_LOCATION = 'Thư mục Tải xuống';
 
 const MESSAGES = {
   downloadFailed: 'Không tải được file xuống máy. Hãy thử lại.',
   notImage: 'File đã chọn không phải ảnh.',
+  fileTooLarge: 'File quá lớn (tối đa 300 MB).',
+  fileReadFailed: 'Không đọc được file đã chọn.',
   tooLarge: 'Ảnh quá lớn (tối đa 50 MB).',
   readFailed: 'Không đọc được ảnh đã chọn.',
 } as const;
@@ -88,42 +91,64 @@ export function createWebPlatform(doc: Document = document): Platform {
     },
   };
 
-  const images: ImagePicker = {
-    pickImage() {
-      return new Promise<PlatformResult<PickedImage | null>>((resolve) => {
-        const input = doc.createElement('input');
-        input.type = 'file';
-        input.accept = 'image/*';
-        input.style.display = 'none';
-        let settled = false;
-        const finish = (result: PlatformResult<PickedImage | null>) => {
-          if (settled) return;
-          settled = true;
-          input.remove();
-          resolve(result);
-        };
-        input.addEventListener('cancel', () => finish({ ok: true, value: null }));
-        input.addEventListener('change', () => {
-          const file = input.files?.[0];
-          if (!file) return finish({ ok: true, value: null });
-          if (!file.type.startsWith('image/')) return finish({ ok: false, error: MESSAGES.notImage });
-          if (file.size > MAX_IMAGE_BYTES) return finish({ ok: false, error: MESSAGES.tooLarge });
-          file
-            .arrayBuffer()
-            .then((buf) => {
-              const bytes = new Uint8Array(buf);
-              // Đuôi file có thể bị đổi: kiểm tra byte thật, và dùng kiểu nhận diện được.
-              const mimeType = detectImageType(bytes);
-              if (mimeType === null) return finish({ ok: false, error: MESSAGES.notImage });
-              finish({ ok: true, value: { name: file.name, mimeType, bytes } });
-            })
-            .catch(() => finish({ ok: false, error: MESSAGES.readFailed }));
-        });
-        doc.body.append(input);
-        input.click();
+  /** Mở hộp chọn file của trình duyệt; `onFile` xử lý file đã chọn. Luôn dọn thẻ input. */
+  function choose<T>(
+    accept: string,
+    onFile: (file: File, finish: (result: PlatformResult<T | null>) => void) => void,
+  ): Promise<PlatformResult<T | null>> {
+    return new Promise<PlatformResult<T | null>>((resolve) => {
+      const input = doc.createElement('input');
+      input.type = 'file';
+      input.accept = accept;
+      input.style.display = 'none';
+      let settled = false;
+      const finish = (result: PlatformResult<T | null>) => {
+        if (settled) return;
+        settled = true;
+        input.remove();
+        resolve(result);
+      };
+      input.addEventListener('cancel', () => finish({ ok: true, value: null }));
+      input.addEventListener('change', () => {
+        const file = input.files?.[0];
+        if (!file) return finish({ ok: true, value: null });
+        onFile(file, finish);
+      });
+      doc.body.append(input);
+      input.click();
+    });
+  }
+
+  const opener: FileOpener = {
+    openFile(accept) {
+      return choose<PickedFile>(accept, (file, finish) => {
+        if (file.size > MAX_FILE_BYTES) return finish({ ok: false, error: MESSAGES.fileTooLarge });
+        file
+          .arrayBuffer()
+          .then((buf) => finish({ ok: true, value: { name: file.name, bytes: new Uint8Array(buf) } }))
+          .catch(() => finish({ ok: false, error: MESSAGES.fileReadFailed }));
       });
     },
   };
 
-  return { name: 'web', files, images, gallery };
+  const images: ImagePicker = {
+    pickImage() {
+      return choose<PickedImage>('image/*', (file, finish) => {
+        // Không tin file.type (có máy để trống với HEIC): kiểm tra byte thật bên dưới.
+        if (file.size > MAX_IMAGE_BYTES) return finish({ ok: false, error: MESSAGES.tooLarge });
+        file
+          .arrayBuffer()
+          .then((buf) => {
+            const bytes = new Uint8Array(buf);
+            // Đuôi file có thể bị đổi: kiểm tra byte thật, và dùng kiểu nhận diện được.
+            const mimeType = detectImageType(bytes);
+            if (mimeType === null) return finish({ ok: false, error: MESSAGES.notImage });
+            finish({ ok: true, value: { name: file.name, mimeType, bytes } });
+          })
+          .catch(() => finish({ ok: false, error: MESSAGES.readFailed }));
+      });
+    },
+  };
+
+  return { name: 'web', files, opener, images, gallery };
 }

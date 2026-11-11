@@ -1,6 +1,7 @@
 import { createDocument, createIdGenerator, createPage } from '@zunva/core';
-import type { ProjectStore, ProjectSummary, StorageInfo } from '@zunva/platform';
+import type { Platform, ProjectStore, ProjectSummary, StorageInfo } from '@zunva/platform';
 import { useCallback, useEffect, useState } from 'react';
+import { exportProject, importProject } from './zunva-io';
 
 /** Random source backed by the browser's crypto (better than Math.random for IDs). */
 const cryptoRandom = () => {
@@ -20,8 +21,8 @@ function formatSize(bytes: number): string {
 
 type LoadState = { kind: 'loading' } | { kind: 'ready'; items: ProjectSummary[] } | { kind: 'error'; message: string };
 
-/** Tab Dự án (G1-5): danh sách, tạo mới, đổi tên, xóa. Chưa có trình chỉnh sửa. */
-export function Projects({ store }: { store: ProjectStore }) {
+/** Tab Dự án (G1-5, G1-7): danh sách, tạo mới, đổi tên, xóa, lưu/mở file .zunva. Chưa có trình chỉnh sửa. */
+export function Projects({ store, platform }: { store: ProjectStore; platform: Platform }) {
   const [state, setState] = useState<LoadState>({ kind: 'loading' });
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -69,6 +70,10 @@ export function Projects({ store }: { store: ProjectStore }) {
       return null;
     });
 
+  const saveFile = (item: ProjectSummary) => run(() => exportProject(store, platform, item.id, Date.now()));
+
+  const openFile = () => run(() => importProject(store, platform, () => newId('doc')));
+
   const removeProject = (item: ProjectSummary) => {
     if (!window.confirm(`Xóa dự án "${item.name}"? Sau khi xóa sẽ không lấy lại được.`)) return;
     void run(async () => {
@@ -81,9 +86,14 @@ export function Projects({ store }: { store: ProjectStore }) {
     <section className="projects" aria-labelledby="projects-title">
       <h1 id="projects-title">Dự án</h1>
 
-      <button type="button" className="primary" disabled={busy} onClick={() => void createProject()}>
-        + Tạo dự án mới
-      </button>
+      <div className="row">
+        <button type="button" className="primary" disabled={busy} onClick={() => void createProject()}>
+          + Tạo dự án mới
+        </button>
+        <button type="button" disabled={busy} onClick={() => void openFile()}>
+          Mở file .zunva
+        </button>
+      </div>
 
       {message && (
         <p className="notice" role="alert">
@@ -146,6 +156,14 @@ export function Projects({ store }: { store: ProjectStore }) {
                       onClick={() => setEditing({ id: item.id, name: item.name })}
                     >
                       Đổi tên
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      aria-label={`Lưu file .zunva của dự án ${item.name}`}
+                      onClick={() => void saveFile(item)}
+                    >
+                      Lưu file
                     </button>
                     <button
                       type="button"

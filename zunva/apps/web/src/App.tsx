@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { PRODUCT_NAME } from '@zunva/core';
-import { createIndexedDbProjectStore } from '@zunva/platform';
+import { createIndexedDbProjectStore, createPlatform } from '@zunva/platform';
 import { Projects } from './Projects';
 
 /** One store for the whole app (IndexedDB database "c87"). */
 const projectStore = createIndexedDbProjectStore();
+/** Web hoặc Android (khi chạy trong vỏ C87 có cầu nối Java). */
+const platform = createPlatform();
 
 type TabId = 'home' | 'projects' | 'templates' | 'ai' | 'account';
 
@@ -31,7 +33,7 @@ export function App() {
         {tab === 'home' ? (
           <h1>Bạn muốn tạo gì hôm nay?</h1>
         ) : tab === 'projects' ? (
-          <Projects store={projectStore} />
+          <Projects store={projectStore} platform={platform} />
         ) : (
           <h1>{current.label}</h1>
         )}
