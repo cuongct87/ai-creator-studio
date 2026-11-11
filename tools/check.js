@@ -67,5 +67,65 @@ if (fs.existsSync(path.join(dir,'index.html'))) {
   tabs.forEach(t => new RegExp('<section[^>]*id=["\']' + t + '["\']').test(html) ? ok('tab -> section #' + t) : bad('tab "' + t + '" has no <section id="' + t + '">'));
 }
 
+console.log('7) Translations (studioStrings in studio_v15.js)');
+if (!fs.existsSync(path.join(dir, 'studio_v15.js'))) warn('studio_v15.js not found (skipped)');
+else {
+  const src = read('studio_v15.js');
+  const lineOf = i => src.slice(0, i).split('\n').length;
+  // Return the {...} literal starting at src[start], skipping braces inside strings.
+  const literalAt = start => {
+    let depth = 0, quote = '';
+    for (let i = start; i < src.length; i++) {
+      const c = src[i];
+      if (quote) { if (c === '\\') i++; else if (c === quote) quote = ''; continue; }
+      if (c === '"' || c === "'" || c === '`') quote = c;
+      else if (c === '{') depth++;
+      else if (c === '}' && --depth === 0) return src.slice(start, i + 1);
+    }
+    return null;
+  };
+  // studioStrings = one literal plus later Object.assign(studioStrings, {...}) blocks.
+  const strings = {};
+  let blocks = 0, readError = '';
+  for (const m of src.matchAll(/(?:var\s+studioStrings\s*=\s*|Object\.assign\(\s*studioStrings\s*,\s*)(?=\{)/g)) {
+    const at = m.index + m[0].length, lit = literalAt(at);
+    try { Object.assign(strings, vm.runInNewContext('(' + lit + ')', {}, { timeout: 1000 })); blocks++; }
+    catch (e) { readError = 'line ' + lineOf(at) + ': ' + e.message; }
+  }
+  if (readError) bad('cannot read studioStrings (' + readError + ')');
+  else if (!blocks) bad('studioStrings not found in studio_v15.js');
+  else {
+    // 7a) Every key needs non-empty English + Spanish that differ from the Vietnamese key. FAIL.
+    const keys = Object.keys(strings);
+    let missing = 0;
+    for (const k of keys) {
+      const v = strings[k], problems = [];
+      if (!Array.isArray(v) || v.length < 2) problems.push('needs [English, Spanish]');
+      else ['English', 'Spanish'].forEach((name, i) => {
+        if (typeof v[i] !== 'string' || !v[i].trim()) problems.push(name + ' is empty');
+        else if (v[i] === k) problems.push(name + ' is the same as the Vietnamese key');
+      });
+      if (problems.length) { missing++; bad('translation "' + k + '": ' + problems.join(', ')); }
+    }
+    if (!missing) ok(keys.length + ' keys in ' + blocks + ' blocks, all have English + Spanish');
+    // 7b) Vietnamese text in notice('...') or aria-label that has no studioStrings key. WARN only.
+    const VI = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+    const literal = (q, body) => { try { return vm.runInNewContext(q + body + q, {}); } catch (e) { return body; } };
+    const finders = [
+      [/\bnotice\(\s*(['"])((?:\\.|(?!\1)[^\\])*)\1/g, 'notice'],
+      [/aria-label=(\\?["'])((?:(?!\1).)*?)\1/g, 'aria-label'],
+      [/setAttribute\(\s*['"]aria-label['"]\s*,\s*(?:studioText\(\s*)?(['"])((?:\\.|(?!\1)[^\\])*)\1/g, 'aria-label']
+    ];
+    let untranslated = 0;
+    for (const [re, kind] of finders) for (const m of src.matchAll(re)) {
+      const quote = m[1].slice(-1), text = literal(quote, m[2]);
+      if (!VI.test(text) || strings[text] || strings[text.trim()]) continue;
+      untranslated++;
+      warn('line ' + lineOf(m.index) + ' ' + kind + ' not in studioStrings: "' + text + '"');
+    }
+    if (!untranslated) ok('all Vietnamese notice()/aria-label texts have a studioStrings key');
+  }
+}
+
 console.log(`\nResult: ${fails} FAIL, ${warns} WARN`);
 process.exit(fails ? 1 : 0);
