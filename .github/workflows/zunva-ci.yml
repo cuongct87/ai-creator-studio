@@ -50,6 +50,19 @@ jobs:
       - name: Lint (gồm luật lõi không gọi giao diện)
         run: pnpm lint
 
+      - name: Thử vi phạm luật lõi (lint phải báo lỗi)
+        run: |
+          printf "import React from 'react';\nexport const leak = React;\n" > packages/core/src/__boundary_check__.ts
+          if pnpm exec eslint packages/core/src/__boundary_check__.ts; then
+            echo "LỖI: lint không chặn được core import React"; rm packages/core/src/__boundary_check__.ts; exit 1
+          fi
+          printf "export const leak = document.title;\n" > packages/core/src/__boundary_check__.ts
+          if pnpm exec eslint packages/core/src/__boundary_check__.ts; then
+            echo "LỖI: lint không chặn được core dùng document"; rm packages/core/src/__boundary_check__.ts; exit 1
+          fi
+          rm packages/core/src/__boundary_check__.ts
+          echo "Đạt: lint chặn được cả import React lẫn document trong core."
+
       - name: Kiểm tra kiểu TypeScript
         run: pnpm typecheck
 
