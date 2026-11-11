@@ -60,8 +60,18 @@ jobs:
 
           # Lấy nội dung: diff (nếu là PR), tiêu đề, mô tả.
           DIFF_SUBSET=""
+          DIFF_NOTE=""
           if [ "$IS_PR" = "true" ]; then
-            DIFF_SUBSET=$(gh pr diff "$PR_NUMBER" | head -c 60000 || true)
+            # Bỏ file khóa phiên bản (máy tạo, rất dài) để Gemini đọc được mã thật.
+            FULL_DIFF=$(gh pr diff "$PR_NUMBER" | awk '/^diff --git /{skip = ($0 ~ /(pnpm-lock\.yaml|package-lock\.json|yarn\.lock)$/)} !skip' || true)
+            DIFF_SUBSET=$(printf '%s' "$FULL_DIFF" | head -c 60000)
+            ALL_FILES=$(gh pr diff "$PR_NUMBER" --name-only || true)
+            if [ "${#FULL_DIFF}" -gt 60000 ]; then
+              DIFF_NOTE="LƯU Ý: diff dài hơn giới hạn nên đã bị CẮT; không được kết luận file nào bị thiếu chỉ vì không thấy trong diff."
+            fi
+            DIFF_NOTE="${DIFF_NOTE}
+          Danh sách đầy đủ file thay đổi trong PR (file khóa phiên bản không được đưa vào diff):
+          ${ALL_FILES}"
           fi
           TITLE=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER" --jq .title)
           BODY_TEXT=$(gh api "repos/$GH_REPO/issues/$PR_NUMBER" --jq '.body // ""' | head -c 6000)
@@ -92,6 +102,8 @@ jobs:
           - Tách rõ điều chắc chắn và điều phỏng đoán. Không bịa dữ kiện. Ngắn gọn.
 
           Phần thay đổi của PR (nếu có):
+          ${DIFF_NOTE}
+
           ${DIFF_SUBSET}
           EOF
             )
@@ -114,6 +126,8 @@ jobs:
           - Chỉ dựa trên nội dung bên dưới, không bịa thêm dữ kiện.
 
           Phần thay đổi (diff):
+          ${DIFF_NOTE}
+
           ${DIFF_SUBSET}
           EOF
             )
