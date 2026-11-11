@@ -1,0 +1,99 @@
+name: Gemini PR Review
+
+# Gemini đọc phần thay đổi của PR và đăng nhận xét bằng tiếng Việt.
+# Cần secret GEMINI_API_KEY (founder tự thêm trong Settings > Secrets and variables > Actions).
+# Không bao giờ ghi khóa API vào file này.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Số PR cần Gemini nhận xét lại"
+        required: true
+
+# Chỉ xin đúng quyền cần dùng: đọc mã và viết bình luận vào PR.
+permissions:
+  contents: read
+  pull-requests: write
+
+# Mỗi PR chỉ chạy một lượt; lượt cũ bị hủy khi có commit mới (tiết kiệm hạn mức API).
+concurrency:
+  group: gemini-review-${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Gemini nhận xét PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          # Đổi tên model ở đây nếu Google ngừng hỗ trợ model này.
+          GEMINI_MODEL: gemini-2.5-flash
+          PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${GEMINI_API_KEY}" ]; then
+            echo "Chưa có secret GEMINI_API_KEY. Founder cần thêm trong Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+          DIFF=$(gh pr diff "$PR_NUMBER")
+          if [ -z "$DIFF" ]; then
+            echo "PR không có thay đổi."
+            exit 0
+          fi
+          DIFF_SUBSET=$(printf '%s' "$DIFF" | head -c 60000)
+          PR_TITLE=$(gh pr view "$PR_NUMBER" --json title --jq .title)
+          PR_BODY=$(gh pr view "$PR_NUMBER" --json body --jq .body | head -c 6000)
+
+          PROMPT=$(cat <<EOF
+          Bạn là thành viên phản biện của ZUNVA AI Council. Hãy nhận xét PR #${PR_NUMBER}: "${PR_TITLE}".
+
+          Mô tả PR (có thể chứa đề bài phản biện, hãy trả lời đề bài nếu có):
+          ${PR_BODY}
+
+          Yêu cầu:
+          - Trả lời bằng tiếng Việt, dễ hiểu với người không phải lập trình viên.
+          - Nếu PR là mã: nêu lỗi tiềm ẩn, vấn đề bảo mật, hiệu năng, đề xuất cải thiện.
+          - Nếu PR là tài liệu thiết kế: trả lời từng câu trong đề bài, mỗi câu ghi lập trường, dẫn chứng, rủi ro, ước tính chi phí, mức tự tin, điều chưa biết.
+          - Tách rõ điều bạn chắc chắn và điều bạn phỏng đoán.
+          - Chỉ dựa trên nội dung bên dưới, không bịa thêm dữ kiện.
+
+          Phần thay đổi (diff):
+          ${DIFF_SUBSET}
+          EOF
+          )
+
+          PAYLOAD=$(jq -n --arg prompt "$PROMPT" '{contents: [{parts: [{text: $prompt}]}]}')
+
+          # Khóa gửi qua header, không nằm trên URL.
+          RESPONSE=$(curl -sS -X POST \
+            "https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent" \
+            -H "Content-Type: application/json" \
+            -H "x-goog-api-key: ${GEMINI_API_KEY}" \
+            -d "$PAYLOAD")
+
+          REVIEW_TEXT=$(printf '%s' "$RESPONSE" | jq -r '.candidates[0].content.parts[0].text // empty')
+          if [ -z "$REVIEW_TEXT" ]; then
+            echo "Không nhận được nhận xét từ Gemini. Lỗi trả về:"
+            printf '%s' "$RESPONSE" | jq -r '.error.message // "không rõ"'
+            exit 1
+          fi
+
+          BODY_FILE=$(mktemp)
+          {
+            echo "### Gemini nhận xét (gọi tự động qua API, model \`${GEMINI_MODEL}\`)"
+            echo
+            printf '%s\n' "$REVIEW_TEXT"
+            echo
+            echo "---"
+            echo "_Ý kiến của Gemini, chưa được founder duyệt. Theo Giao thức AI Council: transport=tool (GitHub Actions)._"
+          } > "$BODY_FILE"
+          gh pr comment "$PR_NUMBER" --body-file "$BODY_FILE"
