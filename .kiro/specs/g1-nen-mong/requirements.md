@@ -21,6 +21,7 @@ Ngoài phạm vi G1: gom 4 nơi dịch (G2), chia sẻ sang Zalo (G2), giao di�
 ## G1-1 — Khóa ký và tên gói chính thức
 
 **R1.1** Founder chốt **tên gói chính thức** (applicationId) trước khi bắt đầu. Kiro không tự chọn. Sau khi app lên cửa hàng, tên gói không đổi được nữa.
+- **ĐÃ CHỐT (founder, 11/11/2026): `vn.c87.lsc`.** Chỉ đổi `applicationId`; giữ nguyên `namespace 'vn.iaysystem.aicreatorstudio'` và thư mục Java.
 
 **R1.2** Tạo một **khóa ký phát hành** (keystore) duy nhất cho ZUNVA:
 - Tạo trên máy founder bằng `keytool`, thuật toán RSA 4096, hạn ≥ 25 năm.
@@ -30,13 +31,13 @@ Ngoài phạm vi G1: gom 4 nơi dịch (G2), chia sẻ sang Zalo (G2), giao di�
 
 **R1.3** Có workflow CI build **APK release ký bằng khóa này** (chạy tay bằng `workflow_dispatch`), tải về dạng artifact. Không phát hành lên cửa hàng.
 
-**R1.4 (có điều kiện)** Chỉ làm nếu kết quả G1-0 cho thấy **có dự án cần giữ** và **nút "Xuất dự án JSON" không ra file trên S24+**: thêm cầu nối Java nhỏ (theo mẫu `AndroidImageSaver`) để lưu chuỗi JSON thành file trong thư mục Tải xuống; nút xuất của v1.5 dùng cầu nối khi có. Không sửa gì khác trong v1.5.
+**R1.4 — KHÔNG CẦN (G1-0, 11/11/2026: không có dự án cần giữ, nút xuất JSON đã ra file trong Tải xuống).** Điều kiện cũ để tham khảo: chỉ làm nếu kết quả G1-0 cho thấy **có dự án cần giữ** và **nút "Xuất dự án JSON" không ra file trên S24+**: thêm cầu nối Java nhỏ (theo mẫu `AndroidImageSaver`) để lưu chuỗi JSON thành file trong thư mục Tải xuống; nút xuất của v1.5 dùng cầu nối khi có. Không sửa gì khác trong v1.5.
 
 ### Tiêu chí đạt G1-1
 - [ ] `git grep` không tìm thấy keystore, mật khẩu hay base64 của khóa trong repo.
 - [ ] 2 lần chạy workflow cho ra 2 APK có **cùng chứng chỉ SHA-256** (`apksigner verify --print-certs`).
 - [ ] APK cài được trên S24+.
-- [ ] (Nếu làm R1.4) Bấm xuất trên S24+ → file `.json` xuất hiện trong Tải xuống, mở được.
+- [x] ~~(Nếu làm R1.4)~~ Không cần: founder xác nhận nút xuất JSON đã ra file. Bấm xuất trên S24+ → file `.json` xuất hiện trong Tải xuống, mở được.
 
 ## G1-2 — Khung repo mới
 

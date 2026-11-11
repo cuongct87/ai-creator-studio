@@ -6,10 +6,12 @@ Luật chung cho mọi task:
 - Báo cáo bằng tiếng Việt dễ hiểu: đã đổi gì, lệnh đã chạy và kết quả, việc chưa làm.
 - Không đưa khóa, mật khẩu, keystore vào repo, log, PR hay chat.
 
-## G1-0 — Founder tự kiểm (0 credit) — chờ founder
-- [ ] Có mấy app AI Creator Studio / ZUNVA trên S24+, tên gói nếu xem được.
-- [ ] Có dự án nào cần giữ không, bao nhiêu.
-- [ ] Bấm "Xuất dự án JSON": có ra file trong Tải xuống không.
+## G1-0 — Founder tự kiểm (0 credit) — XONG (founder trả lời 11/11/2026)
+- [x] Có mấy app AI Creator Studio / ZUNVA trên S24+: **chỉ 1 app ZUNVA**.
+- [x] Có dự án nào cần giữ không: **không cần giữ dự án nào**.
+- [x] Bấm "Xuất dự án JSON": **có ra file trong Tải xuống**.
+
+Hệ quả: không cần cầu nối `AndroidFileSaver` (đã bỏ bước 1.4). Phần nhập dự án v1.5 ở G1-7 hạ xuống **ưu tiên thấp**.
 
 ## G1-2 — Khung repo mới — XONG (Claude, PR #32, 0 credit Kiro)
 Nhánh: `feat/g1-2-khung-zunva`
@@ -21,12 +23,11 @@ Nhánh: `feat/g1-2-khung-zunva`
 - [ ] 2.6 `.github/workflows/zunva-ci.yml` theo R2.7.
 - [ ] 2.7 Kiểm tra tiêu chí đạt G1-2, mở PR, báo cáo.
 
-## G1-1 — Khóa ký và tên gói (dự toán 15–30 credit) — chờ founder chốt tên gói và G1-0
-Nhánh: `feat/g1-1-khoa-ky`
+## G1-1 — Khóa ký và tên gói (dự toán 15–30 credit) — tên gói đã chốt
+Nhánh: `feat/g1-1-khoa-ky` · Tên gói chính thức: **`vn.c87.lsc`** (founder chốt 11/11/2026)
 - [ ] 1.1 Hướng dẫn founder từng lệnh `keytool` để tạo keystore **trên máy founder**, cách mã hóa base64 và dán 4 secret vào GitHub. Kiro không tự đọc hay in mật khẩu.
 - [ ] 1.2 Workflow `android-release-apk.yml` (chỉ `workflow_dispatch`): giải mã keystore từ secret, build release với tên gói đã chốt, ký, xuất artifact, xóa file khóa tạm.
 - [ ] 1.3 Chạy workflow 2 lần, so chứng chỉ SHA-256 hai APK.
-- [ ] 1.4 (Chỉ khi G1-0 cần) Cầu nối `AndroidFileSaver` + sửa hàm xuất JSON trong `studio_v15.js` (design.md). Thử trên S24+.
 - [ ] 1.5 Kiểm tra tiêu chí đạt G1-1, mở PR, báo cáo.
 
 ## Chia việc song song (founder chốt 11/11 13:33)
@@ -60,3 +61,4 @@ Nhánh: `feat/g1-4-poc-konva`. Ứng dụng thử **độc lập** `zunva/apps/p
 
 ## G1-5 → G1-7
 Đặc tả chi tiết viết sau khi G1-3 và G1-4 xong.
+- Ghi chú (G1-0, 11/11/2026): phần **nhập dự án v1.5** ở G1-7 hạ xuống **ưu tiên thấp**, vì không có dự án nào cần giữ. Làm sau cùng hoặc bỏ nếu thiếu credit.
