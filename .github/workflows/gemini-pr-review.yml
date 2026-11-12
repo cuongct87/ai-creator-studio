@@ -133,7 +133,8 @@ jobs:
             )
           fi
 
-          PAYLOAD=$(jq -n --arg prompt "$PROMPT" '{contents: [{parts: [{text: $prompt}]}]}')
+          # Bật Google Search cho Gemini để tra nguồn thật (ảnh, giấy phép, giá) thay vì trả lời theo trí nhớ.
+          PAYLOAD=$(jq -n --arg prompt "$PROMPT" '{contents: [{parts: [{text: $prompt}]}], tools: [{google_search: {}}]}')
 
           # Khóa gửi qua header, không nằm trên URL.
           # Google đôi khi báo quá tải tạm thời: thử lại tối đa 4 lần, chờ 30, 60, 90 giây.
