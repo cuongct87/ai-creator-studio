@@ -156,8 +156,37 @@ export async function alphaMaskToPng(mask: HTMLCanvasElement): Promise<Uint8Arra
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, grey.width, grey.height);
   ctx.drawImage(mask, 0, 0);
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    grey.toBlob((b) => (b ? resolve(b) : reject(new Error('Không lưu được vùng tẩy.'))), 'image/png');
+  const blob = await encodeCanvas(grey, 'image/png').catch(() => {
+    throw new Error('Không lưu được vùng tẩy.');
   });
   return new Uint8Array(await blob.arrayBuffer());
+}
+
+/**
+ * Canvas → ảnh (PNG/JPG) **ngay**, không chờ máy rảnh.
+ * `HTMLCanvasElement.toBlob` của Chrome/WebView chỉ mã hóa khi luồng chính rảnh; lúc app đang vẽ
+ * (Konva, tay nắm, ảnh thu nhỏ) nó có thể chờ vài giây (đo trên S24+: tạo mặt nạ tẩy mất 4 giây).
+ * `OffscreenCanvas.convertToBlob` mã hóa luôn. Máy không có OffscreenCanvas thì dùng `toDataURL` (đồng bộ).
+ */
+export async function encodeCanvas(canvas: HTMLCanvasElement, mimeType: 'image/png' | 'image/jpeg', quality?: number): Promise<Blob> {
+  if (typeof OffscreenCanvas !== 'undefined') {
+    const off = new OffscreenCanvas(canvas.width, canvas.height);
+    const ctx = off.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(canvas, 0, 0);
+      try {
+        return await off.convertToBlob(quality === undefined ? { type: mimeType } : { type: mimeType, quality });
+      } finally {
+        // Trả bộ nhớ ngay (ảnh xuất có thể tới 8000 px).
+        off.width = 0;
+        off.height = 0;
+      }
+    }
+  }
+  const url = canvas.toDataURL(mimeType, quality);
+  const comma = url.indexOf(',');
+  const binary = atob(url.slice(comma + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mimeType });
 }

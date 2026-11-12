@@ -3,7 +3,7 @@ import type Konva from 'konva';
 import { type JSX, useEffect, useRef } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Layer as KLayer, Stage } from 'react-konva';
-import { alphaMaskFromImage, createCanvas, renderComposite } from './composite';
+import { alphaMaskFromImage, createCanvas, encodeCanvas, renderComposite } from './composite';
 import {
   encoderQuality,
   EXPORT_TIMEOUT_MS,
@@ -43,8 +43,9 @@ function loadImage(url: string): Promise<HTMLImageElement | null> {
 }
 
 function canvasToBlob(canvas: HTMLCanvasElement, mimeType: ExportMimeType, quality: number | undefined): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Không xuất được ảnh trang.'))), mimeType, quality);
+  // Không dùng canvas.toBlob: WebView chờ máy rảnh mới mã hóa (vài giây khi app đang bận).
+  return encodeCanvas(canvas, mimeType, quality).catch(() => {
+    throw new Error('Không xuất được ảnh trang.');
   });
 }
 
