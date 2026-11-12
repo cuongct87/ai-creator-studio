@@ -69,7 +69,10 @@ export function Home({ store, platform, theme, onThemeChange, onOpen }: HomeProp
     if (busy) return;
     if (option.kind === 'photo') return void finish(createPhotoProject(store, platform, option));
     if (option.size === null) return setAskingSize(option);
-    void finish(createBlankProject(store, option, option.size));
+    // Hình nền: đúng kích thước màn hình máy nếu nền tảng cho biết (Android).
+    const screen = option.kind === 'wallpaper' ? platform.screenSize?.() : null;
+    const pageSize = screen ? { ...option.size, width: screen.width, height: screen.height } : option.size;
+    void finish(createBlankProject(store, option, pageSize));
   }
 
   return (

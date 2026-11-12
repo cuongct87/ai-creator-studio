@@ -443,6 +443,7 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
           onGestureEnd={endGesture}
           assetUrl={assetUrl}
           onTextEditing={setTextEditing}
+          guides={doc.meta.kind === 'wallpaper' ? 'phone-wallpaper' : null}
           brush={brush}
           onMaskStroke={(layerId, png) => {
             const layer = histRef.current?.doc.pages[0]?.layers.find((l) => l.id === layerId);
@@ -568,7 +569,14 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
         </div>
       )}
       {exporting && (
-        <ExportSheet doc={doc} pageIds={doc.pages.map((p) => p.id)} render={renderPage} platform={platform} onClose={() => setExporting(false)} />
+        <ExportSheet
+          doc={doc}
+          pageIds={doc.pages.map((p) => p.id)}
+          currentPageId={page.id}
+          render={renderPage}
+          platform={platform}
+          onClose={() => setExporting(false)}
+        />
       )}
       {dialog}
     </div>

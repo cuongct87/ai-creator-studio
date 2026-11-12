@@ -54,6 +54,13 @@ export interface SubjectSegmenter {
   segment(bytes: Uint8Array): Promise<PlatformResult<Uint8Array | null>>;
 }
 
+export type WallpaperTarget = 'home' | 'lock' | 'both';
+
+/** Đặt ảnh làm hình nền máy (G3 R4, Android). */
+export interface WallpaperSetter {
+  set(png: Uint8Array, target: WallpaperTarget): Promise<PlatformResult<void>>;
+}
+
 export interface GallerySaver {
   /** Lưu ảnh vào Thư viện ảnh của máy (Android/iOS); trên web có thể là tải xuống. */
   saveImage(fileName: string, bytes: Uint8Array): Promise<PlatformResult<SavedFile>>;
@@ -82,6 +89,10 @@ export interface Platform {
   readonly subject?: SubjectSegmenter;
   /** Có khi nền tảng mở được bảng chia sẻ của máy. Vắng mặt → app ẩn nút "Chia sẻ". */
   readonly share?: Sharer;
+  /** Có trên Android: đặt hình nền. Vắng mặt → app ẩn nút "Đặt làm hình nền". */
+  readonly wallpaper?: WallpaperSetter;
+  /** Kích thước màn hình máy (px thật), để làm hình nền vừa khít. Vắng mặt / null → dùng khổ mặc định. */
+  screenSize?(): { width: number; height: number } | null;
 }
 
 /** Một dòng trong danh sách dự án (không cần mở cả thiết kế). */

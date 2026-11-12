@@ -31,6 +31,7 @@ export const PAGE_SIZES: readonly PageSize[] = [
   { id: 'vuong', label: 'Vuông 1080×1080', width: 1080, height: 1080 },
   { id: 'doc', label: 'Bài đăng dọc 1080×1350', width: 1080, height: 1350 },
   { id: 'story', label: 'Story / màn hình điện thoại 1080×1920', width: 1080, height: 1920 },
+  { id: 'hinh-nen', label: 'Hình nền điện thoại 1080×2340', width: 1080, height: 2340 },
   { id: 'ngang', label: 'Ngang 1920×1080', width: 1920, height: 1080 },
   { id: 'a5', label: 'Giấy A5 1748×2480', width: 1748, height: 2480 },
   { id: 'a4', label: 'Giấy A4 2480×3508', width: 2480, height: 3508 },
@@ -88,6 +89,17 @@ export const START_OPTIONS: readonly StartOption[] = [
     ink: '#14553a',
     size: size('vuong'),
     keywords: ['mạng xã hội', 'facebook', 'instagram', 'zalo', 'tiktok', 'bài đăng', 'story'],
+  },
+  {
+    kind: 'wallpaper',
+    label: 'Hình nền điện thoại',
+    projectName: 'Hình nền điện thoại',
+    icon: '▯',
+    tint: '#fbe3ef',
+    ink: '#7a1f4c',
+    // Android dùng đúng kích thước màn hình máy (AndroidShell.screenSize); web dùng khổ này.
+    size: size('hinh-nen'),
+    keywords: ['hình nền', 'màn hình khóa', 'wallpaper', 'điện thoại', 'nền máy'],
   },
   {
     kind: 'blank',
