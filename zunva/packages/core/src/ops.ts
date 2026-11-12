@@ -91,7 +91,7 @@ function assetInUse(doc: DesignDocument, assetId: Id): boolean {
   return doc.pages.some(
     (p) =>
       p.background.imageAssetId === assetId ||
-      p.layers.some((l) => l.type === 'image' && l.assetId === assetId),
+      p.layers.some((l) => l.type === 'image' && (l.assetId === assetId || l.maskAssetId === assetId)),
   );
 }
 
