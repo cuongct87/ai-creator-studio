@@ -3,6 +3,13 @@ import { expect, test, type Page } from '@playwright/test';
 /** Ảnh mẫu: PNG đỏ 400×400 (e2e/fixtures/do-400.png). */
 const redPng = () => `${test.info().project.testDir}/fixtures/do-400.png`;
 
+/** Thông tin khi lỗi: câu báo của app + nhãn nút hoàn tác. */
+async function diag(page: Page): Promise<string> {
+  const msg = await page.locator('.editor-message').allTextContents();
+  const undo = await page.getByRole('button', { name: /^Hoàn tác/ }).getAttribute('aria-label');
+  return `báo: ${JSON.stringify(msg)} | hoàn tác: ${undo ?? '-'}`;
+}
+
 /** Màu điểm giữa vùng vẽ (đọc thẳng từ canvas của Konva). */
 async function centerPixel(page: Page): Promise<number[]> {
   return page.evaluate(() => {
@@ -53,7 +60,8 @@ test('ghép ảnh: tẩy một nét, mờ viền, bỏ hết vùng tẩy (G2b)',
 
   // Bỏ hết vùng tẩy → ảnh đỏ trở lại ở giữa.
   await page.getByRole('button', { name: 'Bỏ hết vùng tẩy' }).click();
-  await expect(page.getByRole('button', { name: 'Bỏ hết vùng tẩy' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Hoàn tác: Bỏ hết vùng tẩy/ }), await diag(page)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Bỏ hết vùng tẩy' }), await diag(page)).toHaveCount(0);
   await expect.poll(async () => (await centerPixel(page))[0]).toBeGreaterThan(180);
 
   // Tải lại trang: dữ liệu còn (mờ viền 40).
