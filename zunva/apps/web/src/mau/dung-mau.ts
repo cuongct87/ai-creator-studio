@@ -114,7 +114,8 @@ export function searchTemplates(query: string, kind: string | null, templates: r
   return templates.filter((t) => {
     if (kind !== null && t.kind !== kind) return false;
     if (words.length === 0) return true;
-    const haystack = normalizeVi([t.title, kindLabel(t.kind), ...t.tags].join(' '));
-    return words.every((w) => haystack.includes(w));
+    // Khớp đầu từ: "hoa" ra "hoa cúc" nhưng không ra "điện thoại".
+    const haystack = normalizeVi([t.title, kindLabel(t.kind), ...t.tags].join(' ')).split(' ');
+    return words.every((w) => haystack.some((h) => h.startsWith(w)));
   });
 }

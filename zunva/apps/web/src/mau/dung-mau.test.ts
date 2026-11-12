@@ -97,7 +97,8 @@ describe('kho mẫu: 15 mẫu đầu', () => {
     const two = estimateTextHeight({ text: 'abc\nabc', width: 1000, fontSize: 50, lineHeight: 1.2, letterSpacing: 0 });
     expect(one).toBe(60);
     expect(two).toBe(120);
-    expect(estimateTextHeight({ text: 'x'.repeat(100), width: 520, fontSize: 50, lineHeight: 1, letterSpacing: 0 })).toBe(500);
+    // 520 / (50 × 0,52) = 20 ký tự mỗi dòng → 100 ký tự = 5 dòng.
+    expect(estimateTextHeight({ text: 'x'.repeat(100), width: 520, fontSize: 50, lineHeight: 1, letterSpacing: 0 })).toBe(250);
   });
 });
 
@@ -156,6 +157,8 @@ describe('tìm mẫu', () => {
     expect(ids('com tam')).toEqual(['ban-hang-com-tam']);
     expect(ids('', 'obituary')).toEqual(['cao-pho-hoa-sen', 'cao-pho-hoa-cuc']);
     expect(ids('hoa pastel', 'wallpaper')).toEqual(['hinh-nen-hoa-pastel']);
+    // Khớp đầu từ: "hoa" không ra mẫu chỉ có chữ "điện thoại" (hình nền khối tròn).
+    expect(ids('hoa', 'wallpaper')).not.toContain('hinh-nen-hinh-hoc');
     expect(ids('không có gì')).toEqual([]);
   });
 });
