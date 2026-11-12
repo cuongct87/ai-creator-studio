@@ -438,11 +438,15 @@ async function main() {
     await waitFor(async () => /Đã lưu/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu', 20000);
     const text = (await status.textContent())?.trim();
     if (!/Ảnh\/Artio/.test(text ?? '')) throw new Error(`báo lạ: "${text}"`);
-    const name = `${(await page.locator('.editor-title').textContent())?.trim()}.png`;
-    const size = (await device.shell(`stat -c %s "/sdcard/Pictures/Artio/${name}"`)).toString().trim();
-    if (!/^\d+$/.test(size)) throw new Error(`không thấy file trong Ảnh/Artio: ${size}`);
-    exported.push(`/sdcard/Pictures/Artio/${name}`);
-    return `${Date.now() - t0} ms — ${text} (${Math.round(Number(size) / 1024)} KB)`;
+    // Tên file có dấu tiếng Việt: lệnh gửi qua USB làm hỏng dấu, nên tìm file PNG mới nhất (lệnh chỉ chữ không dấu).
+    const newest = 'ls -t /sdcard/Pictures/Artio/*.png | head -1';
+    const info = (await device.shell(`stat -c '%s %Y' "$(${newest})"`)).toString().trim();
+    const m = /^(\d+) (\d+)$/.exec(info);
+    if (!m) throw new Error(`không thấy file PNG trong Ảnh/Artio: ${info}`);
+    const age = Date.now() / 1000 - Number(m[2]);
+    if (age > 120) throw new Error(`file PNG mới nhất đã cũ (${Math.round(age)} giây) — có thể chưa lưu`);
+    exported.push(newest);
+    return `${Date.now() - t0} ms — ${text} (${Math.round(Number(m[1]) / 1024)} KB)`;
   });
 
   await step('Chia sẻ → mở bảng chia sẻ của máy', async () => {
@@ -469,16 +473,16 @@ async function main() {
     const status = sheet().getByRole('status');
     await waitFor(async () => /PDF/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu PDF', 30000);
     const text = (await status.textContent())?.trim();
-    const name = `${(await page.locator('.editor-title').textContent())?.trim()}.pdf`;
-    const head = (await device.shell(`head -c 8 "/sdcard/Download/Artio/${name}"`)).toString();
+    const newestPdf = 'ls -t /sdcard/Download/Artio/*.pdf | head -1';
+    const head = (await device.shell(`head -c 8 "$(${newestPdf})"`)).toString();
     if (!head.startsWith('%PDF-1.4')) throw new Error(`file PDF lạ: "${head}"`);
-    exported.push(`/sdcard/Download/Artio/${name}`);
+    exported.push(newestPdf);
     await tap(sheet().getByRole('button', { name: 'Đóng' }));
     return `${Date.now() - t0} ms — ${text}`;
   });
 
   // Dọn file thử vừa xuất (không đụng file khác của bạn).
-  for (const f of exported) await device.shell(`rm -f "${f}"`).catch(() => {});
+  for (const newest of exported) await device.shell(`rm -f "$(${newest})"`).catch(() => {});
 
   await step('Nút Back của Android → về trang chủ', async () => {
     await device.shell('input keyevent 4');
