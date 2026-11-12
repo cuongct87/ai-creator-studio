@@ -7,12 +7,16 @@ test('chỉnh sửa thiệp cưới: thêm chữ/hình, sửa chữ tiếng Vi�
   await expect(stage).toHaveAccessibleName(/0 lớp/);
   await expect(stage.locator('canvas').first()).toBeVisible();
 
-  // Thêm chữ → bảng thuộc tính chữ hiện ra.
+  // Thêm chữ → ô gõ mở ngay trên trang (không phải chạm thêm), gõ xong → bảng thuộc tính chữ.
   await page.getByRole('button', { name: 'Chữ', exact: true }).click();
   await expect(stage).toHaveAccessibleName(/1 lớp/);
-  const content = page.getByLabel('Nội dung (hoặc chạm vào chữ đang chọn trên trang để gõ)');
-  await expect(content).toHaveValue('Chữ mới');
-  await content.fill('Trân trọng kính mời');
+  const inPlace = page.getByRole('textbox', { name: 'Sửa chữ' });
+  await expect(inPlace).toBeFocused();
+  await expect(inPlace).toHaveValue('Chữ mới');
+  await inPlace.fill('Trân trọng kính mời');
+  await inPlace.press('Escape');
+  const content = page.getByLabel('Nội dung (hoặc chạm 1 lần vào chữ đang chọn trên trang để gõ)');
+  await expect(content).toHaveValue('Trân trọng kính mời');
   await page.getByLabel('Phông chữ').selectOption('Dancing Script');
   await page.getByRole('button', { name: 'Chữ to hơn' }).click();
   await page.getByRole('button', { name: 'Bỏ chọn' }).click();

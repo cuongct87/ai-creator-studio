@@ -388,6 +388,8 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
                     apply('Thêm chữ', ops);
                     setSelection([layerId]);
                     setPanel('none');
+                    // Mở ô gõ + bàn phím ngay, không phải chạm thêm (founder thử 12/11).
+                    canvasRef.current?.startTextEdit(layerId);
                   }}
                 />
                 <ToolButton icon="▣" label="Ảnh" disabled={busy} onClick={() => void addImage()} />
@@ -614,7 +616,7 @@ function TextProps({ layer, onPatch, onDone }: { layer: Extract<Layer, { type: '
   return (
     <>
       <label className="field">
-        <span>Nội dung (hoặc chạm vào chữ đang chọn trên trang để gõ)</span>
+        <span>Nội dung (hoặc chạm 1 lần vào chữ đang chọn trên trang để gõ)</span>
         <textarea
           value={layer.text}
           rows={2}

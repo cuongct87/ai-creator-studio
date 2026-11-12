@@ -36,11 +36,20 @@ Khung bao ngoài phải có chiều cao: canvas chiếm 100% × 100% khung đó.
 | --- | --- | --- | --- |
 | Kéo 1 lớp | `updateLayer { x, y }` liên tục (mỗi khung hình) | `drag:<layerId>` | khi thả tay |
 | Kéo nhiều lớp đang chọn | 1 lần khi thả tay, mỗi lớp một `updateLayer` | `transform:<ids>` | khi thả tay |
-| Phóng to, thu nhỏ, xoay (tay nắm) | 1 lần khi thả tay: `{ x, y, rotation, width, height }`; chữ: `{ width, fontSize, height }` | `transform:<ids>` | khi thả tay |
+| Hai ngón khi đang chọn 1 lớp (phóng + xoay lớp) | `updateLayer { x, y, width, height, rotation }` (chữ thêm `fontSize`) liên tục | `drag:<layerId>` (gộp với lần kéo 1 ngón ngay trước) | khi nhấc ngón |
+| Hai ngón khi không chọn lớp nào | không có lệnh (chỉ phóng/di chuyển trang) | — | khi nhấc ngón |
+| Tay nắm góc (↻): xoay quanh tâm, hút 0/90/180/270° khi lệch ≤ 5° | `updateLayer { x, y, rotation }` liên tục | `transform:<layerId>` | khi thả tay |
+| Tay nắm giữa cạnh: kéo dãn một chiều (chữ: chỉ bề ngang khung) | 1 lần khi thả tay: `{ x, y, width, height }`; chữ: `{ x, y, width, height }` | `transform:<ids>` | khi thả tay |
 | Sửa chữ | 1 `updateLayer { text, height }` khi xong | không | không |
 
-Đổi cỡ chỉ báo khi thả tay (không báo liên tục) vì Konva đổi `scale` trong lúc kéo; báo giữa chừng sẽ làm
+Số trong lệnh luôn gọn: `fontSize` số nguyên, `x/y/width/height` 0,1 px, `rotation` 0,1° trong [0, 360).
+
+Kéo dãn bằng tay nắm cạnh chỉ báo khi thả tay vì Konva đổi `scale` trong lúc kéo; báo giữa chừng sẽ làm
 kích thước bị nhân hai lần. Lớp `locked` chọn được nhưng không kéo được; lớp `hidden` không vẽ.
+
+## Sửa chữ
+- Chạm vào lớp chữ chưa chọn → chọn. Chạm thêm 1 lần (nhanh < 300 ms, lệch < 10 px) → mở ô gõ. Chạm 2 lần nhanh cũng được.
+- Ứng dụng gọi `ref.startTextEdit(layerId)` ngay sau khi thêm chữ mới để mở ô gõ luôn (lớp chưa vẽ kịp thì canvas tự chờ vài khung hình).
 
 ## Phông chữ
 6 phông OFL có bộ chữ tiếng Việt (đã kiểm trên api.fontsource.org): Be Vietnam Pro, Playfair Display,
