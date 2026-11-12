@@ -1,4 +1,4 @@
-import type { FileOpener, FileSaver, GallerySaver, ImagePicker, PickedFile, PickedImage, Platform, PlatformResult } from './index';
+import type { FileOpener, FileSaver, GallerySaver, ImagePicker, PickedFile, PickedImage, Platform, PlatformResult, Sharer } from './index';
 
 /**
  * Bản cài đặt nền tảng cho trình duyệt (G1-5).
@@ -150,5 +150,23 @@ export function createWebPlatform(doc: Document = document): Platform {
     },
   };
 
-  return { name: 'web', files, opener, images, gallery };
+  const base: Platform = { name: 'web', files, opener, images, gallery };
+  // Chia sẻ trên web: chỉ khi trình duyệt chia sẻ được file (điện thoại có Web Share).
+  const nav = doc.defaultView?.navigator as (Navigator & { canShare?(data: ShareData): boolean }) | undefined;
+  if (!nav || typeof nav.share !== 'function' || typeof nav.canShare !== 'function') return base;
+  const share: Sharer = {
+    async share(list) {
+      const fileList = list.map((f) => new File([f.bytes.slice()], f.fileName, { type: f.mimeType }));
+      if (!nav.canShare?.({ files: fileList })) return { ok: false, error: 'Trình duyệt này không chia sẻ được file.' };
+      try {
+        await nav.share({ files: fileList });
+        return { ok: true, value: undefined };
+      } catch (e) {
+        // Người dùng đóng bảng chia sẻ: không phải lỗi.
+        if (e instanceof DOMException && e.name === 'AbortError') return { ok: true, value: undefined };
+        return { ok: false, error: 'Không chia sẻ được file.' };
+      }
+    },
+  };
+  return { ...base, share };
 }

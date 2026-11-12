@@ -113,3 +113,48 @@ describe('tách nền qua cầu nối Java (G2b)', () => {
     expect(r.ok).toBe(false);
   });
 });
+
+describe('xuất và chia sẻ (G3)', () => {
+  it('ảnh xuất lưu vào Ảnh/Artio qua saveImageBytes, có uri để chia sẻ', async () => {
+    const calls: string[] = [];
+    const win: AndroidBridgeWindow = {
+      AndroidFileSaver: {
+        saveBytes: () => '{"ok":true,"location":"Tải xuống/Artio"}',
+        saveImageBytes(fileName, mime) {
+          calls.push(`${fileName}|${mime}`);
+          return '{"ok":true,"location":"Ảnh/Artio","uri":"content://media/external/images/media/42"}';
+        },
+      },
+    };
+    const r = await createAndroidPlatform(win, fakeDoc).gallery.saveImage('Thiệp.jpg', new Uint8Array([0xff, 0xd8, 1]));
+    expect(r).toEqual({ ok: true, value: { location: 'Ảnh/Artio', uri: 'content://media/external/images/media/42' } });
+    expect(calls).toEqual(['Thiệp.jpg|image/jpeg']);
+  });
+
+  it('chia sẻ gửi danh sách uri sang Java; chưa lưu thì báo lỗi', async () => {
+    let sent = '';
+    const win: AndroidBridgeWindow = {
+      AndroidFileSaver: { saveBytes: () => '{"ok":true}' },
+      AndroidShare: {
+        share(urisJson, mime) {
+          sent = `${urisJson}|${mime}`;
+          return '{"ok":true,"location":""}';
+        },
+      },
+    };
+    const sharer = createAndroidPlatform(win, fakeDoc).share!;
+    const files = [
+      { fileName: 'a - 1.png', mimeType: 'image/png', bytes: new Uint8Array([1]), uri: 'content://media/x/1' },
+      { fileName: 'a - 2.png', mimeType: 'image/png', bytes: new Uint8Array([1]), uri: 'content://media/x/2' },
+    ];
+    expect(await sharer.share(files)).toEqual({ ok: true, value: undefined });
+    expect(sent).toBe('["content://media/x/1","content://media/x/2"]|image/png');
+    const r = await sharer.share([{ fileName: 'a.pdf', mimeType: 'application/pdf', bytes: new Uint8Array([1]) }]);
+    expect(r.ok).toBe(false);
+  });
+
+  it('bản app cũ (không có saveImageBytes / AndroidShare): vẫn lưu ảnh kiểu cũ, không có chia sẻ', () => {
+    const p = createAndroidPlatform(bridge('{"ok":true}').win, fakeDoc);
+    expect(p.share).toBeUndefined();
+  });
+});

@@ -1,4 +1,4 @@
-import type { FileSaver, GallerySaver, Platform, PlatformResult, SubjectSegmenter } from './index';
+import type { FileSaver, GallerySaver, Platform, PlatformResult, SavedFile, Sharer, SubjectSegmenter } from './index';
 import { createWebPlatform } from './web-platform';
 
 /**
@@ -13,7 +13,13 @@ import { createWebPlatform } from './web-platform';
  */
 
 export interface AndroidBridgeWindow {
-  AndroidFileSaver?: { saveBytes(fileName: string, mimeType: string, base64: string): string };
+  AndroidFileSaver?: {
+    saveBytes(fileName: string, mimeType: string, base64: string): string;
+    /** G3: ảnh xuất vào Ảnh/Artio, trả kèm uri để chia sẻ (bản app cũ không có). */
+    saveImageBytes?(fileName: string, mimeType: string, base64: string): string;
+  };
+  /** G3: bảng chia sẻ của máy cho các uri vừa lưu. */
+  AndroidShare?: { share(urisJson: string, mimeType: string): string };
   AndroidImageSaver?: { saveImage(dataUrl: string, fileName: string): void };
   /** G2b: tách nền bằng ML Kit. Trả lời bất đồng bộ qua `__artioSegmentDone(requestId, json)`. */
   AndroidSubject?: { segment(requestId: string, base64: string): void };
@@ -98,12 +104,34 @@ export function createAndroidSegmenter(win: AndroidBridgeWindow, timeoutMs = SEG
   };
 }
 
-function parseBridgeReply(reply: unknown): PlatformResult<{ location: string }> {
+/** Chia sẻ file đã lưu (Android): gửi danh sách uri sang Java, Java mở bảng chia sẻ. */
+export function createAndroidSharer(win: AndroidBridgeWindow): Sharer | null {
+  const bridge = win.AndroidShare;
+  if (!bridge) return null;
+  return {
+    async share(files) {
+      const uris = files.map((f) => f.uri).filter((u): u is string => typeof u === 'string');
+      if (uris.length === 0) return { ok: false, error: 'Hãy lưu file trước rồi mới chia sẻ.' };
+      const types = new Set(files.map((f) => f.mimeType));
+      const mime = types.size === 1 ? [...types][0]! : files.every((f) => f.mimeType.startsWith('image/')) ? 'image/*' : '*/*';
+      try {
+        const r = parseBridgeReply(bridge.share(JSON.stringify(uris), mime));
+        return r.ok ? { ok: true, value: undefined } : r;
+      } catch {
+        return { ok: false, error: 'Không mở được bảng chia sẻ.' };
+      }
+    },
+  };
+}
+
+function parseBridgeReply(reply: unknown, fallbackLocation = 'Tải xuống'): PlatformResult<SavedFile> {
   if (typeof reply !== 'string') return { ok: false, error: MESSAGES.bridgeFailed };
   try {
-    const value = JSON.parse(reply) as { ok?: unknown; location?: unknown; error?: unknown };
+    const value = JSON.parse(reply) as { ok?: unknown; location?: unknown; uri?: unknown; error?: unknown };
     if (value.ok === true) {
-      return { ok: true, value: { location: typeof value.location === 'string' ? value.location : 'Tải xuống' } };
+      const saved: SavedFile = { location: typeof value.location === 'string' && value.location !== '' ? value.location : fallbackLocation };
+      if (typeof value.uri === 'string' && value.uri.startsWith('content://')) saved.uri = value.uri;
+      return { ok: true, value: saved };
     }
     return { ok: false, error: typeof value.error === 'string' && value.error !== '' ? value.error : MESSAGES.bridgeFailed };
   } catch {
@@ -133,7 +161,20 @@ export function createAndroidPlatform(win: AndroidBridgeWindow, doc?: Document):
     };
   }
 
-  const gallery: GallerySaver = imageBridge
+  const saveImageBytes = fileBridge?.saveImageBytes;
+  const gallery: GallerySaver = fileBridge && saveImageBytes
+    ? {
+        async saveImage(fileName, bytes) {
+          if (bytes.length > ANDROID_MAX_SAVE_BYTES) return { ok: false, error: MESSAGES.tooLarge };
+          const mime = bytes[0] === 0xff && bytes[1] === 0xd8 ? 'image/jpeg' : 'image/png';
+          try {
+            return parseBridgeReply(saveImageBytes.call(fileBridge, fileName, mime, toBase64(bytes)), 'Ảnh/Artio');
+          } catch {
+            return { ok: false, error: MESSAGES.imageFailed };
+          }
+        },
+      }
+    : imageBridge
     ? {
         async saveImage(fileName, bytes) {
           try {
@@ -147,9 +188,12 @@ export function createAndroidPlatform(win: AndroidBridgeWindow, doc?: Document):
       }
     : web.gallery;
 
-  const base: Platform = { name: fileBridge ? 'android' : 'web', files, opener: web.opener, images: web.images, gallery };
+  let platform: Platform = { name: fileBridge ? 'android' : 'web', files, opener: web.opener, images: web.images, gallery };
   const subject = createAndroidSegmenter(win);
-  return subject ? { ...base, subject } : base;
+  if (subject) platform = { ...platform, subject };
+  const share = createAndroidSharer(win);
+  if (share) platform = { ...platform, share };
+  return platform;
 }
 
 /** Chọn bản nền tảng theo nơi app đang chạy: trong vỏ Android có cầu nối thì dùng Android. */

@@ -9,11 +9,30 @@ import type { DesignDocument, Id } from '@zunva/core';
 
 export type PlatformResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
+/** Nơi file vừa lưu. `uri` (Android: content://media/…) dùng để chia sẻ; vắng mặt trên web. */
+export interface SavedFile {
+  location: string;
+  uri?: string;
+}
+
+/** Một file để chia sẻ sang app khác (Zalo, Messenger…). */
+export interface FileToShare {
+  fileName: string;
+  mimeType: string;
+  bytes: Uint8Array;
+  /** Có khi file đã lưu trên Android (chia sẻ bằng uri, không gửi lại byte). */
+  uri?: string;
+}
+
+export interface Sharer {
+  share(files: readonly FileToShare[]): Promise<PlatformResult<void>>;
+}
+
 export interface FileSaver {
   /** Lưu nội dung chữ (ví dụ JSON dự án) thành file người dùng thấy được. */
-  saveText(fileName: string, mimeType: string, content: string): Promise<PlatformResult<{ location: string }>>;
+  saveText(fileName: string, mimeType: string, content: string): Promise<PlatformResult<SavedFile>>;
   /** Lưu dữ liệu nhị phân (PNG, PDF, .zunva). */
-  saveBytes(fileName: string, mimeType: string, bytes: Uint8Array): Promise<PlatformResult<{ location: string }>>;
+  saveBytes(fileName: string, mimeType: string, bytes: Uint8Array): Promise<PlatformResult<SavedFile>>;
 }
 
 export interface PickedImage {
@@ -37,7 +56,7 @@ export interface SubjectSegmenter {
 
 export interface GallerySaver {
   /** Lưu ảnh vào Thư viện ảnh của máy (Android/iOS); trên web có thể là tải xuống. */
-  saveImage(fileName: string, bytes: Uint8Array): Promise<PlatformResult<{ location: string }>>;
+  saveImage(fileName: string, bytes: Uint8Array): Promise<PlatformResult<SavedFile>>;
 }
 
 export interface PickedFile {
@@ -61,6 +80,8 @@ export interface Platform {
   readonly gallery: GallerySaver;
   /** Có khi nền tảng hỗ trợ tách nền (Android có ML Kit). Vắng mặt → app ẩn nút "Tách nền". */
   readonly subject?: SubjectSegmenter;
+  /** Có khi nền tảng mở được bảng chia sẻ của máy. Vắng mặt → app ẩn nút "Chia sẻ". */
+  readonly share?: Sharer;
 }
 
 /** Một dòng trong danh sách dự án (không cần mở cả thiết kế). */
