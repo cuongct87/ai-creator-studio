@@ -10,6 +10,8 @@ export * from './factory';
 export * from './validate';
 export * from './migrate';
 export * from './assets';
+export * from './template';
+export * from './pdf';
 export * from './ops';
 export * from './history';
 export * from './zip';
