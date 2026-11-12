@@ -24,6 +24,7 @@ import {
   addImageOps,
   addShapeOps,
   addTextOps,
+  coverPagePatch,
   arrangeOps,
   duplicateOps,
   layerLabel,
@@ -414,6 +415,7 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
               }}
               onRemove={() => void removeSelected()}
               onReplaceImage={(layer) => void replaceImage(layer)}
+              onCoverPage={(layer) => patch(layer, coverPagePatch(layer, page.width, page.height), 'Phủ kín trang')}
               onClose={() => setSelection([])}
             />
           )}
@@ -526,10 +528,11 @@ interface PropsPanel {
   onDuplicate(): void;
   onRemove(): void;
   onReplaceImage(layer: Layer): void;
+  onCoverPage(layer: Layer): void;
   onClose(): void;
 }
 
-function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onArrange, onDuplicate, onRemove, onReplaceImage, onClose }: PropsPanel) {
+function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onArrange, onDuplicate, onRemove, onReplaceImage, onCoverPage, onClose }: PropsPanel) {
   const index = single ? layers.findIndex((l) => l.id === single.id) : -1;
   return (
     <div className="props">
@@ -551,6 +554,9 @@ function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onAr
           <div className="row">
             <button type="button" disabled={busy} onClick={() => onReplaceImage(single)}>
               Thay ảnh
+            </button>
+            <button type="button" onClick={() => onCoverPage(single)}>
+              Phủ kín trang
             </button>
             <button type="button" onClick={() => onPatch(single, { flipX: !single.flipX }, 'Lật ảnh')}>
               Lật ngang

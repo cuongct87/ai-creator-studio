@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { applyOp, createDocument, createHistory, createPage, createTextLayer, execute, redo, undo, type DesignDocument, type Op } from '@zunva/core';
-import { addImageOps, addShapeOps, addTextOps, arrangeOps, duplicateOps, layerLabel, removeOps, setBackgroundColorOps } from './editor-actions';
+import { addImageOps, coverPagePatch, addShapeOps, addTextOps, arrangeOps, duplicateOps, layerLabel, removeOps, setBackgroundColorOps } from './editor-actions';
 
 let n = 0;
 const newId = (p: string) => `${p}_${++n}`;
@@ -90,3 +90,17 @@ describe('thao tác màn hình chỉnh sửa', () => {
     expect(layerLabel({ ...t, name: 'Tiêu đề' })).toBe('Tiêu đề');
   });
 });
+
+describe('phủ kín trang', () => {
+  it('ảnh dọc trên trang dọc rộng hơn: phóng theo bề ngang, đặt giữa, thẳng', () => {
+    expect(coverPagePatch({ width: 300, height: 600 }, 1748, 2480)).toEqual({ x: 0, y: -508, width: 1748, height: 3496, rotation: 0 });
+  });
+  it('ảnh ngang: phóng theo bề cao', () => {
+    const p = coverPagePatch({ width: 400, height: 300 }, 1080, 1080);
+    expect(p.height).toBe(1080);
+    expect(p.width).toBe(1440);
+    expect(p.x).toBe(-180);
+    expect(p.y).toBe(0);
+  });
+});
+

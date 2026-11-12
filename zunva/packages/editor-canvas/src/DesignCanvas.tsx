@@ -25,6 +25,7 @@ import {
   cropToSource,
   cssFontFamily,
   dragMergeKey,
+  editorBackdrop,
   type FingerPair,
   fitPage,
   isEmptyPatch,
@@ -124,6 +125,7 @@ const LABEL_MOVE = 'Di chuyển';
 const LABEL_TRANSFORM = 'Đổi cỡ / xoay';
 const LABEL_ROTATE = 'Xoay';
 const LABEL_EDIT_TEXT = 'Sửa chữ';
+const LABEL_REMOVE_EMPTY_TEXT = 'Bỏ chữ trống';
 
 const WRAP_STYLE: CSSProperties = {
   position: 'relative',
@@ -682,6 +684,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
       lineHeight: layer.lineHeight,
       letterSpacing: layer.letterSpacing * scale,
       color: layer.color,
+      background: editorBackdrop(layer.color),
       textAlign: layer.align,
       opacity: layer.opacity,
       transform: `rotate(${node.getAbsoluteRotation()}deg)`,
@@ -768,6 +771,11 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
     setEditing(null);
     onTextEditing?.(null);
     const layer = layerById.get(current.id);
+    if (layer && layer.type === 'text' && current.value.trim() === '') {
+      // An empty text layer is invisible and hard to find again: remove it (undo brings it back).
+      onOps(LABEL_REMOVE_EMPTY_TEXT, [{ op: 'removeLayer', pageId: currentPageId, layerId: current.id }]);
+      return;
+    }
     if (layer && layer.type === 'text' && layer.text !== current.value) {
       const patch = changedFields(layer, roundPatch({ text: current.value, height: measureTextHeight(layer, current.value) }));
       if (!isEmptyPatch(patch)) onOps(LABEL_EDIT_TEXT, [updateLayerOp(currentPageId, current.id, patch)]);

@@ -123,3 +123,21 @@ export const SWATCHES: readonly string[] = [
   '#ffffff', '#000000', '#10263b', '#6b7785', '#f7b6cf', '#ad2459', '#e8f3fb', '#2b7bb9',
   '#fde7c8', '#c97a00', '#d9f2e6', '#1f7a4f', '#ece6fb', '#5b3fa0', '#fdecea', '#c0392b',
 ];
+
+/**
+ * "Phủ kín trang": giữ tỉ lệ khung ảnh, phóng vừa đủ để che kín trang, đặt giữa và thẳng (0°).
+ * Phần thừa nằm ngoài trang (bị cắt khi xuất).
+ */
+export function coverPagePatch(layer: Pick<Layer, 'width' | 'height'>, pageWidth: number, pageHeight: number) {
+  const k = Math.max(pageWidth / layer.width, pageHeight / layer.height);
+  const width = Math.round(layer.width * k * 10) / 10;
+  const height = Math.round(layer.height * k * 10) / 10;
+  return {
+    x: Math.round(((pageWidth - width) / 2) * 10) / 10,
+    y: Math.round(((pageHeight - height) / 2) * 10) / 10,
+    width,
+    height,
+    rotation: 0,
+  };
+}
+

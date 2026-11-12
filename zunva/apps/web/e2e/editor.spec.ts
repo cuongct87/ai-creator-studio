@@ -76,3 +76,18 @@ test('đổi màu nền trang và nhân đôi lớp', async ({ page }) => {
   await page.getByRole('button', { name: 'Nhân đôi' }).click();
   await expect(stage).toHaveAccessibleName(/2 lớp/);
 });
+
+test('xóa hết chữ rồi bấm xong → không sót lớp "Chữ trống"', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+  const stage = page.getByRole('region', { name: /Trang 1080×1080/ });
+  await page.getByRole('button', { name: 'Chữ', exact: true }).click();
+  await expect(stage).toHaveAccessibleName(/1 lớp/);
+  const inPlace = page.getByRole('textbox', { name: 'Sửa chữ' });
+  await inPlace.fill('');
+  await inPlace.press('Escape');
+  await expect(stage).toHaveAccessibleName(/0 lớp/);
+  // Hoàn tác đưa lớp chữ trở lại.
+  await page.getByRole('button', { name: /^Hoàn tác/ }).click();
+  await expect(stage).toHaveAccessibleName(/1 lớp/);
+});

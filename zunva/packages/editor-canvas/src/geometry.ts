@@ -218,6 +218,7 @@ export type FingerPair = readonly [Point, Point];
  * Two fingers on a selected layer (Instagram/Canva style): finger distance → scale,
  * finger angle → rotation, fingers' midpoint → position. The layer point under the
  * starting midpoint follows the current midpoint. Text scales its font size (whole number).
+ * Rotation snaps to right angles within ROTATION_SNAP_DEG, like the corner handles.
  * The shorter side never goes under MIN_LAYER_SIDE.
  */
 export function twoFingerPatch(layer: Layer, start: FingerPair, now: FingerPair): LayerPatch {
@@ -230,7 +231,10 @@ export function twoFingerPatch(layer: Layer, start: FingerPair, now: FingerPair)
   if (shortSide > 0) k = Math.max(k, MIN_LAYER_SIDE / shortSide);
   if (layer.type === 'text' && layer.fontSize > 0) k = Math.max(k, 1 / layer.fontSize);
 
-  const delta = angleFrom(n1, n2) - angleFrom(s1, s2);
+  // Rotation follows the fingers but is pulled to 0°/90°/180°/270° when close, so a pinch that
+  // only meant to resize does not leave the layer slightly crooked (founder test 12/11).
+  const rotation = snapRotation(layer.rotation + angleFrom(n1, n2) - angleFrom(s1, s2));
+  const delta = rotation - layer.rotation;
   const m0 = { x: (s1.x + s2.x) / 2, y: (s1.y + s2.y) / 2 };
   const m = { x: (n1.x + n2.x) / 2, y: (n1.y + n2.y) / 2 };
   const c = layerCenter(layer);
@@ -239,7 +243,6 @@ export function twoFingerPatch(layer: Layer, start: FingerPair, now: FingerPair)
 
   const width = layer.width * k;
   const height = layer.height * k;
-  const rotation = layer.rotation + delta;
   const p = topLeftFromCenter(center, width, height, rotation);
   const patch: LayerPatch = { x: p.x, y: p.y, width, height, rotation };
   if (layer.type === 'text') patch.fontSize = layer.fontSize * k;
@@ -322,4 +325,17 @@ export function coverCrop(natural: Size, box: Size): SourceCrop {
   const width = box.width / scale;
   const height = box.height / scale;
   return { x: (natural.width - width) / 2, y: (natural.height - height) / 2, width, height };
+}
+
+/**
+ * Background for the in-place text box so the text being typed stays readable on any photo:
+ * light veil behind dark text, dark veil behind light text.
+ */
+export function editorBackdrop(color: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(color.trim());
+  if (!m || !m[1]) return 'rgba(255,255,255,0.85)';
+  const n = parseInt(m[1], 16);
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6 ? 'rgba(16,38,59,0.8)' : 'rgba(255,255,255,0.85)';
 }

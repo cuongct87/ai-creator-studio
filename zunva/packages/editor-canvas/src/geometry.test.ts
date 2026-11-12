@@ -37,6 +37,7 @@ import {
   snapRotation,
   transformMergeKey,
   twoFingerPatch,
+  editorBackdrop,
   updateLayerOp,
   zoomAt,
   zoomLimits,
@@ -398,3 +399,46 @@ describe('gộp lệnh với lịch sử của lõi', () => {
     expect(h.doc.pages[0]?.layers[1]).toMatchObject({ width: 600, fontSize: 64 });
   });
 });
+
+describe('sửa sau lần thử 12/11 (video 2)', () => {
+  it('hai ngón quay lệch 4° → hút về thẳng 0°, tâm vẫn theo hai ngón', () => {
+    const layer = createShapeLayer('s', { x: 0, y: 0, width: 200, height: 100 });
+    const c0 = layerCenter(layer);
+    const start = [
+      { x: c0.x - 50, y: c0.y },
+      { x: c0.x + 50, y: c0.y },
+    ] as const;
+    const a = (4 * Math.PI) / 180;
+    const now = [
+      { x: c0.x - 60 * Math.cos(a), y: c0.y - 60 * Math.sin(a) },
+      { x: c0.x + 60 * Math.cos(a), y: c0.y + 60 * Math.sin(a) },
+    ] as const;
+    const patch = twoFingerPatch(layer, start, now);
+    expect(patch.rotation).toBe(0);
+    expect(patch.width).toBe(240);
+    const c1 = layerCenter({ ...layer, ...patch } as typeof layer);
+    expect(c1.x).toBeCloseTo(c0.x, 0);
+    expect(c1.y).toBeCloseTo(c0.y, 0);
+  });
+
+  it('hai ngón quay hẳn 20° → giữ 20°', () => {
+    const layer = createShapeLayer('s', { x: 0, y: 0, width: 200, height: 100 });
+    const a = (20 * Math.PI) / 180;
+    const start = [
+      { x: 50, y: 50 },
+      { x: 150, y: 50 },
+    ] as const;
+    const now = [
+      { x: 100 - 50 * Math.cos(a), y: 50 - 50 * Math.sin(a) },
+      { x: 100 + 50 * Math.cos(a), y: 50 + 50 * Math.sin(a) },
+    ] as const;
+    expect(twoFingerPatch(layer, start, now).rotation).toBe(20);
+  });
+
+  it('nền ô gõ: chữ tối → nền sáng, chữ sáng → nền tối', () => {
+    expect(editorBackdrop('#10263b')).toContain('255,255,255');
+    expect(editorBackdrop('#ffffff')).toContain('16,38,59');
+    expect(editorBackdrop('khong-phai-mau')).toContain('255,255,255');
+  });
+});
+
