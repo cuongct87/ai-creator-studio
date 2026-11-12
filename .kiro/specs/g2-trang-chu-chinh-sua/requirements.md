@@ -1,6 +1,6 @@
 # G2 — Trang chủ, màu giao diện và màn hình chỉnh sửa (Artio)
 
-Ngày viết: 12/11/2026. Người viết: Claude. Trạng thái: **chờ founder duyệt**.
+Ngày viết: 12/11/2026. Người viết: Claude. Trạng thái: **founder đã chốt màu (12/11/2026); chờ merge để bắt đầu**.
 
 ## Mục tiêu
 Người lạ cầm điện thoại mở **Artio** là biết bấm đâu; chọn "Thiệp cưới" → vào màn hình chỉnh sửa → thêm chữ tiếng Việt, ảnh, hình → kéo, phóng to, xoay → hoàn tác được → thoát ra mở lại vẫn còn.
@@ -13,9 +13,9 @@ G2 **chưa** có: kho mẫu thiết kế sẵn, xuất PNG/PDF, AI, hình nền 
 - Học **bố cục** trang chủ từ video Canva founder quay 11/11; **không** dùng màu tím, logo, biểu tượng, mẫu của Canva.
 - Màu: **hồng phấn** và **xanh nhạt**, người dùng **tự chuyển** được.
 
-## Cần founder quyết
-1. **Màu mặc định** khi mới cài: hồng phấn hay xanh nhạt? (Claude đề xuất **xanh nhạt** làm nền, **hồng phấn** làm màu nút chính — kết hợp cả hai.)
-2. Có thêm **chế độ tối** ngay G2 không? (Đề xuất: có — làm cùng lúc rẻ hơn làm sau.)
+## Founder đã quyết (12/11/2026)
+1. **Màu mặc định:** nền **xanh nhạt**, nút chính **hồng phấn**.
+2. **Chế độ tối:** làm luôn trong G2.
 
 ## Yêu cầu
 
@@ -24,7 +24,7 @@ G2 **chưa** có: kho mẫu thiết kế sẵn, xuất PNG/PDF, AI, hình nền 
 - Không đổi tên mã `@zunva/*`, định dạng `.zunva`, tên gói Android.
 
 ### R2 — Màu giao diện (chủ đề)
-- Ít nhất 3 chủ đề: **Xanh nhạt**, **Hồng phấn**, **Tối**. Mỗi chủ đề là một bộ màu (nền, thẻ, chữ, nút chính, viền), đổi tức thì, không tải lại trang.
+- 3 chủ đề: **Xanh nhạt** (mặc định: nền xanh nhạt, nút hồng phấn), **Hồng phấn**, **Tối**. Mỗi chủ đề là một bộ màu (nền, thẻ, chữ, nút chính, viền), đổi tức thì, không tải lại trang.
 - Chữ luôn đủ đậm để đọc (tương phản ≥ 4.5:1 với nền).
 - Nút đổi màu ở tab **Tài khoản** và một nút nhanh ở đầu trang chủ. Lựa chọn được nhớ trên máy.
 - Chỉ đổi màu **giao diện app**, không đổi màu thiết kế của người dùng.
