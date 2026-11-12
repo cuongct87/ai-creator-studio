@@ -24,7 +24,7 @@ export async function createBlankProject(store: ProjectStore, option: StartOptio
 }
 
 /** Đọc kích thước ảnh mà không cần DOM ảnh (chạy được cả trong WebView Android). */
-async function imageSize(bytes: Uint8Array, mimeType: string): Promise<{ width: number; height: number } | null> {
+export async function imageSize(bytes: Uint8Array, mimeType: string): Promise<{ width: number; height: number } | null> {
   try {
     const bitmap = await createImageBitmap(new Blob([bytes.slice()], { type: mimeType }));
     const size = { width: bitmap.width, height: bitmap.height };

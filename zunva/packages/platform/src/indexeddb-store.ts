@@ -265,6 +265,8 @@ export function createIndexedDbProjectStore(dbName = 'c87', options: IndexedDbSt
               return;
             }
             projects.delete(id);
+            // Ảnh thu nhỏ của "Tiếp tục thiết kế" (G2) đi theo dự án.
+            assets.delete(`thumb_${id}`);
             const allReq = projects.getAll();
             allReq.onsuccess = () => {
               const stillUsed = new Set<string>();

@@ -2,6 +2,7 @@ import type { Id } from '@zunva/core';
 import type { Platform, ProjectStore, ProjectSummary } from '@zunva/platform';
 import { useEffect, useMemo, useState } from 'react';
 import { createBlankProject, createPhotoProject, type CreateResult } from './create-project';
+import { thumbAssetId } from './EditorScreen';
 import { PAGE_SIZES, searchStartOptions, type StartOption } from './start-options';
 import type { ThemeId } from './theme';
 import { ThemeSwitch } from './ThemeSwitch';
@@ -24,14 +25,28 @@ export function Home({ store, platform, theme, onThemeChange, onOpen }: HomeProp
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [askingSize, setAskingSize] = useState<StartOption | null>(null);
+  const [thumbs, setThumbs] = useState<Record<Id, string>>({});
 
   useEffect(() => {
     let alive = true;
-    void store.list().then((r) => {
-      if (alive) setRecent(r.ok ? r.value.slice(0, RECENT_LIMIT) : []);
+    const created: string[] = [];
+    void store.list().then(async (r) => {
+      if (!alive) return;
+      const items = r.ok ? r.value.slice(0, RECENT_LIMIT) : [];
+      setRecent(items);
+      // Ảnh thu nhỏ do màn hình chỉnh sửa lưu lại; chưa có thì hiện chữ cái đầu.
+      for (const p of items) {
+        const t = await store.getAsset(thumbAssetId(p.id));
+        if (!alive) return;
+        if (!t.ok) continue;
+        const url = URL.createObjectURL(new Blob([t.value.bytes.slice()], { type: t.value.mimeType }));
+        created.push(url);
+        setThumbs((prev) => ({ ...prev, [p.id]: url }));
+      }
     });
     return () => {
       alive = false;
+      for (const url of created) URL.revokeObjectURL(url);
     };
   }, [store]);
 
@@ -97,9 +112,13 @@ export function Home({ store, platform, theme, onThemeChange, onOpen }: HomeProp
               {recent.map((p) => (
                 <li key={p.id}>
                   <button type="button" className="recent-card" onClick={() => onOpen(p.id)}>
-                    <span className="recent-thumb" aria-hidden="true">
-                      {p.name.trim().charAt(0).toUpperCase() || '·'}
-                    </span>
+                    {thumbs[p.id] ? (
+                      <img className="recent-thumb" src={thumbs[p.id]} alt="" />
+                    ) : (
+                      <span className="recent-thumb" aria-hidden="true">
+                        {p.name.trim().charAt(0).toUpperCase() || '·'}
+                      </span>
+                    )}
                     <span className="recent-name">{p.name}</span>
                     <span className="muted small">{dateFormat.format(p.updatedAt)}</span>
                   </button>

@@ -35,7 +35,7 @@ test('bấm "Thiệp cưới" → mở màn hình chỉnh sửa đúng khổ A5 
   await page.locator('.starts').getByRole('button', { name: 'Thiệp cưới' }).click();
 
   await expect(page.getByRole('heading', { name: 'Thiệp cưới' })).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Trang 1748×2480' })).toBeVisible();
+  await expect(page.getByRole('region', { name: /Trang 1748×2480/ })).toBeVisible();
   expect(page.url()).toContain('?project=');
 
   // Nút Back của trình duyệt/Android quay về trang chủ.
@@ -57,7 +57,7 @@ test('"Trang trắng" hỏi khổ trước khi tạo', async ({ page }) => {
   await page.locator('.starts').getByRole('button', { name: 'Trang trắng' }).click();
   const dialog = page.getByRole('dialog', { name: 'Chọn khổ cho thiết kế' });
   await dialog.getByRole('button', { name: 'Story / màn hình điện thoại 1080×1920' }).click();
-  await expect(page.getByRole('img', { name: 'Trang 1080×1920' })).toBeVisible();
+  await expect(page.getByRole('region', { name: /Trang 1080×1920/ })).toBeVisible();
 });
 
 test('trang chủ không cuộn ngang ở khổ 360px, cả 3 màu', async ({ page }) => {
