@@ -19,4 +19,4 @@ Thứ tự: C1 trước (Kiro cần kiểu dữ liệu mới). Sau đó Kiro (K)
 
 ## Founder duyệt
 - [x] Duyệt đặc tả này (requirements + design + tasks) — founder duyệt 12/11.
-- [ ] Duyệt dùng ML Kit sau khi Claude báo điều khoản: ảnh không gửi đi; ML Kit gửi số liệu hiệu năng/sử dụng cho Google (phải ghi trong chính sách riêng tư); bản beta; trang điều khoản không ghi phí.
+- [x] Duyệt dùng ML Kit (founder đồng ý 12/11) sau khi Claude báo điều khoản: ảnh không gửi đi; ML Kit gửi số liệu hiệu năng/sử dụng cho Google (phải ghi trong chính sách riêng tư); bản beta; trang điều khoản không ghi phí.
