@@ -4,6 +4,8 @@
 Lõi dữ liệu v3 đã có sẵn (Claude làm, CI xanh): `BlendMode`, `BLEND_MODES`, `layer.blendMode`,
 `ImageLayer.feather`, `ImageLayer.maskAssetId` trong `zunva/packages/core/src/model.ts`.
 
+**Mặt nạ = PNG theo độ trong suốt (alpha):** đục = giữ, trong suốt = đã tẩy (màu bỏ qua). Vẽ: `destination-in` với mặt nạ. Tẩy: `destination-out`; khôi phục: tô đục `source-over`.
+
 ## Luật
 - CHỈ sửa trong `zunva/packages/editor-canvas/`. Không thêm thư viện mới.
 - Terminal của Kiro đang lỗi: KHÔNG chạy lệnh. Chỉ sửa file. Claude sẽ chạy CI.
