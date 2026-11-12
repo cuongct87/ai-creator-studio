@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Locale;
+import java.util.ArrayList;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -115,15 +117,28 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Saves any file (PNG, PDF, .zunva, JSON) into Download/Artio (Android 10+).
-     * Returns JSON: {"ok":true,"location":"Tải xuống/Artio"} or {"ok":false,"error":"..."}.
-     * Runs on the WebView bridge thread (not the UI thread), so blocking I/O is fine here.
+     * Saves files for the web app (Android 10+). Each method returns JSON:
+     * {"ok":true,"location":"Tải xuống/Artio","uri":"content://media/..."} or {"ok":false,"error":"..."}.
+     * The uri is what "Chia sẻ" sends to other apps. Runs on the WebView bridge thread, so blocking I/O is fine.
      */
     public class FileSaver {
+        /** Any file (PDF, .zunva, JSON) → Download/Artio. */
         @JavascriptInterface
         public String saveBytes(String fileName, String mimeType, String base64) {
+            return saveInto(MediaStore.Downloads.EXTERNAL_CONTENT_URI, Environment.DIRECTORY_DOWNLOADS + "/Artio", "Tải xuống/Artio", fileName, mimeType, base64);
+        }
+
+        /** G3: exported PNG/JPG → Pictures/Artio (shows in the gallery). */
+        @JavascriptInterface
+        public String saveImageBytes(String fileName, String mimeType, String base64) {
+            String mime = safeMimeType(mimeType);
+            if (!mime.startsWith("image/")) return error("Chỉ lưu được ảnh vào Thư viện ảnh.");
+            return saveInto(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, Environment.DIRECTORY_PICTURES + "/Artio", "Ảnh/Artio", fileName, mime, base64);
+        }
+
+        private String saveInto(Uri collection, String relativePath, String location, String fileName, String mimeType, String base64) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-                return error("Cần Android 10 trở lên để lưu file vào Tải xuống.");
+                return error("Cần Android 10 trở lên để lưu file.");
             }
             if (base64 == null || base64.isEmpty()) return error("Không có dữ liệu để lưu.");
             // Base64 is ~4/3 of the real size: reject huge input before decoding into memory.
@@ -136,33 +151,67 @@ public class MainActivity extends Activity {
             } catch (OutOfMemoryError e) {
                 return error(OUT_OF_MEMORY);
             }
-            String name = safeFileName(fileName);
-            String mime = safeMimeType(mimeType);
             ContentValues values = new ContentValues();
-            values.put(MediaStore.Downloads.DISPLAY_NAME, name);
-            values.put(MediaStore.Downloads.MIME_TYPE, mime);
-            values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Artio");
-            values.put(MediaStore.Downloads.IS_PENDING, 1);
+            values.put(MediaStore.MediaColumns.DISPLAY_NAME, safeFileName(fileName));
+            values.put(MediaStore.MediaColumns.MIME_TYPE, safeMimeType(mimeType));
+            values.put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath);
+            values.put(MediaStore.MediaColumns.IS_PENDING, 1);
             Uri uri;
             try {
-                uri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                uri = getContentResolver().insert(collection, values);
             } catch (Exception e) {
-                return error("Không tạo được file trong Tải xuống.");
+                return error("Không tạo được file trong " + location + ".");
             }
-            if (uri == null) return error("Không tạo được file trong Tải xuống.");
+            if (uri == null) return error("Không tạo được file trong " + location + ".");
             try {
                 try (OutputStream out = getContentResolver().openOutputStream(uri)) {
                     if (out == null) throw new IOException("no stream");
                     out.write(bytes);
                 }
                 ContentValues done = new ContentValues();
-                done.put(MediaStore.Downloads.IS_PENDING, 0);
+                done.put(MediaStore.MediaColumns.IS_PENDING, 0);
                 getContentResolver().update(uri, done, null, null);
             } catch (Exception | OutOfMemoryError e) {
                 try { getContentResolver().delete(uri, null, null); } catch (Exception ignored) {}
                 return error(e instanceof OutOfMemoryError ? OUT_OF_MEMORY : "Không ghi được file. Có thể máy đã hết chỗ lưu.");
             }
-            return ok("Tải xuống/Artio");
+            return ok(location, uri.toString());
+        }
+    }
+
+    /**
+     * G3: "Chia sẻ" — opens the system share sheet (Zalo, Messenger…) for files this app just saved.
+     * Only content://media/ uris (what FileSaver returns) are accepted.
+     */
+    public class ShareBridge {
+        @JavascriptInterface
+        public String share(String urisJson, String mimeType) {
+            ArrayList<Uri> uris = new ArrayList<>();
+            try {
+                JSONArray list = new JSONArray(urisJson);
+                for (int i = 0; i < list.length() && i < 50; i++) {
+                    Uri u = Uri.parse(list.getString(i));
+                    if (!"content".equals(u.getScheme()) || !"media".equals(u.getAuthority())) return error("File không chia sẻ được.");
+                    uris.add(u);
+                }
+            } catch (JSONException e) {
+                return error("File không chia sẻ được.");
+            }
+            if (uris.isEmpty()) return error("Chưa có file để chia sẻ.");
+            Intent send = new Intent(uris.size() == 1 ? Intent.ACTION_SEND : Intent.ACTION_SEND_MULTIPLE);
+            send.setType(safeMimeType(mimeType));
+            if (uris.size() == 1) send.putExtra(Intent.EXTRA_STREAM, uris.get(0));
+            else send.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris);
+            send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            Intent chooser = Intent.createChooser(send, "Chia sẻ");
+            runOnUiThread(() -> {
+                try {
+                    startActivity(chooser);
+                } catch (Exception e) {
+                    Toast.makeText(MainActivity.this, "Máy không có ứng dụng để chia sẻ.", Toast.LENGTH_LONG).show();
+                }
+            });
+            return ok("", null);
         }
     }
 
@@ -180,9 +229,11 @@ public class MainActivity extends Activity {
         return "application/octet-stream";
     }
 
-    private static String ok(String location) {
+    private static String ok(String location, String uri) {
         try {
-            return new JSONObject().put("ok", true).put("location", location).toString();
+            JSONObject o = new JSONObject().put("ok", true).put("location", location);
+            if (uri != null) o.put("uri", uri);
+            return o.toString();
         } catch (JSONException e) {
             return "{\"ok\":true}";
         }
@@ -266,6 +317,7 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new ImageSaver(), "AndroidImageSaver");
         web.addJavascriptInterface(new FileSaver(), "AndroidFileSaver");
         web.addJavascriptInterface(new ShellBridge(), "AndroidShell");
+        web.addJavascriptInterface(new ShareBridge(), "AndroidShare");
         web.addJavascriptInterface(new SubjectBridge(this, web), "AndroidSubject");
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {

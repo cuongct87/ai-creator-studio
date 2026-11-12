@@ -708,3 +708,27 @@ img.recent-thumb {
   object-fit: contain;
   background: var(--bg);
 }
+
+/* ---------- G3: bảng Xuất ---------- */
+.export-formats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.export-formats button {
+  display: grid;
+  gap: 2px;
+  min-height: 64px;
+  padding: 8px 6px;
+  text-align: center;
+}
+
+.export-formats button > span:first-child {
+  font-weight: 600;
+}
+
+.editor-bar button.primary {
+  font-size: 16px;
+  font-weight: 600;
+}

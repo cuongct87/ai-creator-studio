@@ -156,8 +156,24 @@ export async function alphaMaskToPng(mask: HTMLCanvasElement): Promise<Uint8Arra
   ctx.fillStyle = '#000000';
   ctx.fillRect(0, 0, grey.width, grey.height);
   ctx.drawImage(mask, 0, 0);
-  const blob = await new Promise<Blob>((resolve, reject) => {
-    grey.toBlob((b) => (b ? resolve(b) : reject(new Error('Không lưu được vùng tẩy.'))), 'image/png');
+  const blob = await encodeCanvas(grey, 'image/png').catch(() => {
+    throw new Error('Không lưu được vùng tẩy.');
   });
   return new Uint8Array(await blob.arrayBuffer());
+}
+
+/**
+ * Canvas → ảnh (PNG/JPG) **ngay**, không chờ máy rảnh.
+ * Đo trên S24+: `canvas.toBlob` và cả `OffscreenCanvas.convertToBlob` của WebView chỉ mã hóa khi luồng
+ * chính rảnh — lúc app đang bận (vẽ ảnh thu nhỏ, Konva) phải chờ 3–13 giây. `toDataURL` mã hóa đồng bộ
+ * ngay lập tức (mặt nạ 648 px, ảnh thu nhỏ, ảnh xuất 1080 px: vài chục đến vài trăm ms).
+ */
+export async function encodeCanvas(canvas: HTMLCanvasElement, mimeType: 'image/png' | 'image/jpeg', quality?: number): Promise<Blob> {
+  const url = canvas.toDataURL(mimeType, quality);
+  const comma = url.indexOf(',');
+  if (comma < 0 || !url.startsWith(`data:${mimeType}`)) throw new Error('Trình duyệt không tạo được ảnh.');
+  const binary = atob(url.slice(comma + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mimeType });
 }

@@ -31,6 +31,7 @@ export type Op =
   | { op: 'moveLayer'; pageId: Id; layerId: Id; toIndex: number }
   | { op: 'addPage'; index: number; page: Page }
   | { op: 'removePage'; pageId: Id }
+  | { op: 'movePage'; pageId: Id; toIndex: number }
   | { op: 'updatePage'; pageId: Id; set: PagePatch }
   | { op: 'addAsset'; asset: Asset }
   | { op: 'removeAsset'; assetId: Id }
@@ -189,6 +190,15 @@ export function applyOp(doc: DesignDocument, op: Op): OpResult {
       const pages = doc.pages.slice();
       pages.splice(pi, 1);
       return { doc: { ...doc, pages }, inverse: { op: 'addPage', index: pi, page } };
+    }
+
+    case 'movePage': {
+      const from = pageIndex(doc, op.pageId);
+      checkIndex(op.toIndex, doc.pages.length - 1, 'trang');
+      const pages = doc.pages.slice();
+      const [moved] = pages.splice(from, 1);
+      pages.splice(op.toIndex, 0, moved!);
+      return { doc: { ...doc, pages }, inverse: { op: 'movePage', pageId: op.pageId, toIndex: from } };
     }
 
     case 'updatePage': {

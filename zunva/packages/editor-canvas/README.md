@@ -76,6 +76,24 @@ Prop mới (prop cũ giữ nguyên):
 - Chế độ tẩy: 1 ngón tô (nét liền, xem trước mỗi khung hình), 2 ngón phóng/di chuyển trang (nét đang tô bị bỏ),
   không chọn/kéo/xoay lớp, ẩn tay nắm.
 
+## Vẽ trang ra ảnh: `renderPageImage` (G3)
+```ts
+renderPageImage(doc, pageId, {
+  pixelRatio: 1,                 // ảnh ra = khổ trang × pixelRatio (làm tròn)
+  mimeType: 'image/jpeg',        // hoặc 'image/png'
+  quality: 0.9,                  // chỉ JPG, mặc định 0,92
+  assetUrl: (id) => urls.get(id),
+}): Promise<Blob>
+```
+- Vẽ **bất kỳ trang nào**, không cần màn hình chỉnh sửa (Stage ẩn, không gắn vào trang, dọn sạch sau khi vẽ).
+- Dùng **chung mã vẽ** với `DesignCanvas` (`PageScene.tsx`): nền (màu + ảnh nền + độ rõ), chữ, ảnh (cắt, lật,
+  bo góc, mặt nạ tẩy, mờ viền), hình, độ rõ, ẩn, hòa trộn. Không có tay nắm, khung chọn, nút ↻, viền xám trang.
+- Chờ phông và mọi ảnh + mặt nạ của trang; quá 20 giây → lỗi "Hết thời gian chờ…". Ảnh tải hỏng → ô xám (như màn hình).
+- Cạnh dài > 16384 px → `RangeError` tiếng Việt (`MAX_EXPORT_SIDE`).
+- JPG: trang có màu nền không đục (trong suốt / nửa trong) → tô trắng dưới cùng. PNG: giữ trong suốt.
+- Ảnh có mặt nạ / mờ viền được dựng lại theo độ phân giải xuất (cạnh dài ≤ 2048 px).
+- `ref.exportPageImage(pixelRatio)` giữ hợp đồng cũ: PNG trang đang mở, gọi `renderPageImage`.
+
 ## Phông chữ
 6 phông OFL có bộ chữ tiếng Việt (đã kiểm trên api.fontsource.org): Be Vietnam Pro, Playfair Display,
 Dancing Script, Lora, Montserrat, Pacifico. Chỉ nạp bộ `latin` + `vietnamese`, độ đậm 400 và 700
@@ -84,5 +102,6 @@ Dancing Script, Lora, Montserrat, Pacifico. Chỉ nạp bộ `latin` + `vietname
 ## Lưu ý cho ứng dụng
 - Gói dùng **React 19.3.0** (react-konva 19.3.2 cần React ≥ 19.3). Ứng dụng dùng gói này cũng phải dùng
   đúng React 19.3.0, nếu không sẽ có hai bản React và canvas không chạy.
-- Test: `geometry.test.ts`, `mask.test.ts` (Vitest, chạy trong Node, không cần trình duyệt).
+- Test: `geometry.test.ts`, `mask.test.ts`, `exportImage.test.ts` (Vitest, chạy trong Node, không cần trình duyệt).
+  `renderPage.tsx` cần trình duyệt (Playwright ở C3).
   `composite.ts` (vẽ canvas phụ) cần trình duyệt nên chưa có test tự động.

@@ -18,10 +18,12 @@ import {
   type Op,
   type TextAlign,
 } from '@zunva/core';
-import { DesignCanvas, FONT_FAMILIES, type BrushSettings, type DesignCanvasHandle } from '@zunva/editor-canvas';
+import { DesignCanvas, FONT_FAMILIES, perfMark, renderPageImage, type BrushSettings, type DesignCanvasHandle } from '@zunva/editor-canvas';
 import { createAutosave, detectImageType, type AutosaveStatus, type Platform, type ProjectStore } from '@zunva/platform';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useConfirm } from './ConfirmDialog';
+import { JPEG_QUALITY, type RenderPage } from './export-actions';
+import { ExportSheet } from './ExportSheet';
 import { imageSize, newId } from './create-project';
 import {
   addImageOps,
@@ -68,6 +70,7 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
   const [textEditing, setTextEditing] = useState<Id | null>(null);
   /** Chế độ Tẩy (G2b) cho một lớp ảnh; null = chỉnh sửa bình thường. */
   const [brush, setBrush] = useState<BrushSettings | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [panel, setPanel] = useState<Panel>('none');
   const [urls, setUrls] = useState<Record<Id, string>>({});
   const [saveStatus, setSaveStatus] = useState<AutosaveStatus>('idle');
@@ -88,10 +91,12 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
       const canvas = canvasRef.current;
       const page = histRef.current?.doc.pages[0];
       if (!canvas || !page) return;
+      perfMark('anh-nho:bat-dau');
       void canvas
         .exportPageImage(THUMB_SIDE / Math.max(page.width, page.height))
         .then((blob) => blob.arrayBuffer())
         .then((buf) => store.putAsset(thumbAssetId(projectId), 'image/png', new Uint8Array(buf)))
+        .then(() => perfMark('anh-nho:xong'))
         .catch(() => undefined); // ảnh thu nhỏ chỉ để đẹp, lỗi thì bỏ qua
     }, 3000);
   }, [store, projectId]);
@@ -244,13 +249,16 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
   /** Lưu ảnh mặt nạ mới vào kho rồi gắn cho lớp ảnh: 1 bước hoàn tác (Tách nền, mỗi nét Tẩy). */
   async function putMask(layer: Layer, bytes: Uint8Array, label: string): Promise<void> {
     if (!page || layer.type !== 'image') return;
+    perfMark('tay:app-nhan');
     const dims = await imageSize(bytes, 'image/png');
+    perfMark('tay:doc-kich-thuoc');
     if (!dims) {
       setMessage('Không đọc được vùng tẩy. Hãy thử lại.');
       return;
     }
     const id = newId('mask');
     const put = await store.putAsset(id, 'image/png', bytes);
+    perfMark('tay:luu-kho');
     if (!put.ok) {
       setMessage(put.error);
       return;
@@ -261,7 +269,15 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
       { op: 'addAsset', asset: { id, kind: 'image', mimeType: 'image/png', name: null, hash: null, width: dims.width, height: dims.height } },
       { op: 'updateLayer', pageId: page.id, layerId: layer.id, set: { maskAssetId: id } },
     ]);
+    perfMark('tay:ghi-thiet-ke');
   }
+
+  /** Vẽ một trang bất kỳ ra ảnh để xuất (cùng mã vẽ với màn hình). */
+  const renderPage: RenderPage = (pageId, mimeType, pixelRatio) => {
+    const current = histRef.current?.doc;
+    if (!current) return Promise.reject(new Error('Thiết kế chưa mở xong, hãy thử lại.'));
+    return renderPageImage(current, pageId, { pixelRatio, mimeType, quality: JPEG_QUALITY, assetUrl });
+  };
 
   const segmentSubject = (layer: Layer) =>
     withBusy(async () => {
@@ -370,6 +386,9 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
         </button>
         <button type="button" aria-label="Vừa màn hình" onClick={() => canvasRef.current?.fitToScreen()}>
           ⤢
+        </button>
+        <button type="button" className="primary" onClick={() => setExporting(true)}>
+          Xuất
         </button>
       </header>
 
@@ -492,6 +511,9 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
             />
           )}
         </div>
+      )}
+      {exporting && (
+        <ExportSheet doc={doc} pageIds={doc.pages.map((p) => p.id)} render={renderPage} platform={platform} onClose={() => setExporting(false)} />
       )}
       {dialog}
     </div>

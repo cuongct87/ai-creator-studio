@@ -190,6 +190,21 @@ function samplePng(w = 600, h = 600) {
 }
 const imageLayer = (d) => layersOf(d).find((l) => l.type === 'image');
 
+
+/** Bật đồng hồ đo trong app; trả hàm đọc kết quả "nhãn ms, …" (ms kể từ lúc bật). */
+async function startMarks() {
+  await page.evaluate(() => {
+    window.__artioMarks = [['bat-dau', performance.now()]];
+  });
+  return () =>
+    page.evaluate(() => {
+      const m = window.__artioMarks ?? [];
+      const t = m[0]?.[1] ?? 0;
+      delete window.__artioMarks;
+      return m.slice(1).map(([k, v]) => `${k.replace('xuat:', '')} ${Math.round(v - t)}`).join(', ');
+    });
+}
+
 async function keyboardShown() {
   const s = (await device.shell('dumpsys input_method')).toString();
   const m = /mInputShown=(true|false)/.exec(s) || /isInputViewShown=(true|false)/.exec(s);
@@ -384,12 +399,32 @@ async function main() {
       await page.getByLabel('Chế độ tẩy').waitFor({ timeout: 3000 });
       const wrap = await page.getByLabel('Trang thiết kế').boundingBox();
       const c = { x: wrap.x + wrap.width / 2, y: wrap.y + wrap.height / 2 };
+      await page.evaluate(() => {
+        window.__artioMarks = [['bat-dau-keo', performance.now()]];
+      });
       const t0 = Date.now();
       await dragCss({ x: c.x - 50, y: c.y }, { x: c.x + 50, y: c.y }, 25);
-      const d = await waitDoc((x) => imageLayer(x).maskAssetId !== null, 'lưu vùng tẩy', 8000);
-      await page.getByRole('button', { name: /^Hoàn tác: Tẩy/ }).waitFor({ timeout: 3000 });
-      await tap(page.getByLabel('Chế độ tẩy').getByRole('button', { name: 'Xong' }));
-      return `lưu vùng tẩy sau ${Date.now() - t0} ms (${imageLayer(d).maskAssetId})`;
+      let d = null;
+      let err = null;
+      try {
+        await page.getByRole('button', { name: /^Hoàn tác: Tẩy/ }).waitFor({ timeout: 20000 });
+        d = await waitDoc((x) => imageLayer(x).maskAssetId !== null, 'lưu vùng tẩy', 8000);
+      } catch (e) {
+        err = e;
+      }
+      // Đồng hồ từng chặng (ms kể từ lúc bắt đầu kéo).
+      const marks = await page.evaluate(() => {
+        const m = window.__artioMarks ?? [];
+        const t = m[0]?.[1] ?? 0;
+        delete window.__artioMarks;
+        return m.map(([k, v]) => `${k} ${Math.round(v - t)}`).join(', ');
+      });
+      // Luôn thoát chế độ tẩy, để bước sau không hỏng dây chuyền.
+      await tap(page.getByLabel('Chế độ tẩy').getByRole('button', { name: 'Xong' })).catch(() => {});
+      if (err) throw new Error(`${String(err.message).split('\n')[0]} — đo: ${marks}`);
+      const ms = Date.now() - t0;
+      if (ms > 5000) throw new Error(`lưu vùng tẩy chậm: ${ms} ms — đo: ${marks}`);
+      return `lưu vùng tẩy sau ${ms} ms — đo: ${marks}`;
     });
 
     await step('Tách nền (ML Kit trên máy)', async () => {
@@ -424,6 +459,69 @@ async function main() {
       return '';
     });
   }
+
+  // ---------- G3: xuất và chia sẻ ----------
+  const exported = [];
+  const sheet = () => page.getByRole('dialog', { name: /Xuất thiết kế/ });
+  await step('Xuất ảnh PNG → Ảnh/Artio', async () => {
+    if (await page.getByRole('button', { name: 'Bỏ chọn' }).isVisible()) await tap(page.getByRole('button', { name: 'Bỏ chọn' }));
+    await tap(page.getByRole('button', { name: 'Xuất', exact: true }));
+    await sheet().waitFor({ timeout: 3000 });
+    const readMarks = await startMarks();
+    const t0 = Date.now();
+    await tap(sheet().getByRole('button', { name: 'Xuất', exact: true }));
+    const status = sheet().getByRole('status');
+    await waitFor(async () => /Đã lưu/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu', 20000);
+    const marksPng = await readMarks();
+    const text = (await status.textContent())?.trim();
+    if (!/Ảnh\/Artio/.test(text ?? '')) throw new Error(`báo lạ: "${text}"`);
+    // Tên file có dấu tiếng Việt: lệnh gửi qua USB làm hỏng dấu, nên tìm file PNG mới nhất (lệnh chỉ chữ không dấu).
+    const newest = 'ls -t /sdcard/Pictures/Artio/*.png | head -1';
+    const info = (await device.shell(`stat -c '%s %Y' "$(${newest})"`)).toString().trim();
+    const m = /^(\d+) (\d+)$/.exec(info);
+    if (!m) throw new Error(`không thấy file PNG trong Ảnh/Artio: ${info}`);
+    const age = Date.now() / 1000 - Number(m[2]);
+    if (age > 120) throw new Error(`file PNG mới nhất đã cũ (${Math.round(age)} giây) — có thể chưa lưu`);
+    exported.push(newest);
+    return `${Date.now() - t0} ms — ${text} (${Math.round(Number(m[1]) / 1024)} KB) — đo: ${marksPng}`;
+  });
+
+  await step('Chia sẻ → mở bảng chia sẻ của máy', async () => {
+    await tap(sheet().getByRole('button', { name: 'Chia sẻ' }));
+    const top = await waitFor(async () => {
+      const out = (await device.shell('dumpsys activity activities')).toString();
+      const m = /(?:topResumedActivity|mResumedActivity)[^\n]*?\{[^}]*\s([\w.]+\/[\w.$]+)/.exec(out);
+      return m && !m[1].startsWith('vn.c87.lsc') ? m[1] : null;
+    }, 'bảng chia sẻ mở', 6000);
+    await sleep(800);
+    await device.shell('input keyevent 4'); // đóng bảng chia sẻ
+    await sleep(800);
+    return `mở: ${top}`;
+  });
+
+  await step('Xuất PDF để in → Tải xuống/Artio', async () => {
+    if (!(await sheet().isVisible())) {
+      await tap(page.getByRole('button', { name: 'Xuất', exact: true }));
+      await sheet().waitFor({ timeout: 3000 });
+    }
+    await tap(sheet().getByRole('button', { name: /PDF để in/ }));
+    const readMarks = await startMarks();
+    const t0 = Date.now();
+    await tap(sheet().getByRole('button', { name: /^Xuất( lại)?$/ }));
+    const status = sheet().getByRole('status');
+    await waitFor(async () => /PDF/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu PDF', 30000);
+    const marksPdf = await readMarks();
+    const text = (await status.textContent())?.trim();
+    const newestPdf = 'ls -t /sdcard/Download/Artio/*.pdf | head -1';
+    const head = (await device.shell(`head -c 8 "$(${newestPdf})"`)).toString();
+    if (!head.startsWith('%PDF-1.4')) throw new Error(`file PDF lạ: "${head}"`);
+    exported.push(newestPdf);
+    await tap(sheet().getByRole('button', { name: 'Đóng' }));
+    return `${Date.now() - t0} ms — ${text} — đo: ${marksPdf}`;
+  });
+
+  // Dọn file thử vừa xuất (không đụng file khác của bạn).
+  for (const newest of exported) await device.shell(`rm -f "$(${newest})"`).catch(() => {});
 
   await step('Nút Back của Android → về trang chủ', async () => {
     await device.shell('input keyevent 4');
