@@ -31,7 +31,6 @@ import {
   isEmptyPatch,
   isTap,
   konvaFontStyle,
-  layerCorners,
   patchFromTransform,
   type PinchStart,
   type Point,
@@ -47,8 +46,24 @@ import {
   type View,
   zoomAt,
   zoomLimits,
+  type Size,
+  type SourceCrop,
 } from './geometry';
+import { alphaMaskFromImage, alphaMaskToPng, createCanvas, fullAlphaMask, paintDab, renderComposite } from './composite';
 import { useImageCache } from './images';
+import {
+  blendToComposite,
+  brushRadiusInMask,
+  compositeCanvasSize,
+  compositeKey,
+  dabSpacing,
+  layerLocalToMask,
+  maskCanvasSize,
+  needsComposite,
+  pageToLayerLocal,
+  rotateHandlePositions,
+  strokePoints,
+} from './mask';
 
 // Let a second finger start a pinch while the first finger is already dragging (as in G1-4).
 Konva.hitOnDragEnabled = true;
@@ -69,6 +84,22 @@ export interface DesignCanvasProps {
   /** Which text layer is being edited (so the outer frame can hide its toolbar). */
   onTextEditing?(layerId: Id | null): void;
   readonly?: boolean;
+  /**
+   * Eraser mode (G2b) for one image layer. While set: one finger paints, two fingers zoom/move the
+   * page, layers cannot be selected, moved or rotated, handles are hidden. null/absent = normal.
+   */
+  brush?: BrushSettings | null;
+  /** One eraser stroke finished: the layer's new grey mask PNG. The app stores it (1 undo step). */
+  onMaskStroke?(layerId: Id, png: Uint8Array): void;
+}
+
+export interface BrushSettings {
+  layerId: Id;
+  mode: 'erase' | 'restore';
+  /** Brush diameter in screen pixels. */
+  size: number;
+  /** 0 = hard edge … 1 = very soft edge. */
+  softness: number;
 }
 
 export interface DesignCanvasHandle {
@@ -103,6 +134,37 @@ interface RotateGesture {
   cleanup: () => void;
 }
 
+/** One eraser stroke in progress (finger down → up). */
+interface Stroke {
+  layerId: Id;
+  pointerId: number;
+  /** Layer as it was when the stroke began (the box does not move while painting). */
+  layer: ImageLayer;
+  image: HTMLImageElement;
+  crop: SourceCrop | null;
+  /** Working alpha mask (opaque = keep), image orientation. */
+  mask: HTMLCanvasElement;
+  maskSize: Size;
+  /** Offscreen picture shown on the page while painting, redrawn each frame. */
+  composite: HTMLCanvasElement;
+  compositeSize: Size;
+  radius: number;
+  softness: number;
+  mode: 'erase' | 'restore';
+  last: Point;
+  raf: number;
+  cleanup: () => void;
+}
+
+/** After a stroke: keep showing its result until the app's new maskAssetId arrives (no flash). */
+interface StrokeHold {
+  layerId: Id;
+  oldMaskId: Id | null;
+  composite: HTMLCanvasElement;
+  mask: HTMLCanvasElement;
+  maskSize: Size;
+}
+
 const EMPTY_LAYERS: readonly Layer[] = [];
 // Corners are rotate handles (drawn separately). The Transformer keeps only the side handles:
 // text → left/right (wrap width only); images and shapes → all four sides (stretch one way).
@@ -126,6 +188,8 @@ const LABEL_TRANSFORM = 'Đổi cỡ / xoay';
 const LABEL_ROTATE = 'Xoay';
 const LABEL_EDIT_TEXT = 'Sửa chữ';
 const LABEL_REMOVE_EMPTY_TEXT = 'Bỏ chữ trống';
+
+const sizeKey = (s: Size) => `${s.width}x${s.height}`;
 
 const WRAP_STYLE: CSSProperties = {
   position: 'relative',
@@ -227,7 +291,10 @@ const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() 
  * The parent must give this component a size (it fills 100% × 100% of its box).
  */
 export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvasHandle> }): JSX.Element {
-  const { document: doc, pageId, selection, onSelect, onOps, onGestureEnd, assetUrl, onTextEditing, readonly = false, ref } = props;
+  const { document: doc, pageId, selection, onSelect, onOps, onGestureEnd, assetUrl, onTextEditing, readonly = false, onMaskStroke, ref } = props;
+  const brush = readonly ? null : (props.brush ?? null);
+  /** Eraser mode: no selecting / moving / rotating layers. */
+  const brushActive = brush !== null;
   const page = doc.pages.find((p) => p.id === pageId) ?? doc.pages[0] ?? null;
   const currentPageId = page?.id ?? pageId;
   const pageWidth = page?.width ?? 1;
@@ -256,16 +323,25 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
   const dragFrame = useRef<{ raf: number; emit: () => void } | null>(null);
   const transformPending = useRef(false);
   const editingRef = useRef<Editing | null>(null);
+  /** Layer the rotate handles belong to (applyView repositions them while zooming). */
+  const handleTarget = useRef<Layer | null>(null);
+  /** Offscreen pictures of masked / feathered images, per layer, rebuilt only when the key changes. */
+  const composites = useRef(new Map<Id, { key: string; canvas: HTMLCanvasElement }>());
+  /** Alpha copies of mask PNGs, per layer. */
+  const alphaMasks = useRef(new Map<Id, { key: string; canvas: HTMLCanvasElement }>());
+  const stroke = useRef<Stroke | null>(null);
+  const strokeHold = useRef<StrokeHold | null>(null);
 
   const [box, setBox] = useState({ width: 1, height: 1 });
   const [editing, setEditing] = useState<Editing | null>(null);
   const [fontsTick, setFontsTick] = useState(0);
+  const [, setStrokeTick] = useState(0);
   const images = useImageCache();
 
   editingRef.current = editing;
   /** Latest props for listeners that outlive one render (window pointer events, pending edit). */
-  const live = useRef({ layerById, onOps, onGestureEnd, pageId: currentPageId });
-  live.current = { layerById, onOps, onGestureEnd, pageId: currentPageId };
+  const live = useRef({ layerById, onOps, onGestureEnd, onMaskStroke, pageId: currentPageId });
+  live.current = { layerById, onOps, onGestureEnd, onMaskStroke, pageId: currentPageId };
 
   // ---------- size of the drawing area ----------
   useLayoutEffect(() => {
@@ -285,9 +361,15 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
     if (!stage) return;
     stage.scale({ x: next.scale, y: next.scale });
     stage.position({ x: next.x, y: next.y });
-    // Rotate handles keep the same size on screen at any zoom.
+    // Rotate handles keep the same size on screen at any zoom, and move out when the layer gets small.
     const inv = 1 / next.scale;
-    handlesRef.current?.getChildren().forEach((h) => h.scale({ x: inv, y: inv }));
+    const target = handleTarget.current;
+    const spots = target ? rotateHandlePositions(target, next.scale) : null;
+    handlesRef.current?.getChildren().forEach((h, i) => {
+      h.scale({ x: inv, y: inv });
+      const p = spots?.[i];
+      if (p) h.position(p);
+    });
     stage.batchDraw();
   }, []);
 
@@ -324,9 +406,23 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
       if (dragFrame.current) cancelAnimationFrame(dragFrame.current.raf);
       if (pendingEdit.current) cancelAnimationFrame(pendingEdit.current.raf);
       rotating.current?.cleanup();
+      stroke.current?.cleanup();
     },
     [],
   );
+
+  // Forget offscreen pictures of layers that are gone.
+  useEffect(() => {
+    for (const map of [composites.current, alphaMasks.current]) {
+      for (const id of map.keys()) if (!layerById.has(id)) map.delete(id);
+    }
+  }, [layerById]);
+
+  // Leaving eraser mode (or switching layer) ends any "keep showing the last stroke" state.
+  const brushLayerId = brush?.layerId ?? null;
+  useEffect(() => {
+    if (strokeHold.current && strokeHold.current.layerId !== brushLayerId) strokeHold.current = null;
+  }, [brushLayerId]);
 
   const register = useCallback((id: Id) => {
     let cb = refCallbacks.current.get(id);
@@ -349,7 +445,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
     const tr = trRef.current;
     if (!tr) return;
     const attached: Konva.Node[] = [];
-    if (!readonly && !editing) {
+    if (!readonly && !editing && !brushActive) {
       for (const id of selection) {
         const layer = layerById.get(id);
         const node = nodes.current.get(id);
@@ -362,7 +458,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
     // Layer props change on every gesture frame (text height follows font size): refit the frame.
     tr.forceUpdate();
     tr.getLayer()?.batchDraw();
-  }, [selection, layerById, editing, readonly, fontsTick]);
+  }, [selection, layerById, editing, readonly, fontsTick, brushActive]);
 
   const movableSelection = selection.filter((id) => {
     const l = layerById.get(id);
@@ -371,7 +467,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
 
   // ---------- tap to select ----------
   const select = (id: Id, e: AnyEvent) => {
-    if (readonly || editingRef.current) return;
+    if (readonly || editingRef.current || brushActive) return;
     e.cancelBubble = true;
     const additive = e.evt instanceof MouseEvent && e.evt.shiftKey;
     if (additive) {
@@ -382,7 +478,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
   };
 
   const onStageTap = (e: AnyEvent) => {
-    if (readonly || editingRef.current) return;
+    if (readonly || editingRef.current || brushActive) return;
     const target = e.target;
     if ((target === stageRef.current || target.name() === 'page-bg') && selection.length > 0) onSelect([]);
   };
@@ -507,7 +603,8 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
 
   /** The one layer two fingers act on: exactly one selected, unlocked, visible layer. */
   const gestureLayer = (): Layer | null => {
-    if (readonly || editingRef.current || movableSelection.length !== 1) return null;
+    // Eraser mode: two fingers always zoom / move the page.
+    if (readonly || brushActive || editingRef.current || movableSelection.length !== 1) return null;
     const id = movableSelection[0];
     return id ? (layerById.get(id) ?? null) : null;
   };
@@ -532,6 +629,8 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
     if (!stage || !t1 || !t2 || rotating.current) return;
     e.evt.preventDefault();
     tapDown.current = null;
+    // A second finger during an eraser stroke means "zoom", not "paint": drop the stroke.
+    if (stroke.current) cancelStroke();
     const p1 = touchPoint(t1);
     const p2 = touchPoint(t2);
 
@@ -664,7 +763,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
    * focused inside that event, so Android shows the keyboard. Returns false if the layer is not drawn yet.
    */
   const startEdit = (layer: TextLayer, sync = false): boolean => {
-    if (readonly || layer.locked || layer.hidden || editingRef.current) return false;
+    if (readonly || brushActive || layer.locked || layer.hidden || editingRef.current) return false;
     const node = nodes.current.get(layer.id);
     if (!node) return false;
     flushDragEmit();
@@ -742,6 +841,10 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
   const onStagePointerDownTap = (e: KonvaEventObject<PointerEvent>) => {
     const evt = e.evt;
     tapDown.current = null;
+    if (brushActive) {
+      startStroke(e);
+      return;
+    }
     if (readonly || editingRef.current || !evt.isPrimary || twoFinger.current || rotating.current) return;
     const id = e.target.id();
     const layer = id ? layerById.get(id) : undefined;
@@ -800,6 +903,187 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
     if (e.key === 'Escape') finishEdit();
   };
 
+  // ---------- masked / feathered images: offscreen picture (K2) ----------
+  /** Alpha copy of a layer's mask PNG at `size`, or null while the PNG is loading. */
+  const alphaMaskFor = (layer: ImageLayer, size: Size): HTMLCanvasElement | null => {
+    if (!layer.maskAssetId) return null;
+    const url = assetUrl(layer.maskAssetId);
+    const key = `${url ?? ''}|${sizeKey(size)}`;
+    const cached = alphaMasks.current.get(layer.id);
+    if (cached && cached.key === key) return cached.canvas;
+    const img = images.get(url);
+    if (!url || !img) return null;
+    const canvas = alphaMaskFromImage(img, size);
+    alphaMasks.current.set(layer.id, { key, canvas });
+    return canvas;
+  };
+
+  /**
+   * Picture for an image layer that needs the offscreen canvas (mask, feather or a stroke).
+   * null = not ready yet (draw the grey placeholder, never the un-erased image).
+   */
+  const compositeFor = (layer: ImageLayer, image: HTMLImageElement, crop: SourceCrop | null): HTMLCanvasElement | null => {
+    const active = stroke.current;
+    if (active && active.layerId === layer.id) return active.composite;
+
+    const hold = strokeHold.current;
+    let fallback: HTMLCanvasElement | null = composites.current.get(layer.id)?.canvas ?? null;
+    if (hold && hold.layerId === layer.id) {
+      if (layer.maskAssetId === hold.oldMaskId) return hold.composite;
+      // The app saved the stroke as a new mask: reuse the painted mask instead of decoding the PNG.
+      strokeHold.current = null;
+      fallback = hold.composite;
+      const url = layer.maskAssetId ? assetUrl(layer.maskAssetId) : undefined;
+      if (url && sizeKey(hold.maskSize) === sizeKey(maskCanvasSize(layer))) {
+        alphaMasks.current.set(layer.id, { key: `${url}|${sizeKey(hold.maskSize)}`, canvas: hold.mask });
+      }
+    }
+
+    const size = compositeCanvasSize(layer);
+    const mask = layer.maskAssetId ? alphaMaskFor(layer, maskCanvasSize(layer)) : null;
+    if (layer.maskAssetId && !mask) return fallback;
+    const key = compositeKey({
+      assetId: layer.assetId,
+      maskId: layer.maskAssetId,
+      width: layer.width,
+      height: layer.height,
+      cornerRadius: layer.cornerRadius,
+      feather: layer.feather,
+      flipX: layer.flipX,
+      flipY: layer.flipY,
+      crop,
+      canvas: size,
+    });
+    const cached = composites.current.get(layer.id);
+    if (cached && cached.key === key) return cached.canvas;
+    // A new canvas object each time, so Konva sees a new `image` and redraws.
+    const canvas = renderComposite({ layer, image, crop, mask }, size);
+    composites.current.set(layer.id, { key, canvas });
+    return canvas;
+  };
+
+  // ---------- eraser strokes (K3) ----------
+  const drawStrokePreview = (s: Stroke) => {
+    renderComposite({ layer: s.layer, image: s.image, crop: s.crop, mask: s.mask }, s.compositeSize, s.composite);
+    nodes.current.get(s.layerId)?.getLayer()?.batchDraw();
+  };
+
+  const scheduleStrokePreview = (s: Stroke) => {
+    if (s.raf) return;
+    s.raf = requestAnimationFrame(() => {
+      s.raf = 0;
+      drawStrokePreview(s);
+    });
+  };
+
+  const paintTo = (s: Stroke, clientX: number, clientY: number, first: boolean) => {
+    const local = pageToLayerLocal(s.layer, clientToPage(clientX, clientY));
+    const p = layerLocalToMask(local, s.layer, s.maskSize);
+    const points = first ? [p] : strokePoints(s.last, p, dabSpacing(s.radius));
+    for (const q of points) paintDab(s.mask, q, s.radius, s.softness, s.mode);
+    s.last = p;
+    scheduleStrokePreview(s);
+  };
+
+  const cancelStroke = () => {
+    const s = stroke.current;
+    if (!s) return;
+    s.cleanup();
+    // Back to the picture before the stroke.
+    setStrokeTick((t) => t + 1);
+    nodes.current.get(s.layerId)?.getLayer()?.batchDraw();
+  };
+
+  const startStroke = (e: KonvaEventObject<PointerEvent>) => {
+    const evt = e.evt;
+    if (!brush || stroke.current || twoFinger.current || !evt.isPrimary) return;
+    const target = layerById.get(brush.layerId);
+    if (!target || target.type !== 'image' || target.hidden) return;
+    const image = images.get(assetUrl(target.assetId));
+    if (!image) return;
+    const maskSize = maskCanvasSize(target);
+    let mask: HTMLCanvasElement;
+    if (target.maskAssetId) {
+      // Start from the saved mask; wait (ignore the touch) while it is still loading.
+      const saved = alphaMaskFor(target, maskSize);
+      const held = strokeHold.current?.layerId === target.id ? strokeHold.current.mask : null;
+      const from = held ?? saved;
+      if (!from) return;
+      mask = createCanvas(maskSize);
+      mask.getContext('2d')?.drawImage(from, 0, 0, maskSize.width, maskSize.height);
+    } else {
+      const held = strokeHold.current?.layerId === target.id ? strokeHold.current.mask : null;
+      mask = held ? createCanvas(maskSize) : fullAlphaMask(maskSize);
+      if (held) mask.getContext('2d')?.drawImage(held, 0, 0, maskSize.width, maskSize.height);
+    }
+    e.cancelBubble = true;
+    const crop = cropToSource(target.crop, { width: image.naturalWidth, height: image.naturalHeight });
+    const compositeSize = compositeCanvasSize(target);
+    const pointerId = evt.pointerId;
+    const settings = brush;
+
+    const onMove = (ev: PointerEvent) => {
+      const s = stroke.current;
+      if (!s || ev.pointerId !== s.pointerId) return;
+      ev.preventDefault();
+      paintTo(s, ev.clientX, ev.clientY, false);
+    };
+    const onUp = (ev: PointerEvent) => {
+      const s = stroke.current;
+      if (!s || ev.pointerId !== s.pointerId) return;
+      if (ev.type === 'pointercancel') {
+        cancelStroke();
+        return;
+      }
+      s.cleanup();
+      drawStrokePreview(s);
+      strokeHold.current = { layerId: s.layerId, oldMaskId: s.layer.maskAssetId, composite: s.composite, mask: s.mask, maskSize: s.maskSize };
+      setStrokeTick((t) => t + 1);
+      const send = live.current.onMaskStroke;
+      void alphaMaskToPng(s.mask).then(
+        (png) => send?.(s.layerId, png),
+        () => {
+          // Could not encode the mask: show the saved state again rather than a stroke that is not kept.
+          if (strokeHold.current?.composite === s.composite) strokeHold.current = null;
+          setStrokeTick((t) => t + 1);
+        },
+      );
+    };
+    const cleanup = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      const s = stroke.current;
+      if (s?.raf) cancelAnimationFrame(s.raf);
+      stroke.current = null;
+    };
+    window.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+
+    const s: Stroke = {
+      layerId: target.id,
+      pointerId,
+      layer: target,
+      image,
+      crop,
+      mask,
+      maskSize,
+      composite: renderComposite({ layer: target, image, crop, mask }, compositeSize),
+      compositeSize,
+      radius: brushRadiusInMask(settings.size, view.current.scale, target, maskSize),
+      softness: settings.softness,
+      mode: settings.mode,
+      last: { x: 0, y: 0 },
+      raf: 0,
+      cleanup,
+    };
+    stroke.current = s;
+    paintTo(s, evt.clientX, evt.clientY, true);
+    // Switch the layer to the live picture now (it may have been drawn the plain way).
+    flushSync(() => setStrokeTick((t) => t + 1));
+  };
+
   // ---------- export exactly the page frame ----------
   const exportPageImage = useCallback(
     async (pixelRatio: number): Promise<Blob> => {
@@ -813,6 +1097,9 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
         if (l.type !== 'image') continue;
         const url = assetUrl(l.assetId);
         if (url) urls.push(url);
+        // Masks too: the export uses the same pictures as the screen.
+        const maskUrl = l.maskAssetId ? assetUrl(l.maskAssetId) : undefined;
+        if (maskUrl) urls.push(maskUrl);
       }
       const bgId = page?.background.imageAssetId;
       const bgUrl = bgId ? assetUrl(bgId) : undefined;
@@ -859,8 +1146,9 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
     rotation: layer.rotation,
     opacity: layer.opacity,
     visible: !layer.hidden,
-    listening: !layer.hidden && !readonly,
-    draggable: !readonly && !layer.locked && !editing,
+    // Eraser mode: layers ignore fingers, the stage gets every touch (paint / zoom).
+    listening: !layer.hidden && !readonly && !brushActive,
+    draggable: !readonly && !brushActive && !layer.locked && !editing,
     onClick: (e: AnyEvent) => select(layer.id, e),
     onTap: (e: AnyEvent) => select(layer.id, e),
     onDragStart: () => onDragStart(layer),
@@ -880,6 +1168,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
       fontSize={layer.fontSize}
       fontStyle={konvaFontStyle(layer)}
       fill={layer.color}
+      globalCompositeOperation={blendToComposite(layer.blendMode)}
       width={layer.width}
       align={layer.align}
       lineHeight={layer.lineHeight}
@@ -894,11 +1183,22 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
   const drawShape = (layer: ShapeLayer) => {
     // A transparent fill keeps the inside tappable when the shape has no fill.
     const fill = layer.fill ?? 'rgba(0,0,0,0)';
-    const stroke = layer.stroke && layer.strokeWidth > 0 ? { stroke: layer.stroke, strokeWidth: layer.strokeWidth } : { strokeEnabled: false };
+    const blend = blendToComposite(layer.blendMode);
+    const outline = layer.stroke && layer.strokeWidth > 0 ? { stroke: layer.stroke, strokeWidth: layer.strokeWidth } : { strokeEnabled: false };
     switch (layer.shape) {
       case 'rect':
         return (
-          <Rect key={layer.id} {...common(layer)} width={layer.width} height={layer.height} fill={fill} cornerRadius={layer.cornerRadius} {...stroke} perfectDrawEnabled={false} />
+          <Rect
+            key={layer.id}
+            {...common(layer)}
+            width={layer.width}
+            height={layer.height}
+            fill={fill}
+            cornerRadius={layer.cornerRadius}
+            {...outline}
+            globalCompositeOperation={blend}
+            perfectDrawEnabled={false}
+          />
         );
       case 'ellipse':
         // Offset so (x, y) stays the top-left corner, like every other layer.
@@ -911,7 +1211,8 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
             offsetX={-layer.width / 2}
             offsetY={-layer.height / 2}
             fill={fill}
-            {...stroke}
+            {...outline}
+            globalCompositeOperation={blend}
             perfectDrawEnabled={false}
           />
         );
@@ -925,6 +1226,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
             stroke={layer.stroke ?? layer.fill ?? '#0d1422'}
             strokeWidth={width}
             hitStrokeWidth={Math.max(24, width)}
+            globalCompositeOperation={blend}
             lineCap="round"
             perfectDrawEnabled={false}
           />
@@ -936,24 +1238,44 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
   const drawImage = (layer: ImageLayer) => {
     const image = images.get(assetUrl(layer.assetId));
     const crop = image ? cropToSource(layer.crop, { width: image.naturalWidth, height: image.naturalHeight }) : null;
+    // Blend mode goes on the drawn child: Konva applies it per shape, not per group.
+    const blend = blendToComposite(layer.blendMode);
+    const usesComposite =
+      needsComposite(layer) || stroke.current?.layerId === layer.id || strokeHold.current?.layerId === layer.id;
+    const picture = image && usesComposite ? compositeFor(layer, image, crop) : null;
+    const placeholder = (
+      <Rect width={layer.width} height={layer.height} fill={PLACEHOLDER_FILL} cornerRadius={layer.cornerRadius} globalCompositeOperation={blend} perfectDrawEnabled={false} />
+    );
+    let content: JSX.Element;
+    if (!image) {
+      content = placeholder;
+    } else if (usesComposite) {
+      // Flip, mask, rounded corners and soft edge are already inside the offscreen picture.
+      content = picture ? (
+        <KImage image={picture} width={layer.width} height={layer.height} globalCompositeOperation={blend} perfectDrawEnabled={false} />
+      ) : (
+        placeholder
+      );
+    } else {
+      content = (
+        <KImage
+          image={image}
+          width={layer.width}
+          height={layer.height}
+          cornerRadius={layer.cornerRadius}
+          {...(crop ? { crop } : {})}
+          x={layer.flipX ? layer.width : 0}
+          y={layer.flipY ? layer.height : 0}
+          scaleX={layer.flipX ? -1 : 1}
+          scaleY={layer.flipY ? -1 : 1}
+          globalCompositeOperation={blend}
+          perfectDrawEnabled={false}
+        />
+      );
+    }
     return (
       <Group key={layer.id} {...common(layer)}>
-        {image ? (
-          <KImage
-            image={image}
-            width={layer.width}
-            height={layer.height}
-            cornerRadius={layer.cornerRadius}
-            {...(crop ? { crop } : {})}
-            x={layer.flipX ? layer.width : 0}
-            y={layer.flipY ? layer.height : 0}
-            scaleX={layer.flipX ? -1 : 1}
-            scaleY={layer.flipY ? -1 : 1}
-            perfectDrawEnabled={false}
-          />
-        ) : (
-          <Rect width={layer.width} height={layer.height} fill={PLACEHOLDER_FILL} cornerRadius={layer.cornerRadius} perfectDrawEnabled={false} />
-        )}
+        {content}
       </Group>
     );
   };
@@ -973,9 +1295,13 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
   const bgImage = bgAssetId ? images.get(assetUrl(bgAssetId)) : null;
 
   // Corner rotate handles: only for exactly one selected, movable layer.
-  const rotateTargetId = !readonly && !editing && movableSelection.length === 1 ? movableSelection[0] : undefined;
+  // Hidden in eraser mode.
+  const rotateTargetId = !readonly && !editing && !brushActive && movableSelection.length === 1 ? movableSelection[0] : undefined;
   const rotateTarget = rotateTargetId ? layerById.get(rotateTargetId) : undefined;
+  handleTarget.current = rotateTarget ?? null;
   const handleScale = 1 / view.current.scale;
+  // K6: on a thin layer the handles move out along the corner diagonals (≥ 44 px apart).
+  const handleSpots = rotateTarget ? rotateHandlePositions(rotateTarget, view.current.scale) : [];
 
   return (
     <div ref={wrapRef} style={WRAP_STYLE} aria-label="Trang thiết kế">
@@ -983,7 +1309,8 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
         ref={stageRef}
         width={box.width}
         height={box.height}
-        draggable={!editing}
+        // Eraser mode: one finger paints, so it must not pan the page (two fingers still do).
+        draggable={!editing && !brushActive}
         onClick={onStageTap}
         onTap={onStageTap}
         onMouseDown={onStagePointerDown}
@@ -1045,7 +1372,7 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
           />
           {rotateTarget && (
             <Group ref={handlesRef}>
-              {layerCorners(rotateTarget).map((p, i) => (
+              {handleSpots.map((p, i) => (
                 <Group
                   key={i}
                   x={p.x}

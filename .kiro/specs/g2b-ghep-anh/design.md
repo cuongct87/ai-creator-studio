@@ -10,7 +10,7 @@ interface ImageLayer extends LayerBase {
   ...;
   /** Mờ viền, px của trang. 0 = không. */
   feather: number;
-  /** Ảnh mặt nạ PNG theo ĐỘ TRONG SUỐT (alpha): đục = giữ, trong suốt = đã tẩy (màu bỏ qua). Phủ đúng khung lớp. null = không tẩy. */
+  /** Ảnh mặt nạ PNG phủ đúng khung lớp (hướng ảnh gốc). Mức giữ = độ sáng × độ đục: trắng đục = giữ; đen/trong suốt = đã tẩy. null = không tẩy. */
   maskAssetId: Id | null;
 }
 ```

@@ -18,7 +18,7 @@ import {
   type Op,
   type TextAlign,
 } from '@zunva/core';
-import { DesignCanvas, FONT_FAMILIES, type DesignCanvasHandle } from '@zunva/editor-canvas';
+import { DesignCanvas, FONT_FAMILIES, type BrushSettings, type DesignCanvasHandle } from '@zunva/editor-canvas';
 import { createAutosave, detectImageType, type AutosaveStatus, type Platform, type ProjectStore } from '@zunva/platform';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useConfirm } from './ConfirmDialog';
@@ -66,6 +66,8 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
   const [message, setMessage] = useState<string | null>(null);
   const [selection, setSelection] = useState<Id[]>([]);
   const [textEditing, setTextEditing] = useState<Id | null>(null);
+  /** Chế độ Tẩy (G2b) cho một lớp ảnh; null = chỉnh sửa bình thường. */
+  const [brush, setBrush] = useState<BrushSettings | null>(null);
   const [panel, setPanel] = useState<Panel>('none');
   const [urls, setUrls] = useState<Record<Id, string>>({});
   const [saveStatus, setSaveStatus] = useState<AutosaveStatus>('idle');
@@ -170,6 +172,12 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
   const endGesture = useCallback(() => setHist((h) => (h ? closeMerge(h) : h)), []);
 
   const layers = page?.layers ?? [];
+  const brushRef = useRef(brush);
+  brushRef.current = brush;
+  // Lớp đang tẩy bị xóa / hoàn tác mất → thoát chế độ tẩy.
+  useEffect(() => {
+    if (brush && !layers.some((l) => l.id === brush.layerId && l.type === 'image')) setBrush(null);
+  }, [brush, layers]);
   const selected = useMemo(() => selection.filter((id) => layers.some((l) => l.id === id)), [selection, layers]);
   const single: Layer | null = selected.length === 1 ? (layers.find((l) => l.id === selected[0]) ?? null) : null;
 
@@ -379,6 +387,11 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
           onGestureEnd={endGesture}
           assetUrl={assetUrl}
           onTextEditing={setTextEditing}
+          brush={brush}
+          onMaskStroke={(layerId, png) => {
+            const layer = histRef.current?.doc.pages[0]?.layers.find((l) => l.id === layerId);
+            if (layer) void putMask(layer, png, brushRef.current?.mode === 'restore' ? 'Khôi phục' : 'Tẩy');
+          }}
         />
       </div>
 
@@ -388,7 +401,12 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
         </p>
       )}
 
-      {textEditing === null && (
+      {textEditing === null && brush !== null && (
+        <div className="editor-panel">
+          <EraserPanel value={brush} onChange={setBrush} onDone={() => setBrush(null)} />
+        </div>
+      )}
+      {textEditing === null && brush === null && (
         <div className="editor-panel">
           {selected.length === 0 ? (
             <>
@@ -469,6 +487,7 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
               onReplaceImage={(layer) => void replaceImage(layer)}
               onCoverPage={(layer) => patch(layer, coverPagePatch(layer, page.width, page.height), 'Phủ kín trang')}
               onSegment={platform.subject ? (layer) => void segmentSubject(layer) : null}
+              onErase={(layer) => setBrush({ layerId: layer.id, mode: 'erase', size: 48, softness: 0.5 })}
               onClose={() => setSelection([])}
             />
           )}
@@ -584,10 +603,11 @@ interface PropsPanel {
   onCoverPage(layer: Layer): void;
   /** Có khi nền tảng tách nền được (Android). */
   onSegment: ((layer: Layer) => void) | null;
+  onErase(layer: Layer): void;
   onClose(): void;
 }
 
-function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onArrange, onDuplicate, onRemove, onReplaceImage, onCoverPage, onSegment, onClose }: PropsPanel) {
+function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onArrange, onDuplicate, onRemove, onReplaceImage, onCoverPage, onSegment, onErase, onClose }: PropsPanel) {
   const index = single ? layers.findIndex((l) => l.id === single.id) : -1;
   return (
     <div className="props">
@@ -637,6 +657,9 @@ function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onAr
             onDone={onDone}
           />
           <div className="row">
+            <button type="button" onClick={() => onErase(single)}>
+              Tẩy
+            </button>
             {onSegment && (
               <button type="button" disabled={busy} onClick={() => onSegment(single)}>
                 Tách nền
@@ -755,6 +778,39 @@ function TextProps({ layer, onPatch, onDone }: { layer: Extract<Layer, { type: '
         <Swatches value={layer.color} onPick={(c) => onPatch(layer, { color: c }, 'Màu chữ', `color:${layer.id}`)} onDone={onDone} label="Màu chữ" />
       </Section>
     </>
+  );
+}
+
+/** Thanh công cụ chế độ Tẩy: 1 ngón tô lên ảnh, 2 ngón phóng to trang. */
+function EraserPanel({ value, onChange, onDone }: { value: BrushSettings; onChange(next: BrushSettings): void; onDone(): void }) {
+  return (
+    <div className="props" aria-label="Chế độ tẩy">
+      <div className="props-head">
+        <strong>Tẩy ảnh</strong>
+        <button type="button" onClick={onDone}>
+          Xong
+        </button>
+      </div>
+      <p className="muted small">Dùng 1 ngón tô lên ảnh. Dùng 2 ngón để phóng to chỗ nhỏ.</p>
+      <div className="row" role="group" aria-label="Kiểu cọ">
+        <button type="button" aria-pressed={value.mode === 'erase'} onClick={() => onChange({ ...value, mode: 'erase' })}>
+          Tẩy
+        </button>
+        <button type="button" aria-pressed={value.mode === 'restore'} onClick={() => onChange({ ...value, mode: 'restore' })}>
+          Khôi phục
+        </button>
+      </div>
+      <Slider label="Cỡ cọ" value={value.size} min={8} max={160} onChange={(v) => onChange({ ...value, size: v })} onDone={() => {}} />
+      <Slider
+        label="Độ mềm"
+        value={Math.round(value.softness * 100)}
+        min={0}
+        max={100}
+        suffix="%"
+        onChange={(v) => onChange({ ...value, softness: v / 100 })}
+        onDone={() => {}}
+      />
+    </div>
   );
 }
 

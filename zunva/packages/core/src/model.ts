@@ -97,7 +97,8 @@ export interface ImageLayer extends LayerBase {
   /** Mờ viền, đơn vị px của trang. 0 = mép sắc. */
   feather: number;
   /**
-   * Mặt nạ tẩy: ảnh PNG phủ đúng khung lớp, đọc theo độ trong suốt (đục = giữ, trong suốt = đã tẩy).
+   * Mặt nạ tẩy: ảnh PNG phủ đúng khung lớp, theo hướng ảnh gốc (chưa lật). Mức giữ = độ sáng × độ đục:
+   * trắng đục = giữ; đen hoặc trong suốt = đã tẩy. (Cục tẩy lưu PNG xám; tách nền ML Kit lưu PNG trắng có độ trong suốt.)
    * null = chưa tẩy. Ảnh gốc không bị sửa.
    */
   maskAssetId: Id | null;

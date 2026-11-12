@@ -10,11 +10,16 @@ Thứ tự: C1 trước (Kiro cần kiểu dữ liệu mới). Sau đó Kiro (K)
 - [ ] C5 Kiểm tra trình duyệt (hòa trộn, mờ viền, tẩy bằng chuột), CI xanh, dựng APK gửi founder.
 
 ## Kiro (chỉ sửa trong `zunva/packages/editor-canvas/`)
-- [ ] K1 `blendMode` cho mọi lớp → `globalCompositeOperation`; ảnh xuất giống màn hình.
-- [ ] K2 Lớp ảnh có mặt nạ / mờ viền: vẽ qua canvas phụ (lật, mặt nạ, bo góc + blur), lưu đệm theo khóa; giới hạn 2048 px.
-- [ ] K3 Chế độ tẩy: prop `brush`, `onMaskStroke`; 1 ngón tô (erase/restore, cỡ, độ mềm, nét liền), 2 ngón phóng trang; xem trước ngay; nhấc ngón → PNG.
-- [ ] K4 Test hàm thuần (Vitest, `geometry.ts` hoặc file mới): trang → khung lớp (xoay, lật), nội suy nét, khóa lưu đệm.
-- [ ] K5 README: cập nhật bảng hợp đồng (prop mới, nhãn hoàn tác).
+- [x] K1 `blendMode` cho mọi lớp → `globalCompositeOperation`; ảnh xuất giống màn hình.
+- [x] K2 Lớp ảnh có mặt nạ / mờ viền: vẽ qua canvas phụ (lật, mặt nạ, bo góc + blur), lưu đệm theo khóa; giới hạn 2048 px.
+- [x] K3 Chế độ tẩy: prop `brush`, `onMaskStroke`; 1 ngón tô (erase/restore, cỡ, độ mềm, nét liền), 2 ngón phóng trang; xem trước ngay; nhấc ngón → PNG.
+- [x] K4 Test hàm thuần (Vitest, `geometry.ts` hoặc file mới): trang → khung lớp (xoay, lật), nội suy nét, khóa lưu đệm.
+- [x] K5 README: cập nhật bảng hợp đồng (prop mới, nhãn hoàn tác).
+- [x] K6 Lớp mỏng: nút ↻ góc đẩy ra ngoài theo đường chéo khi cạnh trên màn hình < 88 px (cách nhau ≥ 44 px).
+
+> Kiro, 12/11: K1–K6 đã viết xong file nhưng **chưa chạy CI** (terminal Kiro hỏng). Chưa thử trên trình duyệt / S24+.
+> File: `editor-canvas/src/DesignCanvas.tsx`, `index.ts`, `README.md`; mới: `src/mask.ts`, `src/mask.test.ts`, `src/composite.ts`.
+> Chưa chắc: Konva áp `globalCompositeOperation` đúng cho mọi kiểu hình; độ mềm thật của mép (blur) và cọ; hiệu năng tẩy trên ảnh lớn.
 - [ ] K6 Lớp thấp: đẩy nút ↻ ra ngoài để không che nút kéo dãn (founder thử 12/11).
 
 ## Founder duyệt
