@@ -4,9 +4,9 @@ Thứ tự: C1 trước (Kiro cần kiểu dữ liệu mới). Sau đó Kiro (K)
 
 ## Claude
 - [x] C1 Lõi schema v3: `BlendMode`, `blendMode`, `feather`, `maskAssetId`; `migrateDocument` v2→v3; validate; nhận .zunva v2 và v3; test (dự án cũ mở ra y nguyên).
-- [ ] C2 App: mục Hòa trộn, Mờ viền, nút Tẩy / Tách nền / Bỏ hết vùng tẩy; thanh công cụ chế độ tẩy; `onMaskStroke` → asset + op 1 bước.
-- [ ] C3 Dọn ảnh không dùng khi mở dự án (+ test).
-- [ ] C4 Tách nền Android: đọc điều khoản ML Kit → báo founder; cầu nối Java + `segmentSubject`; manifest tải mô hình lúc cài.
+- [ ] C2 App (đã có: Hòa trộn, Mờ viền, Tách nền, Bỏ hết vùng tẩy, putMask; còn: nối chế độ Tẩy khi Kiro xong K3): mục Hòa trộn, Mờ viền, nút Tẩy / Tách nền / Bỏ hết vùng tẩy; thanh công cụ chế độ tẩy; `onMaskStroke` → asset + op 1 bước.
+- [x] C3 Dọn ảnh không dùng khi mở dự án (+ test).
+- [x] C4 Tách nền Android (APK dựng được; chờ thử trên S24+): đọc điều khoản ML Kit → báo founder; cầu nối Java + `segmentSubject`; manifest tải mô hình lúc cài.
 - [ ] C5 Kiểm tra trình duyệt (hòa trộn, mờ viền, tẩy bằng chuột), CI xanh, dựng APK gửi founder.
 
 ## Kiro (chỉ sửa trong `zunva/packages/editor-canvas/`)
@@ -19,4 +19,4 @@ Thứ tự: C1 trước (Kiro cần kiểu dữ liệu mới). Sau đó Kiro (K)
 
 ## Founder duyệt
 - [x] Duyệt đặc tả này (requirements + design + tasks) — founder duyệt 12/11.
-- [ ] Duyệt dùng ML Kit (miễn phí, chạy trên máy, bản beta) sau khi Claude báo điều khoản.
+- [ ] Duyệt dùng ML Kit sau khi Claude báo điều khoản: ảnh không gửi đi; ML Kit gửi số liệu hiệu năng/sử dụng cho Google (phải ghi trong chính sách riêng tư); bản beta; trang điều khoản không ghi phí.
