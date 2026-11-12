@@ -4,7 +4,7 @@
 Thứ tự: Kiro làm **K1 → K5** (song song với Claude **C1 → C6**). Hai bên chỉ sửa thư mục của mình (xem `design.md`).
 
 ## Kiro — `zunva/packages/editor-canvas/` (dự toán 250–450 credit), nhánh `feat/g2-editor-canvas`
-- [ ] K1 Tạo gói `@zunva/editor-canvas` (react 19, konva 10.9.1, react-konva 19.3.2 — cùng bản G1-4), xuất đúng hợp đồng trong `design.md`. Lint: được dùng React/DOM, không sửa `core`.
+- [ ] K1 Tạo gói `@zunva/editor-canvas`, xuất đúng hợp đồng trong `design.md`. Thư viện: `konva` 10.9.1, `react-konva` 19.3.2 (dependencies); **`react`, `react-dom` là peerDependencies `^19.2.8`** và devDependencies `19.2.8` — đúng bản `apps/web` đang dùng (hai bản React trong một app sẽ lỗi). `@zunva/core: workspace:*`. Lint: được dùng React/DOM, không sửa `core`.
 - [ ] K2 Vẽ lớp chữ / ảnh / hình từ `DesignDocument`; nền trang màu hoặc ảnh; ô xám khi ảnh chưa có URL.
 - [ ] K3 Chọn, kéo, phóng, xoay (Transformer, tay nắm đủ lớn cho ngón tay ≥ 44px), chụm hai ngón phóng trang, `fitToScreen()`; phát `Op` + `mergeKey` + `onGestureEnd` đúng hợp đồng.
 - [ ] K4 Sửa chữ tại chỗ (ô nhập HTML phủ lên, giữ cách G1-4 đã đạt Telex/VNI); 6 phông OFL qua `@fontsource` (Be Vietnam Pro, Playfair Display, Dancing Script, Lora, Montserrat, Pacifico) — chỉ nạp bộ chữ Latin + Vietnamese (kiểm tra từng phông có bộ `vietnamese`; thiếu thì báo, đề xuất phông thay); `fontsReady()`.
