@@ -253,6 +253,7 @@ async function main() {
 
   await step('Tạo thiết kế "Mạng xã hội" 1080×1080', async () => {
     await tap(page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }));
+    await tap(page.getByRole('dialog', { name: 'Chọn mẫu Mạng xã hội' }).getByRole('button', { name: 'Trang trắng' }));
     await page.getByRole('region', { name: /Trang 1080×1080, 0 lớp/ }).waitFor({ timeout: 6000 });
     createdProjects.push(projectId());
     return `dự án thử ${projectId()}`;
@@ -572,6 +573,66 @@ async function main() {
     return '';
   });
 
+  // ---------- G3 đợt 3: kho mẫu ----------
+  await step('Tab Mẫu: đủ 15 mẫu, ảnh thu nhỏ hiện hết', async () => {
+    const t0 = Date.now();
+    await tap(page.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('button', { name: 'Mẫu', exact: true }));
+    const grid = page.getByRole('list', { name: 'Danh sách mẫu' });
+    await waitFor(async () => ((await grid.getByRole('button').count()) === 15 ? true : null), '15 mẫu', 5000);
+    const imgs = grid.locator('img');
+    for (let i = 0; i < 15; i++) await imgs.nth(i).scrollIntoViewIfNeeded();
+    const loaded = await waitFor(async () => {
+      const n = await imgs.evaluateAll((els) => els.filter((e) => e.naturalWidth > 0).length);
+      return n === 15 ? n : null;
+    }, 'ảnh thu nhỏ', 10000);
+    const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    if (over > 0) throw new Error(`tab Mẫu bị cuộn ngang ${over}px`);
+    return `${loaded}/15 ảnh hiện sau ${((Date.now() - t0) / 1000).toFixed(1)} s`;
+  });
+
+  await step('Chọn mẫu "Thiệp cưới hoa hồng" → dự án mới có sẵn 6 lớp, khổ A5', async () => {
+    const t0 = Date.now();
+    await tap(page.getByRole('button', { name: 'Mẫu Thiệp cưới hoa hồng' }));
+    await page.getByRole('region', { name: /Trang 1748×2480, 6 lớp/ }).waitFor({ timeout: 8000 });
+    const ms = Date.now() - t0;
+    createdProjects.push(projectId());
+    await sleep(1500); // để ảnh và chữ vẽ xong cho ảnh chụp
+    await shot('mau-thiep-cuoi-hoa-hong');
+    await device.shell('input keyevent 4');
+    await page.getByRole('heading', { name: 'Mẫu', exact: true }).waitFor({ timeout: 5000 });
+    await tap(page.getByRole('navigation', { name: 'Điều hướng chính' }).getByRole('button', { name: 'Trang chủ', exact: true }));
+    await page.getByRole('heading', { name: 'Bạn muốn tạo gì hôm nay?' }).waitFor({ timeout: 5000 });
+    return `mở mẫu sau ${(ms / 1000).toFixed(1)} s`;
+  });
+
+  await step('Trang chủ → "Bảng hiệu" → chọn mẫu quán cà phê (3000×1000)', async () => {
+    await tap(page.locator('.starts').getByRole('button', { name: 'Bảng hiệu' }));
+    const picker = page.getByRole('dialog', { name: 'Chọn mẫu Bảng hiệu' });
+    await picker.getByRole('button', { name: 'Trang trắng' }).waitFor({ timeout: 3000 });
+    await tap(picker.getByRole('button', { name: 'Mẫu Bảng hiệu quán cà phê' }));
+    await page.getByRole('region', { name: /Trang 3000×1000, 4 lớp/ }).waitFor({ timeout: 8000 });
+    createdProjects.push(projectId());
+    await sleep(1500);
+    await shot('mau-bang-hieu-ca-phe');
+    await device.shell('input keyevent 4');
+    await page.getByRole('heading', { name: 'Bạn muốn tạo gì hôm nay?' }).waitFor({ timeout: 5000 });
+    return '';
+  });
+
+  await step('Mẫu hình nền "sông nước miền Tây" → khổ đúng màn hình máy', async () => {
+    await tap(page.locator('.starts').getByRole('button', { name: 'Hình nền điện thoại' }));
+    await tap(page.getByRole('dialog', { name: 'Chọn mẫu Hình nền điện thoại' }).getByRole('button', { name: 'Mẫu Hình nền sông nước miền Tây' }));
+    const region = page.getByRole('region', { name: /Trang \d+×\d+, 0 lớp/ });
+    await region.waitFor({ timeout: 8000 });
+    const label = await region.getAttribute('aria-label');
+    createdProjects.push(projectId());
+    await sleep(1500);
+    await shot('mau-hinh-nen-song-nuoc');
+    await device.shell('input keyevent 4');
+    await page.getByRole('heading', { name: 'Bạn muốn tạo gì hôm nay?' }).waitFor({ timeout: 5000 });
+    return label ?? '';
+  });
+
   // ---------- G3 đợt 4: hình nền điện thoại (KHÔNG tự đặt hình nền — sẽ đổi hình nền máy bạn) ----------
   await step('Hình nền điện thoại: khổ đúng màn hình máy, có nút "Đặt làm hình nền"', async () => {
     const wm = (await device.shell('wm size')).toString();
@@ -580,6 +641,7 @@ async function main() {
     const w = Math.min(Number(m[1]), Number(m[2]));
     const h = Math.max(Number(m[1]), Number(m[2]));
     await tap(page.locator('.starts').getByRole('button', { name: 'Hình nền điện thoại' }));
+    await tap(page.getByRole('dialog', { name: 'Chọn mẫu Hình nền điện thoại' }).getByRole('button', { name: 'Trang trắng' }));
     await page.getByRole('region', { name: new RegExp(`Trang ${w}×${h}, 0 lớp`) }).waitFor({ timeout: 6000 });
     createdProjects.push(projectId());
     await tap(page.getByRole('button', { name: 'Xuất', exact: true }));
@@ -605,7 +667,8 @@ async function finish(recording) {
           tx.objectStore('assets').delete(`thumb_${id}`);
           const g = tx.objectStore('projects').get(id);
           g.onsuccess = () => {
-            for (const a of Object.keys(g.result?.doc?.assets ?? {})) tx.objectStore('assets').delete(a);
+            // Ảnh mẫu (mau-anh-…) dùng chung với dự án của bạn: không xóa.
+            for (const a of Object.keys(g.result?.doc?.assets ?? {})) if (!a.startsWith('mau-anh-')) tx.objectStore('assets').delete(a);
             tx.objectStore('projects').delete(id);
           };
           tx.oncomplete = res;
