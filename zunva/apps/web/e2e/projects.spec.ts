@@ -25,13 +25,16 @@ test('tạo dự án → tải lại trang vẫn còn → đổi tên → xóa t
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 
-  // Delete asks first; cancelling keeps the project.
-  page.once('dialog', (d) => void d.dismiss());
+  // Xóa phải hỏi lại bằng hộp hỏi của Artio (không phải hộp mặc định của trình duyệt); bấm Hủy thì còn.
   await page.getByRole('button', { name: 'Xóa dự án Thiệp cưới Hùng – Lan' }).click();
+  const confirm = page.getByRole('alertdialog');
+  await expect(confirm).toContainText('Xóa dự án "Thiệp cưới Hùng – Lan"?');
+  await confirm.getByRole('button', { name: 'Hủy' }).click();
+  await expect(confirm).toBeHidden();
   await expect(list.getByRole('listitem')).toHaveCount(1);
 
-  page.once('dialog', (d) => void d.accept());
   await page.getByRole('button', { name: 'Xóa dự án Thiệp cưới Hùng – Lan' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Xóa', exact: true }).click();
   await expect(page.getByText('Chưa có dự án nào.', { exact: false })).toBeVisible();
 
   await page.reload();
@@ -67,8 +70,8 @@ test('lưu dự án ra file .zunva → xóa → mở lại file thì dự án tr
 
   // Xóa cả hai, mở lại file → dự án gốc trở lại với đúng tên.
   for (const name of ['Cáo phó Cần Thơ (bản sao)', 'Cáo phó Cần Thơ']) {
-    page.once('dialog', (d) => void d.accept());
     await page.getByRole('button', { name: `Xóa dự án ${name}`, exact: true }).click();
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Xóa', exact: true }).click();
   }
   await expect(page.getByText('Chưa có dự án nào.', { exact: false })).toBeVisible();
   chooser = page.waitForEvent('filechooser');

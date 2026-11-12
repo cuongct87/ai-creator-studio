@@ -26,16 +26,16 @@ describe('nền tảng Android (cầu nối Java)', () => {
   });
 
   it('lưu file qua AndroidFileSaver và trả nơi lưu', async () => {
-    const { win, calls } = bridge('{"ok":true,"location":"Tải xuống/C87"}');
+    const { win, calls } = bridge('{"ok":true,"location":"Tải xuống/Artio"}');
     const p = createAndroidPlatform(win, fakeDoc);
     expect(p.name).toBe('android');
     const r = await p.files.saveBytes('Thiệp cưới.zunva', 'application/octet-stream', new Uint8Array([1, 2, 3]));
-    expect(r).toEqual({ ok: true, value: { location: 'Tải xuống/C87' } });
+    expect(r).toEqual({ ok: true, value: { location: 'Tải xuống/Artio' } });
     expect(calls[0]).toEqual({ fileName: 'Thiệp cưới.zunva', mimeType: 'application/octet-stream', base64: 'AQID' });
   });
 
   it('saveText gửi chữ UTF-8', async () => {
-    const { win, calls } = bridge('{"ok":true,"location":"Tải xuống/C87"}');
+    const { win, calls } = bridge('{"ok":true,"location":"Tải xuống/Artio"}');
     await createAndroidPlatform(win, fakeDoc).files.saveText('a.json', 'application/json', 'Cần Thơ');
     expect(calls[0]?.base64).toBe(toBase64(new TextEncoder().encode('Cần Thơ')));
   });
@@ -55,7 +55,7 @@ describe('nền tảng Android (cầu nối Java)', () => {
   });
 
   it('file quá 100 MB bị từ chối trước khi gửi sang Java', async () => {
-    const { win, calls } = bridge('{"ok":true,"location":"Tải xuống/C87"}');
+    const { win, calls } = bridge('{"ok":true,"location":"Tải xuống/Artio"}');
     const big = { length: ANDROID_MAX_SAVE_BYTES + 1 } as unknown as Uint8Array;
     const r = await createAndroidPlatform(win, fakeDoc).files.saveBytes('to.zunva', 'application/octet-stream', big);
     expect(r).toEqual({ ok: false, error: 'File quá lớn để lưu trên điện thoại (tối đa 100 MB).' });

@@ -1,15 +1,9 @@
-import { createDocument, createIdGenerator, createPage } from '@zunva/core';
+import { createDocument, createPage, type Id } from '@zunva/core';
 import type { Platform, ProjectStore, ProjectSummary, StorageInfo } from '@zunva/platform';
 import { useCallback, useEffect, useState } from 'react';
+import { useConfirm } from './ConfirmDialog';
+import { newId } from './create-project';
 import { exportProject, importProject } from './zunva-io';
-
-/** Random source backed by the browser's crypto (better than Math.random for IDs). */
-const cryptoRandom = () => {
-  const buf = new Uint32Array(1);
-  crypto.getRandomValues(buf);
-  return (buf[0] ?? 0) / 4294967296;
-};
-const newId = createIdGenerator(cryptoRandom);
 
 const dateFormat = new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' });
 
@@ -21,8 +15,9 @@ function formatSize(bytes: number): string {
 
 type LoadState = { kind: 'loading' } | { kind: 'ready'; items: ProjectSummary[] } | { kind: 'error'; message: string };
 
-/** Tab Dự án (G1-5, G1-7): danh sách, tạo mới, đổi tên, xóa, lưu/mở file .zunva. Chưa có trình chỉnh sửa. */
-export function Projects({ store, platform }: { store: ProjectStore; platform: Platform }) {
+/** Tab Dự án (G1-5, G1-7, G2): danh sách, mở, tạo mới, đổi tên, xóa, lưu/mở file .zunva. */
+export function Projects({ store, platform, onOpen }: { store: ProjectStore; platform: Platform; onOpen(id: Id): void }) {
+  const [dialog, ask] = useConfirm();
   const [state, setState] = useState<LoadState>({ kind: 'loading' });
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -74,8 +69,9 @@ export function Projects({ store, platform }: { store: ProjectStore; platform: P
 
   const openFile = () => run(() => importProject(store, platform, () => newId('doc')));
 
-  const removeProject = (item: ProjectSummary) => {
-    if (!window.confirm(`Xóa dự án "${item.name}"? Sau khi xóa sẽ không lấy lại được.`)) return;
+  const removeProject = async (item: ProjectSummary) => {
+    const ok = await ask(`Xóa dự án "${item.name}"? Sau khi xóa sẽ không lấy lại được.`, { confirmLabel: 'Xóa', danger: true });
+    if (!ok) return;
     void run(async () => {
       const removed = await store.remove(item.id);
       return removed.ok ? null : removed.error;
@@ -151,6 +147,15 @@ export function Projects({ store, platform }: { store: ProjectStore; platform: P
                   <div className="row">
                     <button
                       type="button"
+                      className="primary"
+                      disabled={busy}
+                      aria-label={`Mở dự án ${item.name}`}
+                      onClick={() => onOpen(item.id)}
+                    >
+                      Mở
+                    </button>
+                    <button
+                      type="button"
                       disabled={busy}
                       aria-label={`Đổi tên dự án ${item.name}`}
                       onClick={() => setEditing({ id: item.id, name: item.name })}
@@ -170,7 +175,7 @@ export function Projects({ store, platform }: { store: ProjectStore; platform: P
                       className="danger"
                       disabled={busy}
                       aria-label={`Xóa dự án ${item.name}`}
-                      onClick={() => removeProject(item)}
+                      onClick={() => void removeProject(item)}
                     >
                       Xóa
                     </button>
@@ -182,11 +187,16 @@ export function Projects({ store, platform }: { store: ProjectStore; platform: P
         </ul>
       )}
 
+      <p className="muted small">
+        File .zunva bạn lưu nằm trong thư mục Tải xuống/Artio. Khi bấm "Mở file .zunva", chọn ☰ → Tải xuống → Artio.
+      </p>
+
       {storage && storage.quotaBytes > 0 && (
         <p className="muted small">
           Dự án lưu trên máy này. Đã dùng {formatSize(storage.usedBytes)} / khoảng {formatSize(storage.quotaBytes)}.
         </p>
       )}
+      {dialog}
     </section>
   );
 }

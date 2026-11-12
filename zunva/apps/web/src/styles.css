@@ -1,24 +1,20 @@
 :root {
-  --bg: #eef4f7;
+  /* Màu mặc định = chủ đề "Xanh nhạt" (theme.ts ghi đè khi người dùng đổi). */
+  --bg: #e8f3fb;
   --surface: #ffffff;
-  --ink: #0d1422;
-  --muted: #56677f;
-  --line: #cfdce6;
-  --accent: #0d8799;
+  --ink: #10263b;
+  --muted: #4a6176;
+  --line: #cbdeec;
+  --accent: #f7b6cf;
+  --on-accent: #5e0f30;
+  --accent-ink: #ad2459;
+  --danger: #c92a2a;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #0d1422;
-    --surface: #172339;
-    --ink: #eaf0fb;
-    --muted: #9eafcc;
-    --line: #334766;
-    --accent: #16a6bd;
-    color-scheme: dark;
-  }
+:root[data-theme='toi'] {
+  --danger: #ff8a8a;
 }
 
 * {
@@ -89,11 +85,11 @@ body {
 }
 
 .tabs button[aria-current='page'] {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .tabs button:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--accent-ink);
   outline-offset: -3px;
 }
 
@@ -118,11 +114,11 @@ body {
 .projects button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: #ffffff;
+  color: var(--on-accent);
 }
 
 .projects button.danger {
-  color: #c92a2a;
+  color: var(--danger);
 }
 
 .projects button:disabled {
@@ -131,7 +127,7 @@ body {
 
 .projects button:focus-visible,
 .projects input:focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--accent-ink);
   outline-offset: 2px;
 }
 
@@ -201,6 +197,7 @@ body {
   border-radius: 10px;
   border: 1px solid #f08c00;
   background: color-mix(in srgb, #f08c00 12%, var(--surface));
+  color: var(--ink);
 }
 
 .visually-hidden {
@@ -210,4 +207,328 @@ body {
   overflow: hidden;
   clip: rect(0 0 0 0);
   white-space: nowrap;
+}
+
+/* ---------- G2: nút chung ---------- */
+.home button,
+.account button,
+.dialog button,
+.editor button {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 600;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+button.danger-fill {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #ffffff;
+}
+
+:root[data-theme='toi'] button.danger-fill {
+  color: #2a0505;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+/* ---------- G2: trang chủ ---------- */
+.home {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Thẻ con của lưới mặc định rộng theo nội dung: dải "Tiếp tục thiết kế" cuộn ngang bên trong, không đẩy trang. */
+.home > * {
+  min-width: 0;
+}
+
+.home h2,
+.account h2 {
+  font-size: 17px;
+  margin: 4px 0 8px;
+}
+
+.home-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.home-head h1 {
+  font-size: 26px;
+  line-height: 1.2;
+  margin: 4px 0 0;
+}
+
+.search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+}
+
+.search input::placeholder {
+  color: var(--muted);
+}
+
+.recent {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 132px;
+  gap: 10px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+}
+
+.home .recent-card {
+  display: grid;
+  gap: 4px;
+  width: 132px;
+  min-height: 150px;
+  padding: 8px;
+  text-align: left;
+  scroll-snap-align: start;
+  align-content: start;
+}
+
+.recent-thumb {
+  display: grid;
+  place-items: center;
+  height: 80px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 45%, var(--bg));
+  color: var(--on-accent);
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.recent-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.skeleton {
+  height: 150px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--line), var(--surface), var(--line));
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: 0 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: none; }
+}
+
+.starts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px 4px;
+}
+
+.home .start {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  padding: 4px 0;
+  border: 0;
+  background: none;
+}
+
+.start-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.start-label {
+  font-size: 12px;
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+/* ---------- G2: chọn màu ---------- */
+.theme-switch {
+  display: grid;
+  gap: 8px;
+}
+
+.theme-switch.compact {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.theme-switch button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  text-align: left;
+}
+
+.theme-switch.compact button {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 4px;
+  border-radius: 50%;
+  justify-content: center;
+}
+
+.theme-switch button[aria-checked='true'] {
+  border-color: var(--accent-ink);
+  box-shadow: 0 0 0 2px var(--accent-ink) inset;
+}
+
+.swatch {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid;
+}
+
+.swatch > span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.account {
+  display: grid;
+  gap: 8px;
+}
+
+/* ---------- G2: hộp hỏi ---------- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgb(0 0 0 / 45%);
+}
+
+.dialog {
+  width: min(100%, 420px);
+  max-height: 90vh;
+  overflow: auto;
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.dialog p {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+.dialog-actions {
+  justify-content: flex-end;
+}
+
+.size-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.size-list button {
+  width: 100%;
+  text-align: left;
+}
+
+/* ---------- G2: màn hình chỉnh sửa (bản tạm) ---------- */
+.editor {
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.editor-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  min-width: 0;
+}
+
+.editor-title {
+  font-size: 17px;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.editor-stage {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  justify-items: center;
+  padding: 16px;
+}
+
+.page-preview {
+  width: min(100%, 360px);
+  max-height: 60vh;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 12%);
 }
