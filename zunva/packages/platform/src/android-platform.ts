@@ -1,4 +1,4 @@
-import type { FileSaver, GallerySaver, Platform, PlatformResult } from './index';
+import type { FileSaver, GallerySaver, Platform, PlatformResult, SubjectSegmenter } from './index';
 import { createWebPlatform } from './web-platform';
 
 /**
@@ -15,6 +15,9 @@ import { createWebPlatform } from './web-platform';
 export interface AndroidBridgeWindow {
   AndroidFileSaver?: { saveBytes(fileName: string, mimeType: string, base64: string): string };
   AndroidImageSaver?: { saveImage(dataUrl: string, fileName: string): void };
+  /** G2b: tách nền bằng ML Kit. Trả lời bất đồng bộ qua `__artioSegmentDone(requestId, json)`. */
+  AndroidSubject?: { segment(requestId: string, base64: string): void };
+  __artioSegmentDone?: (requestId: string, json: string) => void;
 }
 
 /** Giới hạn khớp với MainActivity: file đi qua cầu nối dưới dạng một chuỗi base64 lớn. */
@@ -24,7 +27,14 @@ const MESSAGES = {
   tooLarge: 'File quá lớn để lưu trên điện thoại (tối đa 100 MB).',
   bridgeFailed: 'Không lưu được file trên điện thoại. Hãy thử lại.',
   imageFailed: 'Không lưu được ảnh vào Thư viện. Hãy thử lại.',
+  segmentFailed: 'Không tách được nền. Hãy thử lại.',
+  segmentTimeout: 'Tách nền lâu quá. Hãy thử lại với ảnh nhỏ hơn.',
+  segmentTooLarge: 'Ảnh quá lớn để tách nền (tối đa 40 MB).',
 } as const;
+
+/** Khớp với SubjectBridge.java. */
+export const ANDROID_MAX_SEGMENT_BYTES = 40 * 1024 * 1024;
+const SEGMENT_TIMEOUT_MS = 90_000;
 
 const CHUNK = 0x8000;
 
@@ -35,6 +45,57 @@ export function toBase64(bytes: Uint8Array): string {
     binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
   }
   return btoa(binary);
+}
+
+export function fromBase64(text: string): Uint8Array {
+  const binary = atob(text);
+  const out = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) out[i] = binary.charCodeAt(i);
+  return out;
+}
+
+/** Cầu nối tách nền: Java xử lý ở luồng riêng rồi gọi lại `__artioSegmentDone`. */
+export function createAndroidSegmenter(win: AndroidBridgeWindow, timeoutMs = SEGMENT_TIMEOUT_MS): SubjectSegmenter | null {
+  const bridge = win.AndroidSubject;
+  if (!bridge) return null;
+  const pending = new Map<string, (r: PlatformResult<Uint8Array | null>) => void>();
+  let seq = 0;
+  win.__artioSegmentDone = (requestId, json) => {
+    const done = pending.get(requestId);
+    if (!done) return;
+    pending.delete(requestId);
+    try {
+      const v = JSON.parse(json) as { ok?: unknown; mask?: unknown; error?: unknown };
+      if (v.ok === true && v.mask === null) return done({ ok: true, value: null });
+      if (v.ok === true && typeof v.mask === 'string') return done({ ok: true, value: fromBase64(v.mask) });
+      done({ ok: false, error: typeof v.error === 'string' && v.error !== '' ? v.error : MESSAGES.segmentFailed });
+    } catch {
+      done({ ok: false, error: MESSAGES.segmentFailed });
+    }
+  };
+  return {
+    segment(bytes) {
+      if (bytes.length > ANDROID_MAX_SEGMENT_BYTES) return Promise.resolve({ ok: false, error: MESSAGES.segmentTooLarge });
+      seq += 1;
+      const id = `seg_${seq}`;
+      return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          if (pending.delete(id)) resolve({ ok: false, error: MESSAGES.segmentTimeout });
+        }, timeoutMs);
+        pending.set(id, (r) => {
+          clearTimeout(timer);
+          resolve(r);
+        });
+        try {
+          bridge.segment(id, toBase64(bytes));
+        } catch {
+          pending.delete(id);
+          clearTimeout(timer);
+          resolve({ ok: false, error: MESSAGES.segmentFailed });
+        }
+      });
+    },
+  };
 }
 
 function parseBridgeReply(reply: unknown): PlatformResult<{ location: string }> {
@@ -86,7 +147,9 @@ export function createAndroidPlatform(win: AndroidBridgeWindow, doc?: Document):
       }
     : web.gallery;
 
-  return { name: fileBridge ? 'android' : 'web', files, opener: web.opener, images: web.images, gallery };
+  const base: Platform = { name: fileBridge ? 'android' : 'web', files, opener: web.opener, images: web.images, gallery };
+  const subject = createAndroidSegmenter(win);
+  return subject ? { ...base, subject } : base;
 }
 
 /** Chọn bản nền tảng theo nơi app đang chạy: trong vỏ Android có cầu nối thì dùng Android. */

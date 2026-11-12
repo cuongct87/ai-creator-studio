@@ -37,3 +37,9 @@ android { namespace 'vn.iaysystem.aicreatorstudio'; compileSdk 35
 
 // Make sure web assets are copied before any build or packaging step.
 tasks.named('preBuild') { dependsOn syncWebAssets }
+
+dependencies {
+    // G2b tách nền: ML Kit Subject Segmentation (chạy trên máy; mô hình tải qua Google Play services, app nặng thêm ~200 KB).
+    // Bản beta của Google. Điều khoản: ảnh không gửi lên máy chủ; ML Kit gửi số liệu hiệu năng/sử dụng cho Google → phải ghi trong chính sách riêng tư.
+    implementation 'com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1'
+}

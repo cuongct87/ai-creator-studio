@@ -26,6 +26,15 @@ export interface ImagePicker {
   pickImage(): Promise<PlatformResult<PickedImage | null>>;
 }
 
+/** Tự tách chủ thể (người/vật chính) khỏi nền, chạy trên máy (G2b). */
+export interface SubjectSegmenter {
+  /**
+   * Trả ảnh PNG mặt nạ cùng tỉ lệ ảnh (đã xoay theo EXIF như trình duyệt hiển thị), đọc theo độ
+   * trong suốt: đục = chủ thể, trong suốt = nền. `null` = không tìm thấy chủ thể.
+   */
+  segment(bytes: Uint8Array): Promise<PlatformResult<Uint8Array | null>>;
+}
+
 export interface GallerySaver {
   /** Lưu ảnh vào Thư viện ảnh của máy (Android/iOS); trên web có thể là tải xuống. */
   saveImage(fileName: string, bytes: Uint8Array): Promise<PlatformResult<{ location: string }>>;
@@ -50,6 +59,8 @@ export interface Platform {
   readonly opener: FileOpener;
   readonly images: ImagePicker;
   readonly gallery: GallerySaver;
+  /** Có khi nền tảng hỗ trợ tách nền (Android có ML Kit). Vắng mặt → app ẩn nút "Tách nền". */
+  readonly subject?: SubjectSegmenter;
 }
 
 /** Một dòng trong danh sách dự án (không cần mở cả thiết kế). */
