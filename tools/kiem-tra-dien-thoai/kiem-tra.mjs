@@ -425,6 +425,61 @@ async function main() {
     });
   }
 
+  // ---------- G3: xuất và chia sẻ ----------
+  const exported = [];
+  const sheet = () => page.getByRole('dialog', { name: /Xuất thiết kế/ });
+  await step('Xuất ảnh PNG → Ảnh/Artio', async () => {
+    if (await page.getByRole('button', { name: 'Bỏ chọn' }).isVisible()) await tap(page.getByRole('button', { name: 'Bỏ chọn' }));
+    await tap(page.getByRole('button', { name: 'Xuất', exact: true }));
+    await sheet().waitFor({ timeout: 3000 });
+    const t0 = Date.now();
+    await tap(sheet().getByRole('button', { name: 'Xuất', exact: true }));
+    const status = sheet().getByRole('status');
+    await waitFor(async () => /Đã lưu/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu', 20000);
+    const text = (await status.textContent())?.trim();
+    if (!/Ảnh\/Artio/.test(text ?? '')) throw new Error(`báo lạ: "${text}"`);
+    const name = `${(await page.locator('.editor-title').textContent())?.trim()}.png`;
+    const ls = (await device.shell(`ls -l "/sdcard/Pictures/Artio/${name}"`)).toString().trim();
+    if (!ls || /No such file/.test(ls)) throw new Error(`không thấy file trong Ảnh/Artio: ${ls}`);
+    exported.push(`/sdcard/Pictures/Artio/${name}`);
+    return `${Date.now() - t0} ms — ${text} (${ls.split(/\s+/)[4] ?? '?'} byte)`;
+  });
+
+  await step('Chia sẻ → mở bảng chia sẻ của máy', async () => {
+    await tap(sheet().getByRole('button', { name: 'Chia sẻ' }));
+    const top = await waitFor(async () => {
+      const out = (await device.shell('dumpsys activity activities')).toString();
+      const m = /(?:topResumedActivity|mResumedActivity)[^\n]*?\{[^}]*\s([\w.]+\/[\w.$]+)/.exec(out);
+      return m && !m[1].startsWith('vn.c87.lsc') ? m[1] : null;
+    }, 'bảng chia sẻ mở', 6000);
+    await sleep(800);
+    await device.shell('input keyevent 4'); // đóng bảng chia sẻ
+    await sleep(800);
+    return `mở: ${top}`;
+  });
+
+  await step('Xuất PDF để in → Tải xuống/Artio', async () => {
+    if (!(await sheet().isVisible())) {
+      await tap(page.getByRole('button', { name: 'Xuất', exact: true }));
+      await sheet().waitFor({ timeout: 3000 });
+    }
+    await tap(sheet().getByRole('button', { name: /PDF để in/ }));
+    const t0 = Date.now();
+    await tap(sheet().getByRole('button', { name: /^Xuất( lại)?$/ }));
+    const status = sheet().getByRole('status');
+    await waitFor(async () => /PDF/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu PDF', 30000);
+    const text = (await status.textContent())?.trim();
+    const name = `${(await page.locator('.editor-title').textContent())?.trim()}.pdf`;
+    const head = (await device.shell(`head -c 8 "/sdcard/Download/Artio/${name}"`)).toString();
+    if (!head.startsWith('%PDF-1.4')) throw new Error(`file PDF lạ: "${head}"`);
+    exported.push(`/sdcard/Download/Artio/${name}`);
+    await tap(sheet().getByRole('button', { name: 'Đóng' }));
+    return `${Date.now() - t0} ms — ${text}`;
+  });
+
+  // Dọn file thử vừa xuất (không đụng file khác của bạn).
+  for (const f of exported) await device.shell(`rm -f "${f}"`).catch(() => {});
+
   await step('Nút Back của Android → về trang chủ', async () => {
     await device.shell('input keyevent 4');
     await page.getByRole('heading', { name: 'Bạn muốn tạo gì hôm nay?' }).waitFor({ timeout: 5000 });
