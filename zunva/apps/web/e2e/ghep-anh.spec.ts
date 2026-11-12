@@ -1,42 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { deflateSync } from 'node:zlib';
 
-/** PNG một màu (không cần file mẫu). */
-function solidPng(width: number, height: number, [r, g, b]: [number, number, number]): Buffer {
-  const table = Array.from({ length: 256 }, (_, n) => {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    return c >>> 0;
-  });
-  const crc = (buf: Buffer) => {
-    let c = 0xffffffff;
-    for (const byte of buf) c = table[(c ^ byte) & 0xff]! ^ (c >>> 8);
-    return (c ^ 0xffffffff) >>> 0;
-  };
-  const chunk = (type: string, data: Buffer) => {
-    const len = Buffer.alloc(4);
-    len.writeUInt32BE(data.length);
-    const body = Buffer.concat([Buffer.from(type, 'ascii'), data]);
-    const sum = Buffer.alloc(4);
-    sum.writeUInt32BE(crc(body));
-    return Buffer.concat([len, body, sum]);
-  };
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr.set([8, 2, 0, 0, 0], 8);
-  const raw = Buffer.alloc((width * 3 + 1) * height);
-  for (let y = 0; y < height; y++) {
-    const row = y * (width * 3 + 1);
-    for (let x = 0; x < width; x++) raw.set([r, g, b], row + 1 + x * 3);
-  }
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw)),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-}
+/** Ảnh mẫu: PNG đỏ 400×400 (e2e/fixtures/do-400.png). */
+const redPng = () => `${test.info().project.testDir}/fixtures/do-400.png`;
 
 /** Màu điểm giữa vùng vẽ (đọc thẳng từ canvas của Konva). */
 async function centerPixel(page: Page): Promise<number[]> {
@@ -60,7 +25,7 @@ test('ghép ảnh: tẩy một nét, mờ viền, bỏ hết vùng tẩy (G2b)',
 
   const chooser = page.waitForEvent('filechooser');
   await page.getByRole('button', { name: 'Ảnh', exact: true }).click();
-  await (await chooser).setFiles({ name: 'do.png', mimeType: 'image/png', buffer: solidPng(400, 400, [220, 20, 20]) });
+  await (await chooser).setFiles(redPng());
   await expect(stage).toHaveAccessibleName(/1 lớp/);
   await expect.poll(async () => (await centerPixel(page))[0]).toBeGreaterThan(180); // ảnh đỏ ở giữa
 
