@@ -1,0 +1,79 @@
+{
+  "thiep-cuoi-hoa-hong": {
+    "tieu_de": "Trân trọng kính mời",
+    "ten": "[Tên chú rể] & [Tên cô dâu]",
+    "loi_moi": "Xin mời [Tên khách mời] đến dự tiệc cưới\nvà chung vui cùng gia đình chúng tôi.",
+    "thoi_gian": "[Giờ], [Thứ], ngày [Ngày] tháng [Tháng] năm [Năm] (nhằm [Ngày âm] âm lịch)",
+    "dia_diem": "Tại: [Địa chỉ nhà hàng / tư gia]"
+  },
+  "thiep-cuoi-la-xanh": {
+    "tieu_de": "Thiệp mời cưới",
+    "ten": "[Tên chú rể] & [Tên cô dâu]",
+    "loi_moi": "Mời bạn đến dự tiệc cưới và chung vui cùng chúng mình.",
+    "thoi_gian": "[Giờ] · [Ngày/tháng/năm]",
+    "dia_diem": "Tại: [Tên địa điểm], [Địa chỉ]"
+  },
+  "thiep-cuoi-do-truyen-thong": {
+    "tieu_de": "Lễ Thành Hôn",
+    "nha_trai": "Nhà trai: Ông [Tên cha chú rể] – Bà [Tên mẹ chú rể]\nĐịa chỉ: [Địa chỉ nhà trai]",
+    "nha_gai": "Nhà gái: Ông [Tên cha cô dâu] – Bà [Tên mẹ cô dâu]\nĐịa chỉ: [Địa chỉ nhà gái]",
+    "loi_moi": "Trân trọng kính mời quý khách dự lễ thành hôn\ncủa [Tên chú rể] và [Tên cô dâu].",
+    "thoi_gian": "[Giờ], [Thứ], ngày [Ngày] tháng [Tháng] năm [Năm] (nhằm [Ngày âm] âm lịch)",
+    "dia_diem": "Tại: [Địa điểm tổ chức], [Địa chỉ]"
+  },
+  "cao-pho-hoa-sen": {
+    "tieu_de": "CÁO PHÓ",
+    "loi_bao": "Gia đình chúng tôi vô cùng thương tiếc\nkính báo tin buồn đến họ hàng và bằng hữu:",
+    "ten": "[Họ và tên người mất]",
+    "thong_tin": "Sinh năm [Năm sinh]\nTừ trần ngày [Ngày mất]\nHưởng thọ [Số tuổi] tuổi",
+    "tang_le": "Lễ nhập quan: [Ngày giờ nhập quan]\nLễ di quan: [Ngày giờ di quan]\nLễ an táng: [Ngày giờ an táng], tại [Nơi an táng]",
+    "tang_gia": "Tang gia đồng kính báo"
+  },
+  "cao-pho-hoa-cuc": {
+    "tieu_de": "CÁO PHÓ",
+    "loi_bao": "Gia đình xin báo tin buồn đến họ hàng và bạn bè:",
+    "ten": "[Họ và tên người mất]",
+    "thong_tin": "Sinh năm [Năm sinh]. Mất ngày [Ngày mất]. Hưởng thọ [Số tuổi] tuổi.",
+    "tang_le": "Nhập quan: [Ngày giờ nhập quan]. Di quan: [Ngày giờ di quan]. An táng tại [Nơi an táng].",
+    "tang_gia": "Gia đình kính báo"
+  },
+  "bang-hieu-ca-phe": {
+    "ten_quan": "[Tên quán]",
+    "khau_hieu": "Ghé quán, nhâm nhi ly cà phê",
+    "dien_thoai": "ĐT: [Số điện thoại]"
+  },
+  "bang-hieu-sua-xe": {
+    "ten_tiem": "[Tên tiệm sửa xe]",
+    "dich_vu": "Vá lốp • Thay nhớt • Bảo dưỡng",
+    "dien_thoai": "ĐT: [Số điện thoại]"
+  },
+  "ban-hang-thoi-trang": {
+    "tieu_de": "SALE CUỐI TUẦN",
+    "giam_gia": "GIẢM ĐẾN [Mức]%",
+    "mo_ta": "Đồ xinh dễ phối, đi chơi hay đi làm đều hợp.\nGhé thử bộ bạn thích nhé!",
+    "thoi_gian": "Từ [Ngày bắt đầu] đến [Ngày kết thúc]",
+    "lien_he": "Đặt hàng: [Số điện thoại]"
+  },
+  "ban-hang-com-tam": {
+    "ten_mon": "CƠM TẤM SƯỜN NƯỚNG",
+    "mo_ta": "Sườn nướng thơm lừng, cơm tấm nóng hổi.\nĂn kèm đồ chua và nước mắm pha.",
+    "gia": "Chỉ [Giá]đ",
+    "lien_he": "Đặt món: [Số điện thoại]"
+  },
+  "ban-hang-my-pham": {
+    "tieu_de": "KHAI TRƯƠNG",
+    "uu_dai": "Mừng khai trương, giảm [Mức giảm]%\ncho [Sản phẩm áp dụng].",
+    "thoi_gian": "Lúc [Giờ], ngày [Ngày/tháng/năm]",
+    "dia_chi": "Tại: [Địa chỉ cửa hàng]"
+  },
+  "mxh-sinh-nhat": {
+    "tieu_de": "Chúc mừng sinh nhật",
+    "loi_chuc": "Chúc bạn tuổi mới nhiều niềm vui,\nluôn khỏe mạnh và bình an,\ncó thêm thời gian làm điều mình thích.",
+    "ky_ten": "Từ: [Tên bạn]"
+  },
+  "mxh-trich-dan": {
+    "cau_noi": "Kiên nhẫn với những lần đầu vụng về,\nta cho mình thêm cơ hội\nđể làm tốt điều mình yêu.",
+    "ky_ten": "— [Tên trang của bạn]"
+  },
+  "hoi_lai": []
+}
