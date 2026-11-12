@@ -18,9 +18,11 @@ Mở PR **thẳng vào `main`**. Mỗi đợt: CI xanh + kịch bản tự kiể
 ## Đợt 3 — Kho mẫu (R2)
 - [x] C5 (Claude; xem dieu-khoan-anh-chu-ai.md) Đọc điều khoản dùng ảnh Gemini / chữ ChatGPT cho mục đích thương mại → báo founder.
 - [x] C6 (Claude; giao-viec-gemini.txt, giao-viec-gpt.txt) Bản giao việc cho Gemini (ảnh) và GPT (chữ mẫu).
-- [ ] F1 (Founder) Tạo ảnh bằng Gemini, chữ bằng GPT theo bản giao việc; để vào thư mục Claude chỉ định trên laptop.
-- [ ] C7 (Claude) Công cụ `tools/mau/` (JSON → .zunva + ảnh thu nhỏ) và 15 mẫu đầu.
-- [ ] C8 (Claude) Tab Mẫu (lưới, lọc, tìm), trang chủ → mẫu theo loại, mở mẫu thành dự án mới; test.
+- [x] F1 (Founder) Tạo ảnh bằng Gemini, chữ bằng GPT theo bản giao việc; để vào thư mục Claude chỉ định trên laptop.
+  > 12/11: đủ 15 ảnh + nhật ký nguồn gốc (`nguon-goc-anh-mau.txt`); chữ GPT 12 mẫu (`tools/mau/chu-mau.json`), mọi ô trong giới hạn.
+- [x] C7 (Claude; CI xanh, chờ S24+) 15 mẫu: mô tả `apps/web/src/mau/kho-mau.ts`, dựng/mở mẫu `dung-mau.ts`, ảnh JPEG ≈ 2 MB,
+  ảnh thu nhỏ dựng bằng trình vẽ thật (`apps/web/scripts/anh-thu-nho-mau.mjs`, chạy trong CI). Khác thiết kế: xem design.md mục 6 "Đã làm".
+- [x] C8 (Claude; CI xanh, chờ S24+) Tab Mẫu (lưới, lọc, tìm khớp đầu từ không dấu), trang chủ bấm loại → "Trang trắng" + mẫu; e2e `mau.spec.ts`; kịch bản điện thoại thêm 4 bước.
 
 ## Đợt 4 — Hình nền điện thoại (R4)
 - [x] K3 (Kiro) Prop `guides: 'phone-wallpaper'`: lớp gợi ý mờ, không chạm, không xuất.
