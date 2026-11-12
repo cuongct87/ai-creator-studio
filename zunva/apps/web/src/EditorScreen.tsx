@@ -24,6 +24,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } fro
 import { useConfirm } from './ConfirmDialog';
 import { JPEG_QUALITY, type RenderPage } from './export-actions';
 import { ExportSheet } from './ExportSheet';
+import { addPageOps, duplicatePageOps, movePageOps, removePageOps } from './page-actions';
+import { PageStrip } from './PageStrip';
 import { imageSize, newId } from './create-project';
 import {
   addImageOps,
@@ -40,7 +42,7 @@ import {
   type ShapeKind,
 } from './editor-actions';
 
-type Panel = 'none' | 'shapes' | 'background' | 'layers';
+type Panel = 'none' | 'shapes' | 'background' | 'layers' | 'pages';
 
 const SAVE_TEXT: Record<AutosaveStatus, string> = {
   idle: 'Đã lưu',
@@ -88,12 +90,12 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
     if (thumbTimer.current) return;
     thumbTimer.current = setTimeout(() => {
       thumbTimer.current = null;
-      const canvas = canvasRef.current;
-      const page = histRef.current?.doc.pages[0];
-      if (!canvas || !page) return;
+      const current = histRef.current?.doc;
+      const page = current?.pages[0];
+      if (!current || !page) return;
       perfMark('anh-nho:bat-dau');
-      void canvas
-        .exportPageImage(THUMB_SIDE / Math.max(page.width, page.height))
+      // Ảnh thu nhỏ ở trang chủ luôn là trang 1, dù đang mở trang nào.
+      void renderPageImage(current, page.id, { pixelRatio: THUMB_SIDE / Math.max(page.width, page.height), mimeType: 'image/png', assetUrl: (id: Id) => urlsRef.current[id] })
         .then((blob) => blob.arrayBuffer())
         .then((buf) => store.putAsset(thumbAssetId(projectId), 'image/png', new Uint8Array(buf)))
         .then(() => perfMark('anh-nho:xong'))
@@ -145,7 +147,9 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
 
   // ---------- URL của ảnh trong kho ----------
   const doc = hist?.doc ?? null;
-  const page = doc?.pages[0] ?? null;
+  /** Trang đang mở (G3 R3); không còn thì về trang đầu. */
+  const [pageId, setPageId] = useState<Id | null>(null);
+  const page = doc?.pages.find((p) => p.id === pageId) ?? doc?.pages[0] ?? null;
   useEffect(() => {
     if (!doc) return;
     const wanted = new Set(Object.keys(doc.assets));
@@ -271,6 +275,39 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
     ]);
     perfMark('tay:ghi-thiet-ke');
   }
+
+  // ---------- trang (G3 R3) ----------
+  const openPage = (id: Id) => {
+    setPageId(id);
+    setSelection([]);
+  };
+  const addPage = () => {
+    if (!doc || !page) return;
+    const r = addPageOps(doc, page.id, newId);
+    apply('Thêm trang', r.ops);
+    openPage(r.pageId);
+  };
+  const duplicatePage = () => {
+    if (!doc || !page) return;
+    const r = duplicatePageOps(doc, page.id, newId);
+    if (!r) return;
+    apply('Nhân đôi trang', r.ops);
+    openPage(r.pageId);
+  };
+  const removePage = async () => {
+    if (!doc || !page) return;
+    const r = removePageOps(doc, page.id);
+    if (!r) return;
+    const number = doc.pages.findIndex((p) => p.id === page.id) + 1;
+    const ok = await ask(`Xóa trang ${number}? Bấm Hoàn tác nếu xóa nhầm.`, { confirmLabel: 'Xóa trang', danger: true });
+    if (!ok) return;
+    apply('Xóa trang', r.ops);
+    openPage(r.nextPageId);
+  };
+  const movePage = (step: -1 | 1) => {
+    if (!doc || !page) return;
+    apply('Đổi thứ tự trang', movePageOps(doc, page.id, step));
+  };
 
   /** Vẽ một trang bất kỳ ra ảnh để xuất (cùng mã vẽ với màn hình). */
   const renderPage: RenderPage = (pageId, mimeType, pixelRatio) => {
@@ -466,6 +503,18 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
                   </div>
                 </Section>
               )}
+              {panel === 'pages' && (
+                <PageStrip
+                  doc={doc}
+                  currentId={page.id}
+                  assetUrl={assetUrl}
+                  onOpen={openPage}
+                  onAdd={addPage}
+                  onDuplicate={duplicatePage}
+                  onRemove={() => void removePage()}
+                  onMove={movePage}
+                />
+              )}
               {panel === 'layers' && (
                 <LayersPanel layers={layers} onSelect={(id) => setSelection([id])} />
               )}
@@ -486,6 +535,12 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
                 <ToolButton icon="◯" label="Hình" active={panel === 'shapes'} onClick={() => setPanel(panel === 'shapes' ? 'none' : 'shapes')} />
                 <ToolButton icon="▦" label="Nền" active={panel === 'background'} onClick={() => setPanel(panel === 'background' ? 'none' : 'background')} />
                 <ToolButton icon="≡" label="Lớp" active={panel === 'layers'} onClick={() => setPanel(panel === 'layers' ? 'none' : 'layers')} />
+                <ToolButton
+                  icon="⧉"
+                  label={doc.pages.length > 1 ? `Trang ${doc.pages.findIndex((p) => p.id === page.id) + 1}/${doc.pages.length}` : 'Trang'}
+                  active={panel === 'pages'}
+                  onClick={() => setPanel(panel === 'pages' ? 'none' : 'pages')}
+                />
               </nav>
             </>
           ) : (
