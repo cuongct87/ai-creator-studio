@@ -75,6 +75,16 @@ jobs:
       - name: Cài trình duyệt cho Playwright
         run: pnpm --filter @zunva/web exec playwright install --with-deps chromium
 
+      - name: Dựng ảnh thu nhỏ kho mẫu (trình vẽ thật, phông thật)
+        run: pnpm --filter @zunva/web exec node scripts/anh-thu-nho-mau.mjs
+
+      - name: Lưu ảnh thu nhỏ kho mẫu
+        uses: actions/upload-artifact@v4
+        with:
+          name: anh-thu-nho-mau
+          path: zunva/apps/web/public/mau/thu-nho
+          if-no-files-found: error
+
       - name: Test giao diện khổ 360px
         run: pnpm e2e
 

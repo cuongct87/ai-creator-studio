@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test('chỉnh sửa thiệp cưới: thêm chữ/hình, sửa chữ tiếng Việt, hoàn tác/làm lại, tự lưu', async ({ page }) => {
   await page.goto('/');
   await page.locator('.starts').getByRole('button', { name: 'Thiệp cưới' }).click();
+  await page.getByRole('dialog', { name: 'Chọn mẫu Thiệp cưới' }).getByRole('button', { name: 'Trang trắng' }).click();
   const stage = page.getByRole('region', { name: /Trang 1748×2480/ });
   await expect(stage).toHaveAccessibleName(/0 lớp/);
   await expect(stage.locator('canvas').first()).toBeVisible();
@@ -66,6 +67,7 @@ test('chỉnh sửa thiệp cưới: thêm chữ/hình, sửa chữ tiếng Vi�
 test('đổi màu nền trang và nhân đôi lớp', async ({ page }) => {
   await page.goto('/');
   await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+  await page.getByRole('dialog', { name: 'Chọn mẫu Mạng xã hội' }).getByRole('button', { name: 'Trang trắng' }).click();
   const stage = page.getByRole('region', { name: /Trang 1080×1080/ });
   await page.getByRole('button', { name: 'Nền', exact: true }).click();
   await page.getByRole('button', { name: 'Màu nền #f7b6cf' }).click();
@@ -80,6 +82,7 @@ test('đổi màu nền trang và nhân đôi lớp', async ({ page }) => {
 test('xóa hết chữ rồi bấm xong → không sót lớp "Chữ trống"', async ({ page }) => {
   await page.goto('/');
   await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+  await page.getByRole('dialog', { name: 'Chọn mẫu Mạng xã hội' }).getByRole('button', { name: 'Trang trắng' }).click();
   const stage = page.getByRole('region', { name: /Trang 1080×1080/ });
   await page.getByRole('button', { name: 'Chữ', exact: true }).click();
   await expect(stage).toHaveAccessibleName(/1 lớp/);
@@ -95,6 +98,7 @@ test('xóa hết chữ rồi bấm xong → không sót lớp "Chữ trống"', 
 test('hòa trộn: chọn kiểu cho lớp, lưu lại sau khi tải lại trang (G2b)', async ({ page }) => {
   await page.goto('/');
   await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+  await page.getByRole('dialog', { name: 'Chọn mẫu Mạng xã hội' }).getByRole('button', { name: 'Trang trắng' }).click();
   const stage = page.getByRole('region', { name: /Trang 1080×1080/ });
   await page.getByRole('button', { name: 'Hình', exact: true }).click();
   await page.getByRole('button', { name: '◯ Hình tròn' }).click();

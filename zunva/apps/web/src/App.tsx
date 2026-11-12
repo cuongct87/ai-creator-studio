@@ -4,6 +4,7 @@ import { createIndexedDbProjectStore, createPlatform } from '@zunva/platform';
 import { EditorScreen } from './EditorScreen';
 import { Home } from './Home';
 import { Projects } from './Projects';
+import { Templates } from './Templates';
 import { applyTheme, loadThemeId, saveThemeId, type ThemeId } from './theme';
 import { ThemeSwitch } from './ThemeSwitch';
 
@@ -76,6 +77,8 @@ export function App() {
           <Home store={projectStore} platform={platform} theme={theme} onThemeChange={changeTheme} onOpen={open} />
         ) : tab === 'projects' ? (
           <Projects store={projectStore} platform={platform} onOpen={open} />
+        ) : tab === 'templates' ? (
+          <Templates store={projectStore} platform={platform} onOpen={open} />
         ) : tab === 'account' ? (
           <section className="account">
             <h1>Tài khoản</h1>

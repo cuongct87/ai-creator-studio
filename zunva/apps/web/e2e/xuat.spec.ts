@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test('xuất ảnh PNG, JPG và PDF để in (G3)', async ({ page }) => {
   await page.goto('/');
   await page.locator('.starts').getByRole('button', { name: 'Thiệp cưới' }).click();
+  await page.getByRole('dialog', { name: 'Chọn mẫu Thiệp cưới' }).getByRole('button', { name: 'Trang trắng' }).click();
   await expect(page.getByRole('region', { name: /Trang 1748×2480/ })).toBeVisible();
   await page.getByRole('button', { name: 'Hình', exact: true }).click();
   await page.getByRole('button', { name: '◯ Hình tròn' }).click();

@@ -33,6 +33,7 @@ test('bấm "Thiệp cưới" → mở màn hình chỉnh sửa đúng khổ A5 
   await page.goto('/');
   await expect(page.getByText('Chưa có thiết kế nào', { exact: false })).toBeVisible();
   await page.locator('.starts').getByRole('button', { name: 'Thiệp cưới' }).click();
+  await page.getByRole('dialog', { name: 'Chọn mẫu Thiệp cưới' }).getByRole('button', { name: 'Trang trắng' }).click();
 
   await expect(page.getByRole('heading', { name: 'Thiệp cưới' })).toBeVisible();
   await expect(page.getByRole('region', { name: /Trang 1748×2480/ })).toBeVisible();
@@ -73,6 +74,7 @@ test('nhiều dự án gần đây: dải "Tiếp tục thiết kế" cuộn bê
   await page.goto('/');
   for (let i = 0; i < 4; i++) {
     await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+    await page.getByRole('dialog', { name: 'Chọn mẫu Mạng xã hội' }).getByRole('button', { name: 'Trang trắng' }).click();
     await page.getByRole('button', { name: 'Quay lại trang chủ' }).click();
   }
   await expect(page.getByRole('list', { name: 'Thiết kế gần đây' }).getByRole('listitem')).toHaveCount(4);
