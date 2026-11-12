@@ -6,7 +6,7 @@ import { createWebPlatform } from './web-platform';
  * Blob, nên lưu file đi qua cầu nối Java do `MainActivity` cung cấp:
  *
  *   window.AndroidFileSaver.saveBytes(fileName, mimeType, base64)
- *     → chuỗi JSON {"ok":true,"location":"Tải xuống/C87"} hoặc {"ok":false,"error":"..."}
+ *     → chuỗi JSON {"ok":true,"location":"Tải xuống/Artio"} hoặc {"ok":false,"error":"..."}
  *   window.AndroidImageSaver.saveImage(dataUrl, fileName)   (có sẵn từ v1.5, tự hiện thông báo)
  *
  * Chọn ảnh / chọn file dùng hộp chọn file của WebView như bản web. Thiếu cầu nối thì dùng bản web.
@@ -78,7 +78,7 @@ export function createAndroidPlatform(win: AndroidBridgeWindow, doc?: Document):
           try {
             const mime = bytes[0] === 0xff && bytes[1] === 0xd8 ? 'image/jpeg' : 'image/png';
             imageBridge.saveImage(`data:${mime};base64,${toBase64(bytes)}`, fileName);
-            return { ok: true, value: { location: 'Ảnh/C87' } };
+            return { ok: true, value: { location: 'Ảnh/Artio' } };
           } catch {
             return { ok: false, error: MESSAGES.imageFailed };
           }

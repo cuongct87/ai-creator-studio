@@ -1,8 +1,8 @@
 import { defineConfig } from 'vitest/config';
 
-// Unit test chỉ nằm trong packages/*/src. Test giao diện (Playwright) nằm ở apps/web/e2e, chạy riêng.
+// Unit test nằm trong packages/*/src và apps/*/src. Test giao diện (Playwright) nằm ở apps/web/e2e, chạy riêng.
 export default defineConfig({
   test: {
-    include: ['packages/*/src/**/*.test.ts'],
+    include: ['packages/*/src/**/*.test.ts', 'apps/*/src/**/*.test.ts'],
   },
 });

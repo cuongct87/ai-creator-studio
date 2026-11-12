@@ -32,7 +32,7 @@ public class MainActivity extends Activity {
     private static final String TOO_LARGE = "File quá lớn để lưu trên điện thoại (tối đa 100 MB).";
     private static final String OUT_OF_MEMORY = "File quá lớn, bộ nhớ máy không đủ để xử lý. Hãy đóng bớt ứng dụng rồi thử lại.";
 
-    /** Saves rendered images to the gallery (Pictures/C87). Kept from v1.5. */
+    /** Saves rendered images to the gallery (Pictures/Artio). Kept from v1.5. */
     public class ImageSaver {
         @JavascriptInterface
         public void saveImage(String dataUrl, String fileName) {
@@ -52,7 +52,7 @@ public class MainActivity extends Activity {
                     ContentValues values = new ContentValues();
                     values.put(MediaStore.Images.Media.DISPLAY_NAME, safeName);
                     values.put(MediaStore.Images.Media.MIME_TYPE, mime);
-                    values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/C87");
+                    values.put(MediaStore.Images.Media.RELATIVE_PATH, Environment.DIRECTORY_PICTURES + "/Artio");
                     values.put(MediaStore.Images.Media.IS_PENDING, 1);
                     Uri uri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
                     if (uri == null) throw new IOException("Cannot create image file");
@@ -68,7 +68,7 @@ public class MainActivity extends Activity {
                         getContentResolver().delete(uri, null, null);
                         throw e;
                     }
-                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Đã lưu vào Ảnh / C87", Toast.LENGTH_LONG).show());
+                    runOnUiThread(() -> Toast.makeText(MainActivity.this, "Đã lưu vào Ảnh / Artio", Toast.LENGTH_LONG).show());
                 } catch (OutOfMemoryError e) {
                     runOnUiThread(() -> Toast.makeText(MainActivity.this, OUT_OF_MEMORY, Toast.LENGTH_LONG).show());
                 } catch (Exception e) {
@@ -79,8 +79,8 @@ public class MainActivity extends Activity {
     }
 
     /**
-     * Saves any file (PNG, PDF, .zunva, JSON) into Download/C87 (Android 10+).
-     * Returns JSON: {"ok":true,"location":"Tải xuống/C87"} or {"ok":false,"error":"..."}.
+     * Saves any file (PNG, PDF, .zunva, JSON) into Download/Artio (Android 10+).
+     * Returns JSON: {"ok":true,"location":"Tải xuống/Artio"} or {"ok":false,"error":"..."}.
      * Runs on the WebView bridge thread (not the UI thread), so blocking I/O is fine here.
      */
     public class FileSaver {
@@ -105,7 +105,7 @@ public class MainActivity extends Activity {
             ContentValues values = new ContentValues();
             values.put(MediaStore.Downloads.DISPLAY_NAME, name);
             values.put(MediaStore.Downloads.MIME_TYPE, mime);
-            values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/C87");
+            values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS + "/Artio");
             values.put(MediaStore.Downloads.IS_PENDING, 1);
             Uri uri;
             try {
@@ -126,7 +126,7 @@ public class MainActivity extends Activity {
                 try { getContentResolver().delete(uri, null, null); } catch (Exception ignored) {}
                 return error(e instanceof OutOfMemoryError ? OUT_OF_MEMORY : "Không ghi được file. Có thể máy đã hết chỗ lưu.");
             }
-            return ok("Tải xuống/C87");
+            return ok("Tải xuống/Artio");
         }
     }
 
@@ -134,7 +134,7 @@ public class MainActivity extends Activity {
     static String safeFileName(String fileName) {
         String name = fileName == null ? "" : fileName.replaceAll("[\\\\/:*?\"<>|\\p{Cntrl}]", "_").trim();
         while (name.startsWith(".")) name = name.substring(1);
-        if (name.isEmpty()) name = "c87-file";
+        if (name.isEmpty()) name = "artio-file";
         if (name.length() > 120) name = name.substring(name.length() - 120);
         return name;
     }
