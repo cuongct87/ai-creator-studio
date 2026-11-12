@@ -1,0 +1,54 @@
+name: Cập nhật pnpm-lock.yaml (tự động)
+
+# Khi một nhánh làm việc đổi package.json trong zunva/, máy GitHub tự tính lại pnpm-lock.yaml
+# và commit vào chính nhánh đó. Dùng vì máy Claude không cài được thư viện và terminal Kiro hay hỏng.
+# Chỉ đọc danh sách phiên bản (--lockfile-only), không chạy script cài đặt, không chạy trên main.
+on:
+  push:
+    branches-ignore:
+      - main
+    paths:
+      - "zunva/**/package.json"
+      - "zunva/pnpm-workspace.yaml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lockfile-sync-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    # Không tự chạy lại vì commit của chính nó.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: zunva
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: zunva/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Tính lại pnpm-lock.yaml
+        run: pnpm install --lockfile-only --ignore-scripts --no-frozen-lockfile
+
+      - name: Commit nếu có thay đổi
+        run: |
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "pnpm-lock.yaml đã đúng, không cần commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "chore: cập nhật pnpm-lock.yaml (tự động)"
+          git push
