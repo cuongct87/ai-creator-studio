@@ -13,7 +13,7 @@ Mở PR **thẳng vào `main`**. Mỗi đợt: CI xanh + kịch bản tự kiể
 - [x] K2 (Kiro) Ảnh thu nhỏ trang nhanh (pixelRatio nhỏ, lưu đệm theo phiên bản trang).
   > Kiro: mới `usePageThumbnails.ts`, `thumbnails.ts` + `thumbnails.test.ts`; sửa `index.ts`, `README.md`. **Chưa chạy CI/máy.**
   > Chưa chắc: tốc độ khi nhiều trang (mỗi ảnh thu nhỏ dựng 1 Stage ẩn); ảnh chưa tải kịp → thử lại tối đa 5 lần.
-- [ ] C4 (Claude) Dải trang + thêm/nhân đôi/xóa/đổi thứ tự trang; EditorScreen theo trang đang mở; xuất nhiều trang; test.
+- [x] C4 (Claude; S24+ 23/23: 3 trang, xuất 3 ảnh 0,9 s) Dải trang + thêm/nhân đôi/xóa/đổi thứ tự trang; EditorScreen theo trang đang mở; xuất nhiều trang; test.
 
 ## Đợt 3 — Kho mẫu (R2)
 - [ ] C5 (Claude) Đọc điều khoản dùng ảnh Gemini / chữ ChatGPT cho mục đích thương mại → báo founder.
