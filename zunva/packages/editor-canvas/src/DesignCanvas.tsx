@@ -50,6 +50,7 @@ import {
 } from './geometry';
 import { alphaMaskFromImage, alphaMaskToPng, createCanvas, fullAlphaMask, paintDab, renderComposite } from './composite';
 import { useImageCache } from './images';
+import { perfMark } from './perf';
 import { type LayerBinding, PageScene, type TextBinding } from './PageScene';
 import { renderPageImage } from './renderPage';
 import {
@@ -186,15 +187,6 @@ const LABEL_TRANSFORM = 'Đổi cỡ / xoay';
 const LABEL_ROTATE = 'Xoay';
 const LABEL_EDIT_TEXT = 'Sửa chữ';
 const LABEL_REMOVE_EMPTY_TEXT = 'Bỏ chữ trống';
-
-/**
- * Đồng hồ đo cho kịch bản tự kiểm tra trên điện thoại: chỉ ghi khi kịch bản đã tạo `window.__artioMarks`.
- * Người dùng thường không có mảng này nên không tốn gì.
- */
-export function perfMark(label: string): void {
-  const marks = (globalThis as { __artioMarks?: Array<[string, number]> }).__artioMarks;
-  if (Array.isArray(marks)) marks.push([label, performance.now()]);
-}
 
 const sizeKey = (s: Size) => `${s.width}x${s.height}`;
 

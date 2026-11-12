@@ -18,6 +18,7 @@ import { fontsReady } from './fonts';
 import type { SourceCrop } from './geometry';
 import { fitCanvasSize, MAX_COMPOSITE_SIDE, maskCanvasSize, needsComposite } from './mask';
 import { PageScene } from './PageScene';
+import { perfMark } from './perf';
 
 export interface RenderPageOptions {
   /** Output = page size × pixelRatio (page pixels at 1). */
@@ -111,6 +112,7 @@ export async function renderPageImage(doc: DesignDocument, pageId: Id, opts: Ren
     TIMEOUT_MESSAGE,
   );
 
+  perfMark('xuat:da-tai-phong-anh');
   // 2. Offscreen pictures of masked / feathered images, at export resolution (≤ 2048 px).
   const pictures: HTMLCanvasElement[] = [];
   const pictureByLayer = new Map<Id, HTMLCanvasElement | null>();
@@ -146,6 +148,7 @@ export async function renderPageImage(doc: DesignDocument, pageId: Id, opts: Ren
       TIMEOUT_MESSAGE,
     );
     if (!layer) throw new Error('Không dựng được trang để xuất ảnh.');
+    perfMark('xuat:da-dung-trang');
 
     const drawn = layer.toCanvas({ x: 0, y: 0, width: page.width, height: page.height, pixelRatio });
     const out = createCanvas(size);
@@ -154,6 +157,7 @@ export async function renderPageImage(doc: DesignDocument, pageId: Id, opts: Ren
       if (!ctx) throw new Error('Trình duyệt không vẽ được canvas 2D.');
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(drawn, 0, 0, size.width, size.height);
+      perfMark('xuat:da-ve');
       return await canvasToBlob(out, opts.mimeType, encoderQuality(opts.mimeType, opts.quality));
     } finally {
       release(drawn);

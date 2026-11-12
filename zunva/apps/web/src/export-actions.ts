@@ -44,6 +44,12 @@ export interface ExportOptions {
   onProgress?(done: number, total: number): void;
 }
 
+/** Đồng hồ đo cho kịch bản kiểm tra trên điện thoại (giống perfMark của editor-canvas; chép để test không cần Konva). */
+function perfMark(label: string): void {
+  const marks = (globalThis as { __artioMarks?: Array<[string, number]> }).__artioMarks;
+  if (Array.isArray(marks)) marks.push([label, performance.now()]);
+}
+
 const bytesOf = async (blob: Blob) => new Uint8Array(await blob.arrayBuffer());
 
 export async function runExport(o: ExportOptions): Promise<PlatformResult<ExportResult>> {
@@ -58,13 +64,17 @@ export async function runExport(o: ExportOptions): Promise<PlatformResult<Export
     const pdfPages = [];
     for (const [i, page] of pages.entries()) {
       o.onProgress?.(i, total);
+      perfMark('xuat:bat-dau-ve');
       const jpeg = await bytesOf(await o.render(page.id, 'image/jpeg', ratio));
+      perfMark('xuat:co-jpeg');
       pdfPages.push({ jpeg, widthPx: Math.round(page.width * ratio), heightPx: Math.round(page.height * ratio) });
     }
     o.onProgress?.(total, total);
     const pdf = buildPdf(pdfPages, o.doc.dpi * ratio, { title: o.doc.name, createdAt: Date.now() });
+    perfMark('xuat:co-pdf');
     const fileName = exportFileName(o.doc.name, 'pdf', 0, 1);
     const saved = await o.platform.files.saveBytes(fileName, 'application/pdf', pdf);
+    perfMark('xuat:da-luu');
     if (!saved.ok) return saved;
     const file: FileToShare = { fileName, mimeType: 'application/pdf', bytes: pdf };
     if (saved.value.uri) file.uri = saved.value.uri;
@@ -76,9 +86,12 @@ export async function runExport(o: ExportOptions): Promise<PlatformResult<Export
   let location = '';
   for (const [i, page] of pages.entries()) {
     o.onProgress?.(i, total);
+    perfMark('xuat:bat-dau-ve');
     const bytes = await bytesOf(await o.render(page.id, mimeType, exportPixelRatio(page, o.quality)));
+    perfMark('xuat:co-anh');
     const fileName = exportFileName(o.doc.name, o.format, i, total);
     const saved = await o.platform.gallery.saveImage(fileName, bytes);
+    perfMark('xuat:da-luu');
     if (!saved.ok) return saved;
     location = saved.value.location;
     const file: FileToShare = { fileName, mimeType, bytes };

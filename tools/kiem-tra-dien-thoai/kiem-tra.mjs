@@ -190,6 +190,21 @@ function samplePng(w = 600, h = 600) {
 }
 const imageLayer = (d) => layersOf(d).find((l) => l.type === 'image');
 
+
+/** Bật đồng hồ đo trong app; trả hàm đọc kết quả "nhãn ms, …" (ms kể từ lúc bật). */
+async function startMarks() {
+  await page.evaluate(() => {
+    window.__artioMarks = [['bat-dau', performance.now()]];
+  });
+  return () =>
+    page.evaluate(() => {
+      const m = window.__artioMarks ?? [];
+      const t = m[0]?.[1] ?? 0;
+      delete window.__artioMarks;
+      return m.slice(1).map(([k, v]) => `${k.replace('xuat:', '')} ${Math.round(v - t)}`).join(', ');
+    });
+}
+
 async function keyboardShown() {
   const s = (await device.shell('dumpsys input_method')).toString();
   const m = /mInputShown=(true|false)/.exec(s) || /isInputViewShown=(true|false)/.exec(s);
@@ -452,10 +467,12 @@ async function main() {
     if (await page.getByRole('button', { name: 'Bỏ chọn' }).isVisible()) await tap(page.getByRole('button', { name: 'Bỏ chọn' }));
     await tap(page.getByRole('button', { name: 'Xuất', exact: true }));
     await sheet().waitFor({ timeout: 3000 });
+    const readMarks = await startMarks();
     const t0 = Date.now();
     await tap(sheet().getByRole('button', { name: 'Xuất', exact: true }));
     const status = sheet().getByRole('status');
     await waitFor(async () => /Đã lưu/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu', 20000);
+    const marksPng = await readMarks();
     const text = (await status.textContent())?.trim();
     if (!/Ảnh\/Artio/.test(text ?? '')) throw new Error(`báo lạ: "${text}"`);
     // Tên file có dấu tiếng Việt: lệnh gửi qua USB làm hỏng dấu, nên tìm file PNG mới nhất (lệnh chỉ chữ không dấu).
@@ -466,7 +483,7 @@ async function main() {
     const age = Date.now() / 1000 - Number(m[2]);
     if (age > 120) throw new Error(`file PNG mới nhất đã cũ (${Math.round(age)} giây) — có thể chưa lưu`);
     exported.push(newest);
-    return `${Date.now() - t0} ms — ${text} (${Math.round(Number(m[1]) / 1024)} KB)`;
+    return `${Date.now() - t0} ms — ${text} (${Math.round(Number(m[1]) / 1024)} KB) — đo: ${marksPng}`;
   });
 
   await step('Chia sẻ → mở bảng chia sẻ của máy', async () => {
@@ -488,17 +505,19 @@ async function main() {
       await sheet().waitFor({ timeout: 3000 });
     }
     await tap(sheet().getByRole('button', { name: /PDF để in/ }));
+    const readMarks = await startMarks();
     const t0 = Date.now();
     await tap(sheet().getByRole('button', { name: /^Xuất( lại)?$/ }));
     const status = sheet().getByRole('status');
     await waitFor(async () => /PDF/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu PDF', 30000);
+    const marksPdf = await readMarks();
     const text = (await status.textContent())?.trim();
     const newestPdf = 'ls -t /sdcard/Download/Artio/*.pdf | head -1';
     const head = (await device.shell(`head -c 8 "$(${newestPdf})"`)).toString();
     if (!head.startsWith('%PDF-1.4')) throw new Error(`file PDF lạ: "${head}"`);
     exported.push(newestPdf);
     await tap(sheet().getByRole('button', { name: 'Đóng' }));
-    return `${Date.now() - t0} ms — ${text}`;
+    return `${Date.now() - t0} ms — ${text} — đo: ${marksPdf}`;
   });
 
   // Dọn file thử vừa xuất (không đụng file khác của bạn).
