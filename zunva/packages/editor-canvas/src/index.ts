@@ -2,7 +2,7 @@
  * @zunva/editor-canvas — draws a DesignDocument page with Konva and reports changes as core Ops.
  * Contract: .kiro/specs/g2-trang-chu-chinh-sua/design.md.
  */
-export { DesignCanvas } from './DesignCanvas';
+export { DesignCanvas, perfMark } from './DesignCanvas';
 export type { BrushSettings, DesignCanvasHandle, DesignCanvasProps } from './DesignCanvas';
 export { MAX_MASK_SIDE, blendToComposite, maskCanvasSize } from './mask';
 export { renderPageImage } from './renderPage';

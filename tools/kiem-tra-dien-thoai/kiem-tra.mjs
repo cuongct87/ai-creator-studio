@@ -384,12 +384,32 @@ async function main() {
       await page.getByLabel('Chế độ tẩy').waitFor({ timeout: 3000 });
       const wrap = await page.getByLabel('Trang thiết kế').boundingBox();
       const c = { x: wrap.x + wrap.width / 2, y: wrap.y + wrap.height / 2 };
+      await page.evaluate(() => {
+        window.__artioMarks = [['bat-dau-keo', performance.now()]];
+      });
       const t0 = Date.now();
       await dragCss({ x: c.x - 50, y: c.y }, { x: c.x + 50, y: c.y }, 25);
-      const d = await waitDoc((x) => imageLayer(x).maskAssetId !== null, 'lưu vùng tẩy', 8000);
-      await page.getByRole('button', { name: /^Hoàn tác: Tẩy/ }).waitFor({ timeout: 3000 });
-      await tap(page.getByLabel('Chế độ tẩy').getByRole('button', { name: 'Xong' }));
-      return `lưu vùng tẩy sau ${Date.now() - t0} ms (${imageLayer(d).maskAssetId})`;
+      let d = null;
+      let err = null;
+      try {
+        await page.getByRole('button', { name: /^Hoàn tác: Tẩy/ }).waitFor({ timeout: 20000 });
+        d = await waitDoc((x) => imageLayer(x).maskAssetId !== null, 'lưu vùng tẩy', 8000);
+      } catch (e) {
+        err = e;
+      }
+      // Đồng hồ từng chặng (ms kể từ lúc bắt đầu kéo).
+      const marks = await page.evaluate(() => {
+        const m = window.__artioMarks ?? [];
+        const t = m[0]?.[1] ?? 0;
+        delete window.__artioMarks;
+        return m.map(([k, v]) => `${k} ${Math.round(v - t)}`).join(', ');
+      });
+      // Luôn thoát chế độ tẩy, để bước sau không hỏng dây chuyền.
+      await tap(page.getByLabel('Chế độ tẩy').getByRole('button', { name: 'Xong' })).catch(() => {});
+      if (err) throw new Error(`${String(err.message).split('\n')[0]} — đo: ${marks}`);
+      const ms = Date.now() - t0;
+      if (ms > 5000) throw new Error(`lưu vùng tẩy chậm: ${ms} ms — đo: ${marks}`);
+      return `lưu vùng tẩy sau ${ms} ms — đo: ${marks}`;
     });
 
     await step('Tách nền (ML Kit trên máy)', async () => {

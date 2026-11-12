@@ -187,6 +187,15 @@ const LABEL_ROTATE = 'Xoay';
 const LABEL_EDIT_TEXT = 'Sửa chữ';
 const LABEL_REMOVE_EMPTY_TEXT = 'Bỏ chữ trống';
 
+/**
+ * Đồng hồ đo cho kịch bản tự kiểm tra trên điện thoại: chỉ ghi khi kịch bản đã tạo `window.__artioMarks`.
+ * Người dùng thường không có mảng này nên không tốn gì.
+ */
+export function perfMark(label: string): void {
+  const marks = (globalThis as { __artioMarks?: Array<[string, number]> }).__artioMarks;
+  if (Array.isArray(marks)) marks.push([label, performance.now()]);
+}
+
 const sizeKey = (s: Size) => `${s.width}x${s.height}`;
 
 const WRAP_STYLE: CSSProperties = {
@@ -1023,13 +1032,17 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
         cancelStroke();
         return;
       }
+      perfMark('tay:nhac-ngon');
       s.cleanup();
       drawStrokePreview(s);
       strokeHold.current = { layerId: s.layerId, oldMaskId: s.layer.maskAssetId, composite: s.composite, mask: s.mask, maskSize: s.maskSize };
       setStrokeTick((t) => t + 1);
       const send = live.current.onMaskStroke;
       void alphaMaskToPng(s.mask).then(
-        (png) => send?.(s.layerId, png),
+        (png) => {
+          perfMark('tay:png-xong');
+          send?.(s.layerId, png);
+        },
         () => {
           // Could not encode the mask: show the saved state again rather than a stroke that is not kept.
           if (strokeHold.current?.composite === s.composite) strokeHold.current = null;
