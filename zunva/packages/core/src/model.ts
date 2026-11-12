@@ -9,7 +9,22 @@
  * - Ảnh/phông không nằm trong tài liệu, chỉ được tham chiếu qua `assetId` (kho tài nguyên ở G1-5).
  */
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
+
+/** Kiểu hòa trộn lớp với phần bên dưới (G2b). Tên giống CSS `mix-blend-mode`. */
+export const BLEND_MODES = [
+  'normal',
+  'multiply',
+  'screen',
+  'overlay',
+  'soft-light',
+  'darken',
+  'lighten',
+  'difference',
+  'color',
+  'luminosity',
+] as const;
+export type BlendMode = (typeof BLEND_MODES)[number];
 
 export type Id = string;
 
@@ -40,6 +55,8 @@ interface LayerBase {
   rotation: number;
   /** 0 → 1. */
   opacity: number;
+  /** Cách hòa vào phần bên dưới. Mặc định 'normal'. */
+  blendMode: BlendMode;
   locked: boolean;
   hidden: boolean;
   timing: Timing | null;
@@ -77,6 +94,13 @@ export interface ImageLayer extends LayerBase {
   cornerRadius: number;
   flipX: boolean;
   flipY: boolean;
+  /** Mờ viền, đơn vị px của trang. 0 = mép sắc. */
+  feather: number;
+  /**
+   * Mặt nạ tẩy: ảnh PNG xám phủ đúng khung lớp (trắng = giữ, đen = đã tẩy).
+   * null = chưa tẩy. Ảnh gốc không bị sửa.
+   */
+  maskAssetId: Id | null;
 }
 
 export type ShapeKind = 'rect' | 'ellipse' | 'line';

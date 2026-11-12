@@ -165,6 +165,28 @@ describe('file .zunva: mở file lạ hoặc hỏng một cách an toàn', () =>
     expect(errorsOf(rezip(e))).toContain('cập nhật app');
   });
 
+  it('file .zunva cũ (dữ liệu v2, trước G2b) vẫn mở được và tự nâng lên v3', () => {
+    const doc = JSON.parse(JSON.stringify(sample())) as { schemaVersion: number; pages: Array<{ layers: Array<Record<string, unknown>> }> };
+    doc.schemaVersion = 2;
+    for (const l of doc.pages[0]!.layers) {
+      delete l['blendMode'];
+      delete l['feather'];
+      delete l['maskAssetId'];
+    }
+    let e = replace(sampleEntries(), 'manifest.json', utf8Encode('{"format":"zunva","formatVersion":1,"schemaVersion":2}'));
+    e = replace(e, 'document.json', utf8Encode(JSON.stringify(doc)));
+    const r = unpackZunva(rezip(e));
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.document.schemaVersion).toBe(3);
+    expect(r.value.document.pages[0]!.layers[1]).toMatchObject({ type: 'image', feather: 0, maskAssetId: null, blendMode: 'normal' });
+  });
+
+  it('dữ liệu phiên bản lạ bị từ chối', () => {
+    const e = replace(sampleEntries(), 'manifest.json', utf8Encode('{"format":"zunva","formatVersion":1,"schemaVersion":7}'));
+    expect(errorsOf(rezip(e))).toContain('chưa hỗ trợ');
+  });
+
   it('manifest hỏng chỉ báo một lỗi', () => {
     const r = unpackZunva(rezip(replace(sampleEntries(), 'manifest.json', utf8Encode('{oops'))));
     expect(r).toEqual({ ok: false, errors: ['manifest.json: không đọc được (JSON hỏng)'] });

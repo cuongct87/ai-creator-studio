@@ -1,4 +1,4 @@
-import { validateDocument, type DesignDocument, type Id } from '@zunva/core';
+import { migrateDocument, validateDocument, type DesignDocument, type Id } from '@zunva/core';
 import type { PlatformResult, ProjectStore, ProjectSummary, StorageInfo, StoredAsset } from './index';
 
 /**
@@ -226,7 +226,7 @@ export function createIndexedDbProjectStore(dbName = 'c87', options: IndexedDbSt
           req.onsuccess = () => done(req.result as ProjectRecord | undefined);
         });
         if (!rec) return fail(STORE_MESSAGES.notFound);
-        const checked = validateDocument(rec.doc);
+        const checked = validateDocument(migrateDocument(rec.doc)); // dự án lưu trước G2b (v2) tự nâng lên v3
         if (!checked.ok) return fail(STORE_MESSAGES.corrupt);
         return { ok: true, value: checked.value };
       } catch (e) {

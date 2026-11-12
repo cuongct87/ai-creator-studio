@@ -3,7 +3,7 @@ import { SCHEMA_VERSION, clamp, isHexColor } from './index';
 
 describe('@zunva/core', () => {
   it('dùng định dạng dữ liệu v2', () => {
-    expect(SCHEMA_VERSION).toBe(2);
+    expect(SCHEMA_VERSION).toBe(3);
   });
 
   it('clamp giữ số trong khoảng', () => {
