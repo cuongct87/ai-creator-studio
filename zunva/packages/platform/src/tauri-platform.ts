@@ -38,8 +38,9 @@ function errorText(e: unknown, fallback: string): string {
 }
 
 export function createTauriPlatform(win: TauriWindow, doc?: Document): Platform {
-  const internals = win.__TAURI_INTERNALS__;
-  if (!internals) throw new Error('Không phải vỏ Tauri');
+  const found = win.__TAURI_INTERNALS__;
+  if (!found) throw new Error('Không phải vỏ Tauri');
+  const internals: NonNullable<TauriWindow['__TAURI_INTERNALS__']> = found;
   const web = createWebPlatform(doc ?? document);
 
   async function save(folder: 'pictures' | 'downloads', fileName: string, bytes: Uint8Array): Promise<PlatformResult<SavedFile>> {
