@@ -2,7 +2,7 @@
  * File `.zunva`: lưu một thiết kế kèm toàn bộ ảnh/phông thành một file để gửi đi và mở lại.
  *
  * Bên trong là ZIP không nén:
- *   manifest.json   { format: "zunva", formatVersion: 1, schemaVersion: 2, createdAt, app }
+ *   manifest.json   { format: "zunva", formatVersion: 1, schemaVersion: 3, createdAt, app }  (đọc được cả 2)
  *   document.json   DesignDocument (schema v2)
  *   assets/<id>     nội dung từng tài nguyên; kiểu file lấy từ document.assets[id].mimeType
  *
@@ -13,6 +13,7 @@
 import { PRODUCT_NAME } from './brand';
 import type { DesignDocument, Id } from './model';
 import { SCHEMA_VERSION } from './model';
+import { READABLE_SCHEMA_VERSIONS, migrateDocument } from './migrate';
 import { validateDocument } from './validate';
 import { readZip, utf8Decode, utf8Encode, writeZip } from './zip';
 
@@ -123,7 +124,8 @@ function checkManifest(value: unknown, errors: string[]): void {
   } else if (fv > ZUNVA_FORMAT_VERSION) {
     errors.push('File được tạo bởi phiên bản app mới hơn. Hãy cập nhật app rồi mở lại.');
   }
-  if (value['schemaVersion'] !== SCHEMA_VERSION) {
+  const sv = value['schemaVersion'];
+  if (typeof sv !== 'number' || !READABLE_SCHEMA_VERSIONS.includes(sv)) {
     errors.push(`manifest.json: phiên bản dữ liệu ${String(value['schemaVersion'])} chưa hỗ trợ`);
   }
 }
@@ -163,7 +165,7 @@ export function unpackZunva(bytes: Uint8Array): ZunvaResult<ZunvaContent> {
 
   const raw = parseJson(documentBytes, 'document.json', errors);
   if (errors.length > 0) return { ok: false, errors };
-  const checked = validateDocument(raw);
+  const checked = validateDocument(migrateDocument(raw));
   if (!checked.ok) return { ok: false, errors: checked.errors.map((e) => `Thiết kế không hợp lệ: ${e}`) };
   const document = checked.value;
 

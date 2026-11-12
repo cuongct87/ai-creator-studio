@@ -10,7 +10,7 @@ interface ImageLayer extends LayerBase {
   ...;
   /** Mờ viền, px của trang. 0 = không. */
   feather: number;
-  /** Ảnh mặt nạ PNG xám: trắng = giữ, đen = đã tẩy. Phủ đúng khung lớp (x, y, width, height). null = không tẩy. */
+  /** Ảnh mặt nạ PNG phủ đúng khung lớp (hướng ảnh gốc). Mức giữ = độ sáng × độ đục: trắng đục = giữ; đen/trong suốt = đã tẩy. null = không tẩy. */
   maskAssetId: Id | null;
 }
 ```
@@ -38,7 +38,7 @@ onMaskStroke?(layerId: Id, png: Uint8Array): void;
 ```
 - Khi `brush` khác null: không chọn/kéo/xoay lớp; 1 ngón tô; 2 ngón phóng/di chuyển trang như cũ. Ẩn tay nắm.
 - Trong lúc tô: vẽ thẳng vào canvas mặt nạ đang làm việc (bắt đầu từ mặt nạ hiện có, hoặc trắng toàn bộ), cập nhật hình ngay mỗi khung hình.
-  Tọa độ ngón → tọa độ trong khung lớp (tính cả xoay, lật). `erase`: tô đen (`destination-out` trên kênh giữ); `restore`: tô trắng. Cọ tròn, `softness` = gradient mép cọ. Nối các điểm thành nét liền (không lỗ khi kéo nhanh).
+  Tọa độ ngón → tọa độ trong khung lớp (tính cả xoay, lật). `erase`: tô với `destination-out` (làm trong suốt); `restore`: tô đục (`source-over`, màu trắng). Cọ tròn, `softness` = gradient mép cọ. Nối các điểm thành nét liền (không lỗ khi kéo nhanh).
 - Nhấc ngón → `canvas.toBlob('image/png')` → `onMaskStroke`.
 - Hàm thuần có test: đổi tọa độ trang → khung lớp (xoay, lật); nội suy điểm giữa hai lần chạm; khóa lưu đệm.
 
@@ -52,7 +52,7 @@ onMaskStroke?(layerId: Id, png: Uint8Array): void;
 - `Platform.images.segmentSubject(bytes, mimeType): Promise<Result<Uint8Array /* PNG mặt nạ */ | null>>`; nền tảng không có → hàm vắng mặt, app ẩn nút.
 - **Android:** ML Kit Subject Segmentation (Google), chạy trên máy, mô hình tải qua Google Play services, app nặng thêm ~200 KB, minSdk 24.
   Đang ở bản **beta** (không cam kết lâu dài) — chấp nhận cho 1.0, giữ đường lui là cục tẩy tay.
-  Cầu nối Java: nhận ảnh, trả mặt nạ xám (độ tin cậy ≥ 0,5 → trắng, có làm mềm mép), thu về cạnh dài ≤ 1024.
+  Cầu nối Java: nhận ảnh, trả mặt nạ PNG alpha (độ tin cậy cao → đục, thấp → trong suốt, mép chuyển mềm), thu về cạnh dài ≤ 1024, xoay theo EXIF như trình duyệt hiển thị.
   Tải mô hình lúc cài (`meta-data` trong manifest) để lần đầu không phải chờ.
 - **iOS (G5):** Vision `VNGenerateForegroundInstanceMaskRequest` (iOS 17+). **Web:** để sau (có thể MediaPipe, chỉ tách người).
 - Cần kiểm trước khi làm: điều khoản ML Kit (miễn phí, không giới hạn lượt?) — Claude đọc điều khoản, báo founder.

@@ -5,7 +5,7 @@ Viết ngày 12/11/2026 theo yêu cầu founder: "lưu lại, tới giai đoạn
 ## 1. Trước khi lên kho ứng dụng
 - [ ] Tài khoản Google Play Console (phí một lần) và Apple Developer (~99 USD/năm). **Khoản trả phí — hỏi founder trước.**
 - [ ] Google Play, tài khoản cá nhân mới: **≥ 12 người cài thử liên tục 14 ngày** mới được phát hành chính thức (còn áp dụng 2026 — [Google](https://support.google.com/googleplay/android-developer/answer/14151465?hl=en)). Founder gom sẵn 12–15 người dùng Android.
-- [ ] Chính sách quyền riêng tư (cả hai kho bắt buộc) + mục "An toàn dữ liệu" của Google Play. Artio lưu trên máy, không thu dữ liệu → nội dung gọn. Claude soạn.
+- [ ] Chính sách quyền riêng tư (cả hai kho bắt buộc) + mục "An toàn dữ liệu" của Google Play. Artio lưu trên máy, không thu dữ liệu → nội dung gọn. Claude soạn. **Phải ghi:** tính năng "Tách nền" dùng Google ML Kit — ảnh xử lý trên máy, không gửi đi, nhưng ML Kit gửi số liệu hiệu năng/sử dụng cho Google (điều khoản ML Kit bắt nhà phát triển báo người dùng).
 - [ ] Hộ kinh doanh hoặc công ty khi bắt đầu thu tiền (hỏi kế toán về thuế).
 - [ ] Đăng ký nhãn hiệu "Artio" tại Cục Sở hữu trí tuệ trước khi quảng bá. Lưu ý: App Store đã có app "Artio – ART" (sưu tầm tranh) → tên trên kho nên ghép, ví dụ "Artio: Thiết kế & Thiệp".
 - [ ] Chốt tên gói Android (hiện `vn.c87.lsc`, không đổi được sau khi lên Google Play) cùng tên miền `.com`/`.net`; trang web đơn giản có chính sách quyền riêng tư.

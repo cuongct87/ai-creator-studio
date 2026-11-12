@@ -91,3 +91,22 @@ test('xóa hết chữ rồi bấm xong → không sót lớp "Chữ trống"', 
   await page.getByRole('button', { name: /^Hoàn tác/ }).click();
   await expect(stage).toHaveAccessibleName(/1 lớp/);
 });
+
+test('hòa trộn: chọn kiểu cho lớp, lưu lại sau khi tải lại trang (G2b)', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+  const stage = page.getByRole('region', { name: /Trang 1080×1080/ });
+  await page.getByRole('button', { name: 'Hình', exact: true }).click();
+  await page.getByRole('button', { name: '◯ Hình tròn' }).click();
+  await expect(stage).toHaveAccessibleName(/1 lớp/);
+  const blend = page.getByLabel('Hòa trộn');
+  await expect(blend).toHaveValue('normal');
+  await blend.selectOption('multiply');
+  await expect(page.getByText('Đã lưu')).toBeVisible({ timeout: 5000 });
+  await page.reload();
+  await page.getByRole('button', { name: 'Lớp', exact: true }).click();
+  await page.getByRole('list', { name: 'Danh sách lớp' }).getByRole('button', { name: 'Hình tròn' }).click();
+  await expect(page.getByLabel('Hòa trộn')).toHaveValue('multiply');
+  // Web chưa có tách nền: không hiện nút.
+  await expect(page.getByRole('button', { name: 'Tách nền' })).toHaveCount(0);
+});
