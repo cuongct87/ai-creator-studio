@@ -1,0 +1,89 @@
+name: Artio Windows installer
+
+# G4: dựng file cài Artio cho Windows (Tauri 2, NSIS, chưa ký số) từ cùng mã web với Android.
+# Ra 2 file: bản thường (artio-windows-setup) và bản kiểm tra (artio-windows-ban-kiem-tra, mở cổng 9333
+# chỉ trên máy để kịch bản kiem-tra-windows điều khiển). Không phát hành, không cần khóa bí mật.
+on:
+  pull_request:
+    paths:
+      - "zunva/**"
+      - ".github/workflows/windows-installer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-installer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: zunva/package.json
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: zunva/pnpm-lock.yaml
+
+      - name: Cài thư viện web (đúng phiên bản đã khóa)
+        working-directory: zunva
+        run: pnpm install --frozen-lockfile
+
+      - name: Dựng app web
+        working-directory: zunva
+        run: |
+          pnpm build
+          test -f apps/web/dist/index.html
+
+      - name: Lưu đệm Rust (lần sau dựng nhanh hơn)
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: zunva/apps/desktop/src-tauri -> target
+
+      - name: Test phần Rust (tên file, thư mục cho phép)
+        working-directory: zunva/apps/desktop/src-tauri
+        run: cargo test --lib
+
+      - name: Dựng file cài (bản thường)
+        working-directory: zunva/apps/desktop
+        run: npx --yes @tauri-apps/cli@2.11.0 build --bundles nsis
+
+      - name: Gom bản thường
+        run: |
+          mkdir -p out/thuong
+          cp zunva/apps/desktop/src-tauri/target/release/bundle/nsis/*.exe out/thuong/
+          ls -la out/thuong
+
+      - name: Dựng file cài (bản kiểm tra, mở cổng 9333 cho kịch bản trên laptop)
+        working-directory: zunva/apps/desktop
+        run: npx --yes @tauri-apps/cli@2.11.0 build --bundles nsis --config src-tauri/ban-kiem-tra.conf.json
+
+      - name: Gom bản kiểm tra
+        run: |
+          mkdir -p out/kiem-tra
+          cp zunva/apps/desktop/src-tauri/target/release/bundle/nsis/*.exe out/kiem-tra/
+          ls -la out/kiem-tra
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artio-windows-setup
+          path: out/thuong/*.exe
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: artio-windows-ban-kiem-tra
+          path: out/kiem-tra/*.exe
+          if-no-files-found: error
