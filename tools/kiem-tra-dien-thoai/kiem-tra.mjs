@@ -31,6 +31,8 @@ function loadPlaywright() {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const steps = [];
+/** Mọi dự án thử tạo ra (xóa hết khi xong). */
+const createdProjects = [];
 let device;
 let page;
 let shotNo = 0;
@@ -252,6 +254,7 @@ async function main() {
   await step('Tạo thiết kế "Mạng xã hội" 1080×1080', async () => {
     await tap(page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }));
     await page.getByRole('region', { name: /Trang 1080×1080, 0 lớp/ }).waitFor({ timeout: 6000 });
+    createdProjects.push(projectId());
     return `dự án thử ${projectId()}`;
   });
 
@@ -569,14 +572,32 @@ async function main() {
     return '';
   });
 
+  // ---------- G3 đợt 4: hình nền điện thoại (KHÔNG tự đặt hình nền — sẽ đổi hình nền máy bạn) ----------
+  await step('Hình nền điện thoại: khổ đúng màn hình máy, có nút "Đặt làm hình nền"', async () => {
+    const wm = (await device.shell('wm size')).toString();
+    const m = /(\d+)x(\d+)/.exec(wm.split('\n').find((l) => /Override/.test(l)) ?? wm);
+    if (!m) throw new Error(`không đọc được kích thước màn hình: ${wm}`);
+    const w = Math.min(Number(m[1]), Number(m[2]));
+    const h = Math.max(Number(m[1]), Number(m[2]));
+    await tap(page.locator('.starts').getByRole('button', { name: 'Hình nền điện thoại' }));
+    await page.getByRole('region', { name: new RegExp(`Trang ${w}×${h}, 0 lớp`) }).waitFor({ timeout: 6000 });
+    createdProjects.push(projectId());
+    await tap(page.getByRole('button', { name: 'Xuất', exact: true }));
+    await sheet().getByRole('group', { name: 'Đặt làm hình nền' }).waitFor({ timeout: 3000 });
+    await tap(sheet().getByRole('button', { name: 'Đóng' }));
+    await device.shell('input keyevent 4');
+    await page.getByRole('heading', { name: 'Bạn muốn tạo gì hôm nay?' }).waitFor({ timeout: 5000 });
+    return `khổ ${w}×${h} đúng màn hình`;
+  });
+
   await finish(recording);
 }
 
 async function finish(recording) {
   // Xóa dự án thử để không lẫn vào dự án của founder.
   try {
-    const id = projectId();
-    if (page && id) {
+    const ids = [...new Set([...createdProjects, projectId()].filter(Boolean))];
+    for (const id of page ? ids : []) {
       await page.evaluate(async (id) => {
         const db = await new Promise((res) => { const r = indexedDB.open('c87'); r.onsuccess = () => res(r.result); });
         await new Promise((res) => {
