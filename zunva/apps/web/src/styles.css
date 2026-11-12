@@ -253,7 +253,13 @@ button:disabled {
 /* ---------- G2: trang chủ ---------- */
 .home {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
+  min-width: 0;
+}
+
+/* Thẻ con của lưới mặc định rộng theo nội dung: dải "Tiếp tục thiết kế" cuộn ngang bên trong, không đẩy trang. */
+.home > * {
   min-width: 0;
 }
 

@@ -68,3 +68,14 @@ test('trang chủ không cuộn ngang ở khổ 360px, cả 3 màu', async ({ pa
     expect(overflow).toBeLessThanOrEqual(0);
   }
 });
+
+test('nhiều dự án gần đây: dải "Tiếp tục thiết kế" cuộn bên trong, trang không cuộn ngang', async ({ page }) => {
+  await page.goto('/');
+  for (let i = 0; i < 4; i++) {
+    await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+    await page.getByRole('button', { name: 'Quay lại trang chủ' }).click();
+  }
+  await expect(page.getByRole('list', { name: 'Thiết kế gần đây' }).getByRole('listitem')).toHaveCount(4);
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(overflow).toBeLessThanOrEqual(0);
+});
