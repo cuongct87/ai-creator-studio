@@ -3,13 +3,19 @@ package vn.iaysystem.aicreatorstudio;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Base64;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.webkit.*;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 import java.io.IOException;
 import java.io.InputStream;
@@ -20,6 +26,8 @@ import org.json.JSONObject;
 
 public class MainActivity extends Activity {
     private WebView web;
+    /** Khung ngoài WebView: chừa chỗ cho thanh trạng thái / thanh điều hướng (Android 15 vẽ tràn viền). */
+    private FrameLayout root;
     private ValueCallback<Uri[]> chooser;
     private static final int PICK_FILE = 100;
     private static final String HOST = "appassets.androidplatform.net";
@@ -31,6 +39,34 @@ public class MainActivity extends Activity {
     private static final int MAX_SAVE_BYTES = 100 * 1024 * 1024;
     private static final String TOO_LARGE = "File quá lớn để lưu trên điện thoại (tối đa 100 MB).";
     private static final String OUT_OF_MEMORY = "File quá lớn, bộ nhớ máy không đủ để xử lý. Hãy đóng bớt ứng dụng rồi thử lại.";
+
+    /** App web báo màu nền giao diện (Xanh nhạt / Hồng phấn / Tối) để tô dải thanh trạng thái cùng màu. */
+    public class ShellBridge {
+        @JavascriptInterface public void setBarColor(String hex) {
+            final int color;
+            try { color = Color.parseColor(hex); } catch (IllegalArgumentException e) { return; }
+            runOnUiThread(() -> applyBarColor(color));
+        }
+    }
+
+    private void applyBarColor(int color) {
+        if (root != null) root.setBackgroundColor(color);
+        boolean light = (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255.0 > 0.6;
+        if (Build.VERSION.SDK_INT < 35) {
+            getWindow().setStatusBarColor(color);
+            getWindow().setNavigationBarColor(color);
+        }
+        if (Build.VERSION.SDK_INT >= 30) {
+            WindowInsetsController c = getWindow().getInsetsController();
+            int mask = WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
+            if (c != null) c.setSystemBarsAppearance(light ? mask : 0, mask);
+        } else {
+            View decor = getWindow().getDecorView();
+            int flags = decor.getSystemUiVisibility();
+            flags = light ? (flags | View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR) : (flags & ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+            decor.setSystemUiVisibility(flags);
+        }
+    }
 
     /** Saves rendered images to the gallery (Pictures/Artio). Kept from v1.5. */
     public class ImageSaver {
@@ -206,8 +242,22 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        // Chỉ bản kiểm tra (dựng với -PartioWebViewDebug=true) mới cho máy tính điều khiển qua USB.
+        if (BuildConfig.WEBVIEW_DEBUG) WebView.setWebContentsDebuggingEnabled(true);
         web = new WebView(this);
-        setContentView(web);
+        root = new FrameLayout(this);
+        root.setBackgroundColor(Color.parseColor("#e8f3fb"));
+        root.addView(web, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        setContentView(root);
+        // Android 15 (targetSdk 35) luôn vẽ tràn viền: thanh trạng thái đè lên chữ "Artio" (founder thử 12/11).
+        // Chừa đúng phần thanh hệ thống + tai thỏ; bàn phím vẫn phủ lên như trước.
+        if (Build.VERSION.SDK_INT >= 35) {
+            root.setOnApplyWindowInsetsListener((v, insets) -> {
+                android.graphics.Insets i = insets.getInsets(WindowInsets.Type.systemBars() | WindowInsets.Type.displayCutout());
+                v.setPadding(i.left, i.top, i.right, i.bottom);
+                return insets;
+            });
+        }
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setAllowFileAccess(false);
@@ -215,6 +265,7 @@ public class MainActivity extends Activity {
         web.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         web.addJavascriptInterface(new ImageSaver(), "AndroidImageSaver");
         web.addJavascriptInterface(new FileSaver(), "AndroidFileSaver");
+        web.addJavascriptInterface(new ShellBridge(), "AndroidShell");
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri u = request.getUrl();

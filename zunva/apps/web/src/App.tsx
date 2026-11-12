@@ -60,7 +60,7 @@ export function App() {
   }, []);
 
   if (openProject) {
-    return <EditorScreen key={openProject} store={projectStore} projectId={openProject} onBack={back} />;
+    return <EditorScreen key={openProject} store={projectStore} platform={platform} projectId={openProject} onBack={back} />;
   }
 
   const current = TABS.find((t) => t.id === tab) ?? TABS[0]!;

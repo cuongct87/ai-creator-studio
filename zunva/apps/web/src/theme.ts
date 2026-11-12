@@ -143,4 +143,11 @@ export function applyTheme(id: ThemeId, doc: Document = document): void {
     doc.head.append(meta);
   }
   meta.content = theme.colors.surface;
+  // Vỏ Android: tô dải thanh trạng thái / điều hướng cùng màu nền app.
+  const shell = (doc.defaultView as (Window & { AndroidShell?: { setBarColor(hex: string): void } }) | null)?.AndroidShell;
+  try {
+    shell?.setBarColor(theme.colors.bg);
+  } catch {
+    // Cầu nối lỗi thì giữ màu mặc định, không ảnh hưởng app.
+  }
 }
