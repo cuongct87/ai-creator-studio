@@ -94,6 +94,22 @@ renderPageImage(doc, pageId, {
 - Ảnh có mặt nạ / mờ viền được dựng lại theo độ phân giải xuất (cạnh dài ≤ 2048 px).
 - `ref.exportPageImage(pixelRatio)` giữ hợp đồng cũ: PNG trang đang mở, gọi `renderPageImage`.
 
+## Ảnh thu nhỏ trang: `usePageThumbnails` (G3)
+```ts
+const thumbs = usePageThumbnails(doc, assetUrl, 160); // Record<pageId, blob: URL>
+<img src={thumbs[page.id]} alt="" />
+```
+- Vẽ bằng `renderPageImage` (PNG, cạnh dài = `maxSide`, mặc định 160).
+- Chỉ vẽ lại trang **đã đổi** (lõi tạo object trang mới khi trang đổi → so sánh tham chiếu), từng trang một, tối đa 1 lần/giây/trang
+  (đang kéo/tẩy liên tục thì gom lại, vẽ bản mới nhất).
+- Ảnh của trang chưa tải xong (`assetUrl` trả `undefined`) → vẽ ô xám, tự thử lại tối đa 5 lần (mỗi giây 1 lần).
+- URL cũ được thu hồi khi thay, khi xóa trang và khi component bị gỡ.
+
+## Vạch gợi ý hình nền: prop `guides`
+`guides="phone-wallpaper"` vẽ lớp mờ trên trang (dưới tay nắm, không nhận chạm, **không có trong ảnh xuất**):
+vùng đồng hồ màn hình khóa 12–30% chiều cao, hàng biểu tượng 86–100%; nền trắng độ đục 0,18, viền nét đứt màu nhấn,
+nhãn "Đồng hồ" / "Biểu tượng" (~2,2% chiều cao). `wallpaperGuideRects(page)` trả các vùng (px trang).
+
 ## Phông chữ
 6 phông OFL có bộ chữ tiếng Việt (đã kiểm trên api.fontsource.org): Be Vietnam Pro, Playfair Display,
 Dancing Script, Lora, Montserrat, Pacifico. Chỉ nạp bộ `latin` + `vietnamese`, độ đậm 400 và 700
@@ -102,6 +118,6 @@ Dancing Script, Lora, Montserrat, Pacifico. Chỉ nạp bộ `latin` + `vietname
 ## Lưu ý cho ứng dụng
 - Gói dùng **React 19.3.0** (react-konva 19.3.2 cần React ≥ 19.3). Ứng dụng dùng gói này cũng phải dùng
   đúng React 19.3.0, nếu không sẽ có hai bản React và canvas không chạy.
-- Test: `geometry.test.ts`, `mask.test.ts`, `exportImage.test.ts` (Vitest, chạy trong Node, không cần trình duyệt).
+- Test: `geometry.test.ts`, `mask.test.ts`, `exportImage.test.ts`, `thumbnails.test.ts` (Vitest, chạy trong Node, không cần trình duyệt).
   `renderPage.tsx` cần trình duyệt (Playwright ở C3).
   `composite.ts` (vẽ canvas phụ) cần trình duyệt nên chưa có test tự động.
