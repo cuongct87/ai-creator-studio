@@ -4,7 +4,8 @@
  * Mỗi mẫu = mô tả ngắn ở đây (khổ, nền, các lớp chữ/hình) + một ảnh minh họa
  * `public/mau/anh/<id>.jpg` (Gemini vẽ, founder tạo 12/11/2026, nguồn gốc ghi trong
  * `.kiro/specs/g3-xuat-mau-nhieu-trang/nguon-goc-anh-mau.txt`). Chữ mẫu do GPT viết
- * (`tools/mau/chu-mau.json`), Claude kiểm độ dài từng ô.
+ * (`tools/mau/chu-mau.json`), Claude kiểm độ dài từng ô; chỉ thêm xuống dòng ở tên cô dâu chú rể
+ * và "Chúc mừng sinh nhật" để không ngắt giữa tên.
  * Sửa mẫu = sửa mô tả này; ảnh thu nhỏ `public/mau/thu-nho/<id>.webp` dựng lại bằng
  * `apps/web/scripts/anh-thu-nho-mau.mjs` (CI chạy và tải lên artifact "anh-thu-nho-mau").
  *
@@ -143,7 +144,7 @@ export const TEMPLATES: readonly TemplateSpec[] = [
     picture: null,
     items: [
       text('tieu_de', 'Trân trọng kính mời', { x: 274, y: 620, width: 1200 }, style('Playfair Display', 84, '#8c5a63', { italic: true, letterSpacing: 2 })),
-      text('ten', '[Tên chú rể] & [Tên cô dâu]', { x: 174, y: 760, width: 1400 }, style('Dancing Script', 150, '#b5536f', { fontWeight: 700, lineHeight: 1.15 })),
+      text('ten', '[Tên chú rể] &\n[Tên cô dâu]', { x: 174, y: 760, width: 1400 }, style('Dancing Script', 150, '#b5536f', { fontWeight: 700, lineHeight: 1.15 })),
       text('loi_moi', 'Xin mời [Tên khách mời] đến dự tiệc cưới\nvà chung vui cùng gia đình chúng tôi.', { x: 224, y: 1180, width: 1300 }, style('Lora', 54, '#5b4a4a', { lineHeight: 1.45 })),
       line(724, 1400, 300, '#d9a5b3', 4),
       text('thoi_gian', '[Giờ], [Thứ], ngày [Ngày] tháng [Tháng] năm [Năm] (nhằm [Ngày âm] âm lịch)', { x: 274, y: 1470, width: 1200 }, style('Lora', 50, '#5b4a4a', { fontWeight: 700, lineHeight: 1.4 })),
@@ -161,7 +162,7 @@ export const TEMPLATES: readonly TemplateSpec[] = [
     picture: null,
     items: [
       text('tieu_de', 'Thiệp mời cưới', { x: 374, y: 700, width: 1000 }, style('Montserrat', 54, '#5f7466', { letterSpacing: 10 })),
-      text('ten', '[Tên chú rể] & [Tên cô dâu]', { x: 274, y: 820, width: 1200 }, style('Playfair Display', 120, '#2f4a3c', { italic: true, lineHeight: 1.2 })),
+      text('ten', '[Tên chú rể] &\n[Tên cô dâu]', { x: 274, y: 820, width: 1200 }, style('Playfair Display', 120, '#2f4a3c', { italic: true, lineHeight: 1.2 })),
       text('loi_moi', 'Mời bạn đến dự tiệc cưới và chung vui cùng chúng mình.', { x: 374, y: 1160, width: 1000 }, style('Montserrat', 46, '#4d5a52', { lineHeight: 1.5 })),
       text('thoi_gian', '[Giờ] · [Ngày/tháng/năm]', { x: 374, y: 1340, width: 1000 }, style('Montserrat', 56, '#2f4a3c', { fontWeight: 700 })),
       text('dia_diem', 'Tại: [Tên địa điểm], [Địa chỉ]', { x: 374, y: 1440, width: 1000 }, style('Montserrat', 46, '#4d5a52')),
@@ -324,7 +325,7 @@ export const TEMPLATES: readonly TemplateSpec[] = [
     image: { width: 1024, height: 1024 },
     picture: null,
     items: [
-      text('tieu_de', 'Chúc mừng sinh nhật', { x: 190, y: 280, width: 700 }, style('Pacifico', 92, '#e0709a', { lineHeight: 1.25 })),
+      text('tieu_de', 'Chúc mừng\nsinh nhật', { x: 140, y: 250, width: 800 }, style('Pacifico', 100, '#e0709a', { lineHeight: 1.25 })),
       text('loi_chuc', 'Chúc bạn tuổi mới nhiều niềm vui,\nluôn khỏe mạnh và bình an,\ncó thêm thời gian làm điều mình thích.', { x: 150, y: 560, width: 780 }, style('Be Vietnam Pro', 34, '#6b5560', { lineHeight: 1.5 })),
       text('ky_ten', 'Từ: [Tên bạn]', { x: 240, y: 760, width: 600 }, style('Dancing Script', 52, '#e0709a', { fontWeight: 700 })),
     ],
