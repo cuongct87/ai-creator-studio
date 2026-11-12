@@ -38,6 +38,7 @@ const createdProjects = [];
 let browser;
 let page;
 let shotNo = 0;
+let exeName = 'Artio.exe';
 
 async function shot(name) {
   shotNo += 1;
@@ -123,6 +124,7 @@ async function portOpen() {
 }
 
 async function launchAndConnect(exe) {
+  exeName = path.basename(exe);
   try {
     execFileSync('taskkill', ['/IM', path.basename(exe), '/F'], { stdio: 'ignore' });
     await sleep(1500);
@@ -385,7 +387,7 @@ async function cleanup() {
     try { fs.unlinkSync(f); } catch {}
   }
   try { await browser?.close(); } catch {}
-  try { execFileSync('taskkill', ['/IM', 'Artio.exe', '/F'], { stdio: 'ignore' }); } catch {}
+  try { execFileSync('taskkill', ['/IM', exeName, '/F'], { stdio: 'ignore' }); } catch {}
 }
 
 function writeReport(fatal) {
