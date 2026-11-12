@@ -16,8 +16,9 @@ import {
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
-import { Arc, Circle, Group, Layer as KLayer, RegularPolygon, Stage, Transformer } from 'react-konva';
+import { Arc, Circle, Group, Layer as KLayer, Rect, RegularPolygon, Stage, Text, Transformer } from 'react-konva';
 import { fontsReady } from './fonts';
+import { GUIDE_FILL_OPACITY, type GuideKind, guideLabelSize, wallpaperGuideRects } from './guides';
 import {
   changedFields,
   clamp,
@@ -85,6 +86,11 @@ export interface DesignCanvasProps {
   /** Which text layer is being edited (so the outer frame can hide its toolbar). */
   onTextEditing?(layerId: Id | null): void;
   readonly?: boolean;
+  /**
+   * Faint guide overlay drawn above the page (never exported, never touchable), e.g. where the
+   * phone's lock-screen clock and bottom icon row go on a wallpaper. null/absent = none.
+   */
+  guides?: GuideKind | null;
   /**
    * Eraser mode (G2b) for one image layer. While set: one finger paints, two fingers zoom/move the
    * page, layers cannot be selected, moved or rotated, handles are hidden. null/absent = normal.
@@ -282,7 +288,7 @@ function styleAnchor(anchor: Konva.Rect): void {
  * The parent must give this component a size (it fills 100% × 100% of its box).
  */
 export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvasHandle> }): JSX.Element {
-  const { document: doc, pageId, selection, onSelect, onOps, onGestureEnd, assetUrl, onTextEditing, readonly = false, onMaskStroke, ref } = props;
+  const { document: doc, pageId, selection, onSelect, onOps, onGestureEnd, assetUrl, onTextEditing, readonly = false, onMaskStroke, guides = null, ref } = props;
   const brush = readonly ? null : (props.brush ?? null);
   /** Eraser mode: no selecting / moving / rotating layers. */
   const brushActive = brush !== null;
@@ -1125,6 +1131,8 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
   const handleScale = 1 / view.current.scale;
   // K6: on a thin layer the handles move out along the corner diagonals (≥ 44 px apart).
   const handleSpots = rotateTarget ? rotateHandlePositions(rotateTarget, view.current.scale) : [];
+  // Wallpaper guides: label size in page px (also the dash length).
+  const guideLabel = page ? guideLabelSize(page) : 8;
 
   return (
     <div ref={wrapRef} style={WRAP_STYLE} aria-label="Trang thiết kế">
@@ -1159,6 +1167,35 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
             />
           )}
         </KLayer>
+        {/* Above the page, below the handles; ignores touches so selecting / erasing work through it. */}
+        {page && guides === 'phone-wallpaper' && (
+          <KLayer listening={false}>
+            {wallpaperGuideRects(page).map((g) => (
+              <Group key={g.kind} x={g.x} y={g.y}>
+                <Rect
+                  width={g.width}
+                  height={g.height}
+                  fill={`rgba(255,255,255,${GUIDE_FILL_OPACITY})`}
+                  stroke={ACCENT}
+                  strokeWidth={1.5}
+                  strokeScaleEnabled={false}
+                  dash={[guideLabel, guideLabel * 0.6]}
+                  perfectDrawEnabled={false}
+                />
+                <Text
+                  text={g.label}
+                  width={g.width}
+                  y={guideLabel * 0.4}
+                  align="center"
+                  fontSize={guideLabel}
+                  fontFamily={cssFontFamily('Be Vietnam Pro')}
+                  fill={ACCENT}
+                  perfectDrawEnabled={false}
+                />
+              </Group>
+            ))}
+          </KLayer>
+        )}
         <KLayer>
           <Transformer
             ref={trRef}

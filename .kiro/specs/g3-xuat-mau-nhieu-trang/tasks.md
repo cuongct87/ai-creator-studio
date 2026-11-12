@@ -10,8 +10,10 @@ Mở PR **thẳng vào `main`**. Mỗi đợt: CI xanh + kịch bản tự kiể
 - [x] C3 (Claude; S24+ 20/20: xuất PNG 0,45 s, PDF 0,8 s, mặt nạ tẩy 0,02 s) Kiểm tra: trình duyệt (xuất PNG/PDF đúng khổ), kịch bản điện thoại (xuất ảnh vào Thư viện, PDF vào Tải xuống).
 
 ## Đợt 2 — Nhiều trang (R3)
-- [ ] K2 (Kiro) Ảnh thu nhỏ trang nhanh (pixelRatio nhỏ, lưu đệm theo phiên bản trang).
-- [ ] C4 (Claude) Dải trang + thêm/nhân đôi/xóa/đổi thứ tự trang; EditorScreen theo trang đang mở; xuất nhiều trang; test.
+- [x] K2 (Kiro) Ảnh thu nhỏ trang nhanh (pixelRatio nhỏ, lưu đệm theo phiên bản trang).
+  > Kiro: mới `usePageThumbnails.ts`, `thumbnails.ts` + `thumbnails.test.ts`; sửa `index.ts`, `README.md`. **Chưa chạy CI/máy.**
+  > Chưa chắc: tốc độ khi nhiều trang (mỗi ảnh thu nhỏ dựng 1 Stage ẩn); ảnh chưa tải kịp → thử lại tối đa 5 lần.
+- [x] C4 (Claude; S24+ 23/23: 3 trang, xuất 3 ảnh 0,9 s) Dải trang + thêm/nhân đôi/xóa/đổi thứ tự trang; EditorScreen theo trang đang mở; xuất nhiều trang; test.
 
 ## Đợt 3 — Kho mẫu (R2)
 - [ ] C5 (Claude) Đọc điều khoản dùng ảnh Gemini / chữ ChatGPT cho mục đích thương mại → báo founder.
@@ -21,7 +23,8 @@ Mở PR **thẳng vào `main`**. Mỗi đợt: CI xanh + kịch bản tự kiể
 - [ ] C8 (Claude) Tab Mẫu (lưới, lọc, tìm), trang chủ → mẫu theo loại, mở mẫu thành dự án mới; test.
 
 ## Đợt 4 — Hình nền điện thoại (R4)
-- [ ] K3 (Kiro) Prop `guides: 'phone-wallpaper'`: lớp gợi ý mờ, không chạm, không xuất.
+- [x] K3 (Kiro) Prop `guides: 'phone-wallpaper'`: lớp gợi ý mờ, không chạm, không xuất.
+  > Kiro: mới `guides.ts` (test trong `thumbnails.test.ts`); sửa `DesignCanvas.tsx` (prop + lớp Konva riêng `listening=false`, giữa trang và tay nắm). **Chưa chạy CI/máy.**
 - [ ] C9 (Claude) `AndroidShell.screenSize`, loại "Hình nền điện thoại", cầu nối `AndroidWallpaper`, nút "Đặt làm hình nền"; 3 mẫu hình nền; test.
 
 ## Founder duyệt

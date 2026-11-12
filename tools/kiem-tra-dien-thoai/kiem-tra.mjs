@@ -520,8 +520,48 @@ async function main() {
     return `${Date.now() - t0} ms — ${text} — đo: ${marksPdf}`;
   });
 
-  // Dọn file thử vừa xuất (không đụng file khác của bạn).
-  for (const newest of exported) await device.shell(`rm -f "$(${newest})"`).catch(() => {});
+  // ---------- G3 đợt 2: nhiều trang ----------
+  const thumbs = () => page.getByRole('list', { name: 'Danh sách trang' }).getByRole('button');
+  const pagesOk = await step('Thêm trang + nhân đôi trang → 3 trang, có ảnh thu nhỏ', async () => {
+    if (await page.getByRole('button', { name: 'Bỏ chọn' }).isVisible()) await tap(page.getByRole('button', { name: 'Bỏ chọn' }));
+    await tap(page.getByRole('button', { name: /^Trang( \d+\/\d+)?$/ }));
+    await tap(page.getByRole('button', { name: '+ Trang' }));
+    await waitDoc((x) => x.pages.length === 2, '2 trang');
+    await tap(page.getByRole('button', { name: 'Trang 1', exact: true }));
+    await tap(page.getByRole('button', { name: 'Nhân đôi trang' }));
+    await waitDoc((x) => x.pages.length === 3, '3 trang');
+    const t0 = Date.now();
+    await waitFor(async () => (await page.locator('.page-thumb img').count()) === 3, 'đủ 3 ảnh thu nhỏ', 15000);
+    return `3 trang, ảnh thu nhỏ xong sau ${Date.now() - t0} ms`;
+  });
+
+  if (pagesOk) {
+    await step('Xuất PNG nhiều trang → 3 ảnh', async () => {
+      await tap(page.getByRole('button', { name: 'Xuất', exact: true }));
+      await sheet().waitFor({ timeout: 3000 });
+      await tap(sheet().getByRole('button', { name: /Ảnh PNG/ }));
+      const t0 = Date.now();
+      await tap(sheet().getByRole('button', { name: 'Xuất', exact: true }));
+      const status = sheet().getByRole('status');
+      await waitFor(async () => /Đã lưu 3 ảnh/.test((await status.textContent().catch(() => '')) ?? ''), 'báo đã lưu 3 ảnh', 30000);
+      const listing = (await device.shell('ls -t /sdcard/Pictures/Artio/*.png | head -3 | wc -l')).toString().trim();
+      for (let i = 0; i < 3; i++) exported.push('ls -t /sdcard/Pictures/Artio/*.png | head -1');
+      await tap(sheet().getByRole('button', { name: 'Đóng' }));
+      return `${Date.now() - t0} ms — 3 trang (${listing} file PNG mới nhất)`;
+    });
+
+    await step('Xóa trang (hỏi lại) → còn 2, hoàn tác → 3', async () => {
+      await tap(page.getByRole('button', { name: 'Xóa trang' }));
+      await tap(page.getByRole('alertdialog').getByRole('button', { name: 'Xóa trang' }));
+      await waitDoc((x) => x.pages.length === 2, 'còn 2 trang');
+      await tap(page.getByRole('button', { name: /^Hoàn tác: Xóa trang/ }));
+      await waitDoc((x) => x.pages.length === 3, 'lại 3 trang');
+      return '';
+    });
+  }
+
+  // Dọn file thử vừa xuất (không đụng file khác của bạn). Xóa lần lượt file mới nhất.
+  for (const newest of exported.reverse()) await device.shell(`rm -f "$(${newest})"`).catch(() => {});
 
   await step('Nút Back của Android → về trang chủ', async () => {
     await device.shell('input keyevent 4');
