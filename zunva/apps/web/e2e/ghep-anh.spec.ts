@@ -52,16 +52,16 @@ test('ghép ảnh: tẩy một nét, mờ viền, bỏ hết vùng tẩy (G2b)',
 
   // Thoát chế độ tẩy: ảnh có vùng tẩy → có nút "Bỏ hết vùng tẩy".
   await page.getByLabel('Chế độ tẩy').getByRole('button', { name: 'Xong' }).click();
-  await expect(page.getByRole('button', { name: 'Bỏ hết vùng tẩy' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Bỏ hết vùng tẩy', exact: true })).toBeVisible();
 
   // Mờ viền.
   await page.getByLabel(/^Mờ viền/).fill('40');
   await expect(page.getByText('Mờ viền: 40')).toBeVisible();
 
   // Bỏ hết vùng tẩy → ảnh đỏ trở lại ở giữa.
-  await page.getByRole('button', { name: 'Bỏ hết vùng tẩy' }).click();
+  await page.getByRole('button', { name: 'Bỏ hết vùng tẩy', exact: true }).click();
   await expect(page.getByRole('button', { name: /^Hoàn tác: Bỏ hết vùng tẩy/ }), await diag(page)).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Bỏ hết vùng tẩy' }), await diag(page)).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Bỏ hết vùng tẩy', exact: true }), await diag(page)).toHaveCount(0);
   await expect.poll(async () => (await centerPixel(page))[0]).toBeGreaterThan(180);
 
   // Tải lại trang: dữ liệu còn (mờ viền 40).
