@@ -1,0 +1,81 @@
+GIAO VIỆC CHO GPT — CHỮ MẪU TIẾNG VIỆT CHO KHO MẪU ARTIO
+=========================================================
+Cách làm: mở ChatGPT, dán NGUYÊN khung bên dưới (từ dòng "Bạn là..." đến hết). GPT trả về một khối JSON.
+Bấm nút sao chép của khối đó, dán vào Notepad, lưu thành:  ai-creator-studio\mau-anh\chu-mau.json
+(Hoặc dán thẳng câu trả lời của GPT cho Claude cũng được.)
+
+----------------------------- DÁN TỪ ĐÂY -----------------------------
+Bạn là người viết chữ mẫu cho app thiết kế Artio (người Việt dùng để làm thiệp cưới, cáo phó, bảng hiệu, bài bán hàng).
+Mỗi mẫu có vài ô chữ. Khách sẽ tự sửa tên, ngày, địa chỉ… nên phần thông tin riêng phải là CHỖ TRỐNG GỢI Ý trong ngoặc vuông,
+ví dụ [Tên cô dâu], [Ngày giờ], [Địa chỉ], [Số điện thoại].
+
+Yêu cầu bắt buộc:
+1. Tiếng Việt có dấu đầy đủ, đúng chính tả, lịch sự, tự nhiên như người Việt viết.
+2. KHÔNG vượt quá số ký tự tối đa ghi cho từng ô (tính cả dấu cách). Ô nào có "dòng" thì dùng \n để xuống dòng.
+3. Không dùng tên người thật, tên thương hiệu, tên quán có thật, số điện thoại thật.
+4. Không bịa thêm ô mới, không bỏ ô nào. Giữ đúng "id" của từng ô.
+5. Nếu có chỗ chưa rõ, ĐỪNG tự đoán: ghi câu hỏi vào trường "hoi_lai" ở cuối JSON.
+6. Chỉ trả về MỘT khối JSON hợp lệ theo đúng khung dưới, không viết gì thêm ngoài khối đó.
+
+Danh sách mẫu và ô chữ (định dạng: id — mô tả — tối đa ký tự):
+
+thiep-cuoi-hoa-hong (thiệp cưới, giọng trang trọng, ấm áp)
+  tieu_de — câu mở đầu ngắn, ví dụ kiểu "Trân trọng kính mời" — 24
+  ten — tên cô dâu & chú rể dạng "[Tên chú rể] & [Tên cô dâu]" — 40
+  loi_moi — lời mời dự tiệc cưới, 2 dòng — 90
+  thoi_gian — "[Giờ], [Thứ], ngày [Ngày] tháng [Tháng] năm [Năm]" kèm (âm lịch) — 80
+  dia_diem — "Tại: [Địa chỉ nhà hàng / tư gia]" — 60
+
+thiep-cuoi-la-xanh (thiệp cưới, giọng hiện đại, ngắn gọn)
+  tieu_de — 20 ; ten — 40 ; loi_moi — 1 dòng, 60 ; thoi_gian — 60 ; dia_diem — 60
+
+thiep-cuoi-do-truyen-thong (thiệp cưới kiểu truyền thống, có "Lễ Vu Quy" hoặc "Lễ Thành Hôn")
+  tieu_de — 24 ; nha_trai — "Nhà trai: Ông [..] – Bà [..]" kèm địa chỉ, 2 dòng — 90 ; nha_gai — tương tự — 90 ;
+  loi_moi — 2 dòng — 100 ; thoi_gian — 80 ; dia_diem — 60
+
+cao-pho-hoa-sen (cáo phó, giọng trang nghiêm, không dùng từ ngữ tôn giáo cụ thể)
+  tieu_de — "CÁO PHÓ" hoặc tương đương — 12 ; loi_bao — câu báo tin buồn, 2 dòng — 100 ;
+  ten — "[Họ và tên người mất]" — 40 ; thong_tin — sinh năm, mất ngày, hưởng thọ, 3 dòng — 120 ;
+  tang_le — lễ nhập quan, di quan, an táng, 3 dòng — 140 ; tang_gia — "Tang gia đồng kính báo" — 30
+
+cao-pho-hoa-cuc (cáo phó, giọng giản dị)
+  tieu_de — 12 ; loi_bao — 90 ; ten — 40 ; thong_tin — 100 ; tang_le — 120 ; tang_gia — 30
+
+bang-hieu-ca-phe
+  ten_quan — "[Tên quán]" hoặc gợi ý ngắn — 20 ; khau_hieu — câu ngắn mời ghé quán — 40 ; dien_thoai — "ĐT: [Số điện thoại]" — 24
+
+bang-hieu-sua-xe
+  ten_tiem — 24 ; dich_vu — các dịch vụ, ngăn bằng " • " — 60 ; dien_thoai — 24
+
+ban-hang-thoi-trang (bài giảm giá, giọng vui, trẻ)
+  tieu_de — ví dụ "SALE CUỐI TUẦN" — 20 ; giam_gia — ví dụ "GIẢM ĐẾN 50%" — 16 ; mo_ta — 2 dòng — 80 ; thoi_gian — 40 ; lien_he — 40
+
+ban-hang-com-tam (bài bán món ăn, giọng mời gọi)
+  ten_mon — 24 ; mo_ta — 2 dòng — 80 ; gia — "Chỉ [Giá]đ" — 20 ; lien_he — "Đặt món: [Số điện thoại]" — 36
+
+ban-hang-my-pham (bài khai trương)
+  tieu_de — ví dụ "KHAI TRƯƠNG" — 16 ; uu_dai — 2 dòng — 80 ; thoi_gian — 40 ; dia_chi — 50
+
+mxh-sinh-nhat
+  tieu_de — "Chúc mừng sinh nhật" hoặc tương đương — 24 ; loi_chuc — 3 dòng — 110 ; ky_ten — "Từ: [Tên bạn]" — 24
+
+mxh-trich-dan
+  cau_noi — một câu nói hay, tích cực, do bạn tự viết (không trích người nổi tiếng), 3 dòng — 110 ; ky_ten — "— [Tên trang của bạn]" — 30
+
+Khung JSON phải trả về (điền nội dung thật vào chỗ "..."):
+{
+  "thiep-cuoi-hoa-hong": { "tieu_de": "...", "ten": "...", "loi_moi": "...", "thoi_gian": "...", "dia_diem": "..." },
+  "thiep-cuoi-la-xanh": { "tieu_de": "...", "ten": "...", "loi_moi": "...", "thoi_gian": "...", "dia_diem": "..." },
+  "thiep-cuoi-do-truyen-thong": { "tieu_de": "...", "nha_trai": "...", "nha_gai": "...", "loi_moi": "...", "thoi_gian": "...", "dia_diem": "..." },
+  "cao-pho-hoa-sen": { "tieu_de": "...", "loi_bao": "...", "ten": "...", "thong_tin": "...", "tang_le": "...", "tang_gia": "..." },
+  "cao-pho-hoa-cuc": { "tieu_de": "...", "loi_bao": "...", "ten": "...", "thong_tin": "...", "tang_le": "...", "tang_gia": "..." },
+  "bang-hieu-ca-phe": { "ten_quan": "...", "khau_hieu": "...", "dien_thoai": "..." },
+  "bang-hieu-sua-xe": { "ten_tiem": "...", "dich_vu": "...", "dien_thoai": "..." },
+  "ban-hang-thoi-trang": { "tieu_de": "...", "giam_gia": "...", "mo_ta": "...", "thoi_gian": "...", "lien_he": "..." },
+  "ban-hang-com-tam": { "ten_mon": "...", "mo_ta": "...", "gia": "...", "lien_he": "..." },
+  "ban-hang-my-pham": { "tieu_de": "...", "uu_dai": "...", "thoi_gian": "...", "dia_chi": "..." },
+  "mxh-sinh-nhat": { "tieu_de": "...", "loi_chuc": "...", "ky_ten": "..." },
+  "mxh-trich-dan": { "cau_noi": "...", "ky_ten": "..." },
+  "hoi_lai": []
+}
+----------------------------- DÁN ĐẾN ĐÂY -----------------------------

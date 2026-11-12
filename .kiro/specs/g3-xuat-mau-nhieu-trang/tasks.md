@@ -16,8 +16,8 @@ Mở PR **thẳng vào `main`**. Mỗi đợt: CI xanh + kịch bản tự kiể
 - [x] C4 (Claude; S24+ 23/23: 3 trang, xuất 3 ảnh 0,9 s) Dải trang + thêm/nhân đôi/xóa/đổi thứ tự trang; EditorScreen theo trang đang mở; xuất nhiều trang; test.
 
 ## Đợt 3 — Kho mẫu (R2)
-- [ ] C5 (Claude) Đọc điều khoản dùng ảnh Gemini / chữ ChatGPT cho mục đích thương mại → báo founder.
-- [ ] C6 (Claude) Bản giao việc cho Gemini (ảnh) và GPT (chữ mẫu).
+- [x] C5 (Claude; xem dieu-khoan-anh-chu-ai.md) Đọc điều khoản dùng ảnh Gemini / chữ ChatGPT cho mục đích thương mại → báo founder.
+- [x] C6 (Claude; giao-viec-gemini.txt, giao-viec-gpt.txt) Bản giao việc cho Gemini (ảnh) và GPT (chữ mẫu).
 - [ ] F1 (Founder) Tạo ảnh bằng Gemini, chữ bằng GPT theo bản giao việc; để vào thư mục Claude chỉ định trên laptop.
 - [ ] C7 (Claude) Công cụ `tools/mau/` (JSON → .zunva + ảnh thu nhỏ) và 15 mẫu đầu.
 - [ ] C8 (Claude) Tab Mẫu (lưới, lọc, tìm), trang chủ → mẫu theo loại, mở mẫu thành dự án mới; test.

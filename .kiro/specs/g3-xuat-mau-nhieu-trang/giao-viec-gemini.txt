@@ -1,0 +1,56 @@
+GIAO VIỆC CHO GEMINI — 15 ẢNH MINH HỌA CHO KHO MẪU ARTIO
+==========================================================
+Cách làm: mở Gemini, DÁN TỪNG LỆNH (mỗi lệnh 1 ảnh). Ảnh ưng ý thì tải về, ĐỔI TÊN đúng tên ghi ở đầu lệnh,
+lưu vào thư mục:  ai-creator-studio\mau-anh\
+Ảnh chưa ưng: bảo Gemini "làm lại, ..." (ví dụ "nhạt màu hơn", "ít hoa hơn"). Mỗi ảnh tối đa 3 lần là đủ.
+Xong 1 ảnh: mở file mau-anh\nhat-ky.txt, dán 1 dòng: tên file + ngày + câu lệnh đã dùng (giữ bằng chứng nguồn gốc).
+
+Luật chung (đã có sẵn trong từng lệnh, không cần thêm):
+- KHÔNG có chữ, số, logo, thương hiệu, người thật / khuôn mặt.
+- Màu nhẹ, sang, hợp người Việt; chừa khoảng trống sạch để Artio đặt chữ lên.
+
+-----------------------------------------------------------------
+[1] thiep-cuoi-hoa-hong.png
+Vẽ ảnh dọc tỉ lệ 3:4, nền thiệp cưới: viền hoa hồng pastel hồng phấn và lá xanh nhạt vẽ màu nước ở góc trên và góc dưới, giữa ảnh là khoảng trống màu kem rất nhạt (chiếm khoảng 60% diện tích) để đặt chữ. Phong cách màu nước tinh tế, nhẹ nhàng. Không có chữ, số, logo, người.
+
+[2] thiep-cuoi-la-xanh.png
+Vẽ ảnh dọc tỉ lệ 3:4, nền thiệp cưới tối giản: vài nhánh lá bạch đàn (eucalyptus) xanh xám vẽ màu nước rủ từ góc trên bên trái và góc dưới bên phải, nền trắng ngà, rất nhiều khoảng trống ở giữa để đặt chữ. Thanh lịch, hiện đại. Không có chữ, số, logo, người.
+
+[3] thiep-cuoi-do-truyen-thong.png
+Vẽ ảnh dọc tỉ lệ 3:4, nền thiệp cưới truyền thống Việt Nam: nền đỏ son, viền họa tiết hoa văn vàng kim cổ điển mảnh xung quanh mép, góc có hoa mai vàng nhỏ, giữa là khoảng trống đỏ trơn để đặt chữ. Sang trọng, không rối. Không có chữ (kể cả chữ Hán), số, logo, người.
+
+[4] cao-pho-hoa-sen.png
+Vẽ ảnh dọc tỉ lệ 3:4, nền cáo phó trang nghiêm: một bông hoa sen trắng và lá sen vẽ mực tàu nhạt ở phía dưới, nền xám rất nhạt gần trắng, phía trên là khoảng trống rộng để đặt chữ. Tĩnh lặng, trang trọng, đơn sắc. Không có chữ, số, logo, người.
+
+[5] cao-pho-hoa-cuc.png
+Vẽ ảnh dọc tỉ lệ 3:4, nền cáo phó: vòng hoa cúc trắng nhỏ ở hai góc dưới, nền trắng trơn, viền mảnh màu xám than quanh mép ảnh, giữa trống để đặt chữ. Trang nghiêm, giản dị. Không có chữ, số, logo, người.
+
+[6] bang-hieu-ca-phe.png
+Vẽ ảnh ngang tỉ lệ 16:9, nền bảng hiệu quán cà phê: phía bên phải là ly cà phê sữa đá Việt Nam và vài hạt cà phê, vẽ phẳng (flat illustration) màu nâu ấm và kem; nửa bên trái là nền nâu kem trơn để đặt tên quán. Không có chữ, số, logo, người.
+
+[7] bang-hieu-sua-xe.png
+Vẽ ảnh ngang tỉ lệ 16:9, nền bảng hiệu tiệm sửa xe máy: phía bên phải là cờ lê, tua vít, bánh răng vẽ phẳng màu xanh dương đậm và cam; nửa bên trái là nền xanh dương đậm trơn để đặt chữ. Khỏe khoắn, rõ ràng. Không có chữ, số, logo, thương hiệu xe, người.
+
+[8] ban-hang-thoi-trang.png
+Vẽ ảnh dọc tỉ lệ 3:4, nền bài đăng giảm giá thời trang: áo sơ mi, túi xách, giày treo trên móc vẽ phẳng màu hồng phấn và xanh nhạt ở nửa dưới, nửa trên là nền hồng phấn trơn để đặt chữ giảm giá. Trẻ trung, tươi. Không có chữ, số, %, logo, người.
+
+[9] ban-hang-com-tam.png
+Vẽ ảnh dọc tỉ lệ 3:4: một đĩa cơm tấm sườn bì chả Việt Nam nhìn từ trên xuống, ánh sáng tự nhiên, đặt ở nửa dưới ảnh; nửa trên là mặt bàn gỗ sáng màu trơn để đặt chữ. Ngon miệng, chân thực. Không có chữ, số, logo, người, bàn tay.
+
+[10] ban-hang-my-pham.png
+Vẽ ảnh dọc tỉ lệ 3:4, nền khai trương tiệm mỹ phẩm: vài lọ kem, chai serum không nhãn hiệu, cánh hoa và lá xanh, màu kem và hồng đào, đặt ở góc dưới bên phải; còn lại là nền kem trơn để đặt chữ. Sạch sẽ, cao cấp. Không có chữ, nhãn, logo, người.
+
+[11] mxh-sinh-nhat.png
+Vẽ ảnh vuông tỉ lệ 1:1, nền chúc mừng sinh nhật: bánh kem nhỏ, bóng bay và hoa giấy màu pastel (hồng, xanh nhạt, vàng nhạt) rải quanh mép ảnh, giữa là khoảng trống sáng để đặt lời chúc. Vui, dễ thương. Không có chữ, số, logo, người.
+
+[12] mxh-trich-dan.png
+Vẽ ảnh vuông tỉ lệ 1:1, nền cho câu nói hay: bầu trời lúc bình minh màu hồng cam nhạt, mây mềm, một cánh đồng lúa xa xa rất nhỏ ở mép dưới, phần giữa là trời trơn để đặt chữ. Yên bình. Không có chữ, số, logo, người.
+
+[13] hinh-nen-hoa-pastel.png
+Vẽ ảnh dọc tỉ lệ 9:16, hình nền điện thoại: hoa cúc họa mi trắng và hoa nhỏ màu hồng phấn vẽ màu nước ở phần dưới và góc trên bên phải, nền xanh nhạt pastel, phần trên chừa trống cho đồng hồ. Nhẹ nhàng, dễ thương. Không có chữ, số, logo, người.
+
+[14] hinh-nen-song-nuoc-mien-tay.png
+Vẽ ảnh dọc tỉ lệ 9:16, hình nền điện thoại: sông nước miền Tây Việt Nam lúc hoàng hôn, hàng dừa nước hai bên bờ, một chiếc xuồng nhỏ không người trên sông, bầu trời cam tím, phong cách tranh vẽ phẳng mềm mại; phần trên là trời trơn cho đồng hồ. Không có chữ, số, logo, người.
+
+[15] hinh-nen-hinh-hoc.png
+Vẽ ảnh dọc tỉ lệ 9:16, hình nền điện thoại tối giản: các khối tròn và vòng cung lớn chồng nhau màu hồng phấn, xanh nhạt và trắng ngà, phong cách hiện đại, nhiều khoảng trống, phần trên sáng và trơn cho đồng hồ. Không có chữ, số, logo, người.
