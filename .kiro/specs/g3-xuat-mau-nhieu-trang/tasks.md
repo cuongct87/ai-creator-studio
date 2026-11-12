@@ -7,7 +7,7 @@ Mở PR **thẳng vào `main`**. Mỗi đợt: CI xanh + kịch bản tự kiể
   > Kiro 12/11: mới `PageScene.tsx` (mã vẽ chung), `renderPage.tsx`, `exportImage.ts` + test; sửa `DesignCanvas.tsx`, `index.ts`, `README.md`.
 - [x] C1 (Claude) `buildPdf` + test; `movePage`; `cloneDocumentForTemplate`.
 - [x] C2 (Claude) Bảng Xuất (PNG/JPG/PDF, chất lượng, trang, tiến độ); cầu nối Chia sẻ Android (uri MediaStore + ACTION_SEND); web `navigator.share`.
-- [ ] C3 (Claude) Kiểm tra: trình duyệt (xuất PNG/PDF đúng khổ), kịch bản điện thoại (xuất ảnh vào Thư viện, PDF vào Tải xuống).
+- [x] C3 (Claude; S24+ 20/20: xuất PNG 0,45 s, PDF 0,8 s, mặt nạ tẩy 0,02 s) Kiểm tra: trình duyệt (xuất PNG/PDF đúng khổ), kịch bản điện thoại (xuất ảnh vào Thư viện, PDF vào Tải xuống).
 
 ## Đợt 2 — Nhiều trang (R3)
 - [ ] K2 (Kiro) Ảnh thu nhỏ trang nhanh (pixelRatio nhỏ, lưu đệm theo phiên bản trang).
