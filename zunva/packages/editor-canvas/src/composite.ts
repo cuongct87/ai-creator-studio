@@ -164,27 +164,14 @@ export async function alphaMaskToPng(mask: HTMLCanvasElement): Promise<Uint8Arra
 
 /**
  * Canvas → ảnh (PNG/JPG) **ngay**, không chờ máy rảnh.
- * `HTMLCanvasElement.toBlob` của Chrome/WebView chỉ mã hóa khi luồng chính rảnh; lúc app đang vẽ
- * (Konva, tay nắm, ảnh thu nhỏ) nó có thể chờ vài giây (đo trên S24+: tạo mặt nạ tẩy mất 4 giây).
- * `OffscreenCanvas.convertToBlob` mã hóa luôn. Máy không có OffscreenCanvas thì dùng `toDataURL` (đồng bộ).
+ * Đo trên S24+: `canvas.toBlob` và cả `OffscreenCanvas.convertToBlob` của WebView chỉ mã hóa khi luồng
+ * chính rảnh — lúc app đang bận (vẽ ảnh thu nhỏ, Konva) phải chờ 3–13 giây. `toDataURL` mã hóa đồng bộ
+ * ngay lập tức (mặt nạ 648 px, ảnh thu nhỏ, ảnh xuất 1080 px: vài chục đến vài trăm ms).
  */
 export async function encodeCanvas(canvas: HTMLCanvasElement, mimeType: 'image/png' | 'image/jpeg', quality?: number): Promise<Blob> {
-  if (typeof OffscreenCanvas !== 'undefined') {
-    const off = new OffscreenCanvas(canvas.width, canvas.height);
-    const ctx = off.getContext('2d');
-    if (ctx) {
-      ctx.drawImage(canvas, 0, 0);
-      try {
-        return await off.convertToBlob(quality === undefined ? { type: mimeType } : { type: mimeType, quality });
-      } finally {
-        // Trả bộ nhớ ngay (ảnh xuất có thể tới 8000 px).
-        off.width = 0;
-        off.height = 0;
-      }
-    }
-  }
   const url = canvas.toDataURL(mimeType, quality);
   const comma = url.indexOf(',');
+  if (comma < 0 || !url.startsWith(`data:${mimeType}`)) throw new Error('Trình duyệt không tạo được ảnh.');
   const binary = atob(url.slice(comma + 1));
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
