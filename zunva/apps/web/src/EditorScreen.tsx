@@ -22,6 +22,8 @@ import { DesignCanvas, FONT_FAMILIES, type BrushSettings, type DesignCanvasHandl
 import { createAutosave, detectImageType, type AutosaveStatus, type Platform, type ProjectStore } from '@zunva/platform';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useConfirm } from './ConfirmDialog';
+import { pngToJpeg, type RenderPage } from './export-actions';
+import { ExportSheet } from './ExportSheet';
 import { imageSize, newId } from './create-project';
 import {
   addImageOps,
@@ -68,6 +70,7 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
   const [textEditing, setTextEditing] = useState<Id | null>(null);
   /** Chế độ Tẩy (G2b) cho một lớp ảnh; null = chỉnh sửa bình thường. */
   const [brush, setBrush] = useState<BrushSettings | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [panel, setPanel] = useState<Panel>('none');
   const [urls, setUrls] = useState<Record<Id, string>>({});
   const [saveStatus, setSaveStatus] = useState<AutosaveStatus>('idle');
@@ -263,6 +266,15 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
     ]);
   }
 
+  /** Vẽ một trang ra ảnh để xuất (tạm: trang đang mở, qua màn vẽ; đợt K1 sẽ vẽ được mọi trang). */
+  const renderPage: RenderPage = async (pageId, mimeType, pixelRatio) => {
+    const canvas = canvasRef.current;
+    if (!canvas || !page) throw new Error('Trang chưa sẵn sàng, hãy thử lại.');
+    if (pageId !== page.id) throw new Error('Hiện chỉ xuất được trang đang mở.');
+    const png = await canvas.exportPageImage(pixelRatio);
+    return mimeType === 'image/jpeg' ? pngToJpeg(png) : png;
+  };
+
   const segmentSubject = (layer: Layer) =>
     withBusy(async () => {
       const segmenter = platform.subject;
@@ -370,6 +382,9 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
         </button>
         <button type="button" aria-label="Vừa màn hình" onClick={() => canvasRef.current?.fitToScreen()}>
           ⤢
+        </button>
+        <button type="button" className="primary" onClick={() => setExporting(true)}>
+          Xuất
         </button>
       </header>
 
@@ -492,6 +507,9 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
             />
           )}
         </div>
+      )}
+      {exporting && (
+        <ExportSheet doc={doc} pageIds={doc.pages.map((p) => p.id)} render={renderPage} platform={platform} onClose={() => setExporting(false)} />
       )}
       {dialog}
     </div>
