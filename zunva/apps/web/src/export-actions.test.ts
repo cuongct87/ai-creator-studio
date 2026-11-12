@@ -31,7 +31,9 @@ describe('xuất (G3)', () => {
   it('tỉ lệ vẽ: Thường = 1, Cao = 2, không vượt 8000 px', () => {
     expect(exportPixelRatio({ width: 1080, height: 1080 }, 'normal')).toBe(1);
     expect(exportPixelRatio({ width: 1080, height: 1080 }, 'high')).toBe(2);
-    expect(exportPixelRatio({ width: 2480, height: 3508 }, 'high')).toBeCloseTo(8000 / 3508, 5);
+    expect(exportPixelRatio({ width: 2480, height: 3508 }, 'high')).toBe(2);
+    expect(exportPixelRatio({ width: 5000, height: 1000 }, 'high')).toBeCloseTo(1.6, 5);
+    expect(exportPixelRatio({ width: 10000, height: 1000 }, 'normal')).toBeCloseTo(0.8, 5);
   });
 
   it('tên file giữ tiếng Việt, bỏ ký tự cấm, đánh số khi nhiều trang', () => {
