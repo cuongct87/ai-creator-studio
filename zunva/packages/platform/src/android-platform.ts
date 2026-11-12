@@ -1,5 +1,6 @@
 import type { FileSaver, GallerySaver, Platform, PlatformResult, SavedFile, Sharer, SubjectSegmenter, WallpaperSetter } from './index';
 import { createWebPlatform } from './web-platform';
+import { createTauriPlatform, isTauri } from './tauri-platform';
 
 /**
  * Bản nền tảng cho vỏ Android (G1-7). WebView của Android không tải xuống được file tạo bằng
@@ -264,5 +265,8 @@ export function createAndroidPlatform(win: AndroidBridgeWindow, doc?: Document):
 /** Chọn bản nền tảng theo nơi app đang chạy: trong vỏ Android có cầu nối thì dùng Android. */
 export function createPlatform(): Platform {
   const win = window as unknown as AndroidBridgeWindow;
-  return win.AndroidFileSaver ? createAndroidPlatform(win) : createWebPlatform();
+  if (win.AndroidFileSaver) return createAndroidPlatform(win);
+  // Vỏ Windows (Tauri 2, G4).
+  if (isTauri(window)) return createTauriPlatform(window);
+  return createWebPlatform();
 }

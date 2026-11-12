@@ -93,6 +93,8 @@ export interface Platform {
   readonly wallpaper?: WallpaperSetter;
   /** Kích thước màn hình máy (px thật), để làm hình nền vừa khít. Vắng mặt / null → dùng khổ mặc định. */
   screenSize?(): { width: number; height: number } | null;
+  /** Có trên máy tính (Windows): mở thư mục chứa file vừa lưu (`SavedFile.uri`). Vắng mặt → app ẩn nút "Mở thư mục". */
+  reveal?(uri: string): Promise<PlatformResult<void>>;
 }
 
 /** Một dòng trong danh sách dự án (không cần mở cả thiết kế). */
@@ -147,4 +149,6 @@ export { createAutosave } from './autosave';
 export type { Autosave, AutosaveOptions, AutosaveState, AutosaveStatus } from './autosave';
 export { createWebPlatform, detectImageType } from './web-platform';
 export { createAndroidPlatform, createPlatform } from './android-platform';
+export { createTauriPlatform, isTauri } from './tauri-platform';
+export type { TauriWindow } from './tauri-platform';
 export type { AndroidBridgeWindow } from './android-platform';

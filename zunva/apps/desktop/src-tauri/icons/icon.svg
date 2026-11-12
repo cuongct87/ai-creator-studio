@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e3f2fc"/>
+      <stop offset="1" stop-color="#c5e2f6"/>
+    </linearGradient>
+    <linearGradient id="a" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7a8c8"/>
+      <stop offset="1" stop-color="#ec7fab"/>
+    </linearGradient>
+  </defs>
+  <rect x="32" y="32" width="960" height="960" rx="224" fill="url(#bg)"/>
+  <!-- chữ A: hai nét chéo bo tròn -->
+  <path d="M300 790 L512 230 L724 790" fill="none" stroke="url(#a)" stroke-width="128" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- nét ngang như một nét cọ -->
+  <path d="M372 612 C 450 572, 560 640, 660 588" fill="none" stroke="#ad2459" stroke-width="58" stroke-linecap="round"/>
+  <!-- chấm lấp lánh -->
+  <circle cx="770" cy="270" r="40" fill="#ffffff"/>
+  <circle cx="842" cy="352" r="20" fill="#ffffff" opacity="0.85"/>
+</svg>

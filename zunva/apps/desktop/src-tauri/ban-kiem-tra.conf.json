@@ -1,0 +1,17 @@
+{
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Artio (bản kiểm tra)",
+        "width": 1280,
+        "height": 800,
+        "minWidth": 360,
+        "minHeight": 640,
+        "center": true,
+        "dragDropEnabled": false,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --remote-debugging-port=9333"
+      }
+    ]
+  }
+}

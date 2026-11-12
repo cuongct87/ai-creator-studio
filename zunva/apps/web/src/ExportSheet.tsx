@@ -80,12 +80,20 @@ export function ExportSheet({
     }
   }
 
+  /** Máy tính (Windows): mở Explorer, chọn sẵn file vừa lưu. */
+  async function reveal(uri: string) {
+    const r = await platform.reveal?.(uri);
+    if (r && !r.ok) setStatus({ kind: 'error', message: r.error });
+  }
+
   async function share(result: ExportResult) {
     const sharer = platform.share;
     if (!sharer) return;
     const r = await sharer.share(result.files);
     if (!r.ok) setStatus({ kind: 'error', message: r.error });
   }
+
+  const savedUri = status.kind === 'done' ? status.result.files[0]?.uri : undefined;
 
   return (
     <div className="dialog-backdrop" onClick={() => !working && onClose()}>
@@ -154,6 +162,11 @@ export function ExportSheet({
           ) : (
             <button type="button" className="primary" disabled={working} onClick={() => void start()}>
               {status.kind === 'done' ? 'Xuất lại' : 'Xuất'}
+            </button>
+          )}
+          {savedUri && platform.reveal && (
+            <button type="button" onClick={() => void reveal(savedUri)}>
+              Mở thư mục
             </button>
           )}
           <button type="button" disabled={working} onClick={onClose}>
