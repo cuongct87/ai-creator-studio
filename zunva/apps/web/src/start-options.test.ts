@@ -17,6 +17,7 @@ describe('trang chủ: cách bắt đầu và ô tìm', () => {
     expect(labels('giam gia')).toEqual(['Bài bán hàng']);
     expect(labels('zalo')).toEqual(['Mạng xã hội']);
     expect(labels('phan uu')).toEqual(['Cáo phó']);
+    expect(labels('man hinh khoa')).toEqual(['Hình nền điện thoại']);
   });
 
   it('ô tìm trống thì hiện tất cả; không khớp thì rỗng', () => {

@@ -1,4 +1,4 @@
-import type { FileSaver, GallerySaver, Platform, PlatformResult, SavedFile, Sharer, SubjectSegmenter } from './index';
+import type { FileSaver, GallerySaver, Platform, PlatformResult, SavedFile, Sharer, SubjectSegmenter, WallpaperSetter } from './index';
 import { createWebPlatform } from './web-platform';
 
 /**
@@ -18,6 +18,11 @@ export interface AndroidBridgeWindow {
     /** G3: ảnh xuất vào Ảnh/Artio, trả kèm uri để chia sẻ (bản app cũ không có). */
     saveImageBytes?(fileName: string, mimeType: string, base64: string): string;
   };
+  /** G3: kích thước màn hình (JSON {"width","height"}) — có trong AndroidShell. */
+  AndroidShell?: { setBarColor?(hex: string): void; screenSize?(): string };
+  /** G3: đặt hình nền; trả lời bất đồng bộ qua `__artioWallpaperDone(requestId, json)`. */
+  AndroidWallpaper?: { setWallpaper(requestId: string, base64Png: string, target: string): void };
+  __artioWallpaperDone?: (requestId: string, json: string) => void;
   /** G3: bảng chia sẻ của máy cho các uri vừa lưu. */
   AndroidShare?: { share(urisJson: string, mimeType: string): string };
   AndroidImageSaver?: { saveImage(dataUrl: string, fileName: string): void };
@@ -98,6 +103,59 @@ export function createAndroidSegmenter(win: AndroidBridgeWindow, timeoutMs = SEG
           pending.delete(id);
           clearTimeout(timer);
           resolve({ ok: false, error: MESSAGES.segmentFailed });
+        }
+      });
+    },
+  };
+}
+
+/** Đọc kích thước màn hình từ Java; số lạ → null (app dùng khổ mặc định). */
+export function parseScreenSize(read: () => string): { width: number; height: number } | null {
+  try {
+    const v = JSON.parse(read()) as { width?: unknown; height?: unknown };
+    const ok = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 200 && n <= 8000;
+    return ok(v.width) && ok(v.height) ? { width: v.width, height: v.height } : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Đặt hình nền (Android): Java làm ở luồng riêng rồi gọi lại `__artioWallpaperDone`. */
+export function createAndroidWallpaper(win: AndroidBridgeWindow, timeoutMs = 30_000): WallpaperSetter | null {
+  const bridge = win.AndroidWallpaper;
+  if (!bridge) return null;
+  const pending = new Map<string, (r: PlatformResult<void>) => void>();
+  let seq = 0;
+  win.__artioWallpaperDone = (requestId, json) => {
+    const done = pending.get(requestId);
+    if (!done) return;
+    pending.delete(requestId);
+    try {
+      const v = JSON.parse(json) as { ok?: unknown; error?: unknown };
+      done(v.ok === true ? { ok: true, value: undefined } : { ok: false, error: typeof v.error === 'string' && v.error ? v.error : 'Không đặt được hình nền.' });
+    } catch {
+      done({ ok: false, error: 'Không đặt được hình nền.' });
+    }
+  };
+  return {
+    set(png, target) {
+      if (png.length > ANDROID_MAX_SAVE_BYTES) return Promise.resolve({ ok: false, error: MESSAGES.tooLarge });
+      seq += 1;
+      const id = `wp_${seq}`;
+      return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+          if (pending.delete(id)) resolve({ ok: false, error: 'Đặt hình nền lâu quá. Hãy thử lại.' });
+        }, timeoutMs);
+        pending.set(id, (r) => {
+          clearTimeout(timer);
+          resolve(r);
+        });
+        try {
+          bridge.setWallpaper(id, toBase64(png), target);
+        } catch {
+          pending.delete(id);
+          clearTimeout(timer);
+          resolve({ ok: false, error: 'Không đặt được hình nền.' });
         }
       });
     },
@@ -193,6 +251,13 @@ export function createAndroidPlatform(win: AndroidBridgeWindow, doc?: Document):
   if (subject) platform = { ...platform, subject };
   const share = createAndroidSharer(win);
   if (share) platform = { ...platform, share };
+  const wallpaper = createAndroidWallpaper(win);
+  if (wallpaper) platform = { ...platform, wallpaper };
+  const shell = win.AndroidShell;
+  if (shell && typeof shell.screenSize === 'function') {
+    const read = shell.screenSize.bind(shell);
+    platform = { ...platform, screenSize: () => parseScreenSize(read) };
+  }
   return platform;
 }
 

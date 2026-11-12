@@ -49,6 +49,52 @@ public class MainActivity extends Activity {
             try { color = Color.parseColor(hex); } catch (IllegalArgumentException e) { return; }
             runOnUiThread(() -> applyBarColor(color));
         }
+
+        /** G3 hình nền: kích thước màn hình thật (px), JSON {"width":1080,"height":2340}. */
+        @JavascriptInterface public String screenSize() {
+            int w;
+            int h;
+            if (Build.VERSION.SDK_INT >= 30) {
+                android.graphics.Rect b = getWindowManager().getMaximumWindowMetrics().getBounds();
+                w = b.width();
+                h = b.height();
+            } else {
+                android.util.DisplayMetrics m = new android.util.DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getRealMetrics(m);
+                w = m.widthPixels;
+                h = m.heightPixels;
+            }
+            // Luôn trả khổ dọc (hình nền điện thoại).
+            return "{\"width\":" + Math.min(w, h) + ",\"height\":" + Math.max(w, h) + "}";
+        }
+    }
+
+    /** G3: đặt ảnh PNG làm hình nền (màn hình chính / khóa / cả hai). Trả lời qua __artioWallpaperDone. */
+    public class WallpaperBridge {
+        @JavascriptInterface
+        public void setWallpaper(String requestId, String base64, String target) {
+            if (requestId == null || !requestId.matches("[A-Za-z0-9_-]{1,64}") || base64 == null) return;
+            new Thread(() -> {
+                String reply;
+                try {
+                    byte[] bytes = Base64.decode(base64, Base64.DEFAULT);
+                    android.graphics.Bitmap bmp = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    if (bmp == null) throw new IOException("bad image");
+                    int flags = "home".equals(target) ? android.app.WallpaperManager.FLAG_SYSTEM
+                            : "lock".equals(target) ? android.app.WallpaperManager.FLAG_LOCK
+                            : android.app.WallpaperManager.FLAG_SYSTEM | android.app.WallpaperManager.FLAG_LOCK;
+                    int id = android.app.WallpaperManager.getInstance(MainActivity.this).setBitmap(bmp, null, true, flags);
+                    bmp.recycle();
+                    reply = id == 0 ? error("Máy không cho đặt hình nền.") : ok("", null);
+                } catch (OutOfMemoryError e) {
+                    reply = error(OUT_OF_MEMORY);
+                } catch (Exception e) {
+                    reply = error("Không đặt được hình nền.");
+                }
+                final String js = "window.__artioWallpaperDone&&window.__artioWallpaperDone(" + JSONObject.quote(requestId) + "," + JSONObject.quote(reply) + ")";
+                runOnUiThread(() -> web.evaluateJavascript(js, null));
+            }).start();
+        }
     }
 
     private void applyBarColor(int color) {
@@ -318,6 +364,7 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new FileSaver(), "AndroidFileSaver");
         web.addJavascriptInterface(new ShellBridge(), "AndroidShell");
         web.addJavascriptInterface(new ShareBridge(), "AndroidShare");
+        web.addJavascriptInterface(new WallpaperBridge(), "AndroidWallpaper");
         web.addJavascriptInterface(new SubjectBridge(this, web), "AndroidSubject");
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {

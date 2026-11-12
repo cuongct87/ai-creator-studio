@@ -75,6 +75,29 @@ jobs:
       - name: Cài trình duyệt cho Playwright
         run: pnpm --filter @zunva/web exec playwright install --with-deps chromium
 
+      - name: Dựng ảnh thu nhỏ kho mẫu (trình vẽ thật, phông thật)
+        run: pnpm --filter @zunva/web exec node scripts/anh-thu-nho-mau.mjs
+
+      # Ảnh thu nhỏ khác bản đã commit (hoặc chưa có) → in ra log dạng base64 để Claude lấy về xem rồi commit.
+      - name: So ảnh thu nhỏ kho mẫu với bản đã commit
+        run: |
+          cd apps/web/public/mau/thu-nho
+          changed=0
+          for f in *.webp; do
+            if ! git cat-file -e "HEAD:zunva/apps/web/public/mau/thu-nho/$f" 2>/dev/null || ! git show "HEAD:zunva/apps/web/public/mau/thu-nho/$f" | cmp -s - "$f"; then
+              changed=1
+              echo "THU-NHO-BEGIN $f"; base64 -w0 "$f"; echo; echo "THU-NHO-END $f"
+            fi
+          done
+          if [ "$changed" = 0 ]; then echo "Ảnh thu nhỏ trùng bản đã commit."; else echo "::warning::Ảnh thu nhỏ kho mẫu khác bản đã commit"; fi
+
+      - name: Lưu ảnh thu nhỏ kho mẫu
+        uses: actions/upload-artifact@v4
+        with:
+          name: anh-thu-nho-mau
+          path: zunva/apps/web/public/mau/thu-nho
+          if-no-files-found: error
+
       - name: Test giao diện khổ 360px
         run: pnpm e2e
 

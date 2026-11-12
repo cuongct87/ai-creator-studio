@@ -1,5 +1,5 @@
 import type { DesignDocument, Id } from '@zunva/core';
-import type { Platform } from '@zunva/platform';
+import type { Platform, WallpaperTarget } from '@zunva/platform';
 import { useState } from 'react';
 import { runExport, type ExportFormat, type ExportQuality, type ExportResult, type RenderPage } from './export-actions';
 
@@ -19,12 +19,15 @@ const FORMATS: Array<[ExportFormat, string, string]> = [
 export function ExportSheet({
   doc,
   pageIds,
+  currentPageId,
   render,
   platform,
   onClose,
 }: {
   doc: DesignDocument;
   pageIds: readonly Id[];
+  /** Trang đang mở (dùng cho "Đặt làm hình nền"). */
+  currentPageId: Id;
   render: RenderPage;
   platform: Platform;
   onClose(): void;
@@ -56,6 +59,24 @@ export function ExportSheet({
       setStatus(r.ok ? { kind: 'done', result: r.value } : { kind: 'error', message: r.error });
     } catch (e) {
       setStatus({ kind: 'error', message: e instanceof Error && e.message ? e.message : 'Không xuất được. Hãy thử lại.' });
+    }
+  }
+
+  // Hình nền điện thoại (G3 R4): chỉ với dự án loại hình nền, trên nền tảng đặt được hình nền (Android).
+  const wallpaper = doc.meta.kind === 'wallpaper' ? platform.wallpaper : undefined;
+  async function setWallpaper(target: WallpaperTarget) {
+    if (!wallpaper) return;
+    setStatus({ kind: 'working', done: 0, total: 1 });
+    try {
+      const blob = await render(currentPageId, 'image/png', 1);
+      const r = await wallpaper.set(new Uint8Array(await blob.arrayBuffer()), target);
+      setStatus(
+        r.ok
+          ? { kind: 'done', result: { message: target === 'lock' ? 'Đã đặt hình nền màn hình khóa.' : target === 'home' ? 'Đã đặt hình nền màn hình chính.' : 'Đã đặt hình nền cả hai màn hình.', files: [] } }
+          : { kind: 'error', message: r.error },
+      );
+    } catch (e) {
+      setStatus({ kind: 'error', message: e instanceof Error && e.message ? e.message : 'Không đặt được hình nền.' });
     }
   }
 
@@ -94,6 +115,21 @@ export function ExportSheet({
           </div>
         )}
 
+        {wallpaper && (
+          <div className="row" role="group" aria-label="Đặt làm hình nền">
+            <span className="muted small">Đặt làm hình nền:</span>
+            <button type="button" disabled={working} onClick={() => void setWallpaper('home')}>
+              Màn hình chính
+            </button>
+            <button type="button" disabled={working} onClick={() => void setWallpaper('lock')}>
+              Màn hình khóa
+            </button>
+            <button type="button" disabled={working} onClick={() => void setWallpaper('both')}>
+              Cả hai
+            </button>
+          </div>
+        )}
+
         {status.kind === 'working' && (
           <p className="muted small" role="status">
             Đang xuất{status.total > 1 ? ` trang ${Math.min(status.done + 1, status.total)}/${status.total}` : ''}…
@@ -111,7 +147,7 @@ export function ExportSheet({
         )}
 
         <div className="row">
-          {status.kind === 'done' && platform.share ? (
+          {status.kind === 'done' && platform.share && status.result.files.length > 0 ? (
             <button type="button" className="primary" onClick={() => void share(status.result)}>
               Chia sẻ
             </button>

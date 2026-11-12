@@ -11,7 +11,7 @@ export default tseslint.config(
     languageOptions: { globals: globals.browser },
   },
   {
-    files: ['*.{js,ts}', 'apps/web/*.config.ts'],
+    files: ['*.{js,ts}', 'apps/web/*.config.ts', 'apps/web/scripts/**/*.mjs'],
     languageOptions: { globals: globals.node },
   },
   // Luật hướng phụ thuộc: lõi không biết gì về giao diện, trình duyệt hay các gói khác.

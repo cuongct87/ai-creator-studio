@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 test('nhiều trang: thêm, nhân đôi, chuyển trang, đổi chỗ, xóa + hoàn tác, xuất mỗi trang một ảnh (G3)', async ({ page }) => {
   await page.goto('/');
   await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+  await page.getByRole('dialog', { name: 'Chọn mẫu Mạng xã hội' }).getByRole('button', { name: 'Trang trắng' }).click();
   const stage = page.getByRole('region', { name: /Trang 1080×1080/ });
 
   // Trang 1: một hình tròn.

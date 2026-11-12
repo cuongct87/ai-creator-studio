@@ -57,6 +57,16 @@ export function buildPdf(pages: Array<{ jpeg: Uint8Array; widthPx: number; heigh
 - Trước khi đưa ảnh/chữ AI vào app: Claude đọc điều khoản dùng nội dung tạo ra (Gemini, ChatGPT) cho mục đích thương mại, báo founder.
 - Phông: chỉ 6 phông OFL đang có. Màu: bảng màu riêng của Artio.
 
+### Đã làm (C7, 12/11) — khác bản thiết kế ở trên
+- Mẫu viết bằng **mô tả TypeScript** `apps/web/src/mau/kho-mau.ts` (có kiểm kiểu, unit test) thay cho JSON + file `.zunva` riêng:
+  mở mẫu = dựng tài liệu từ mô tả (`buildTemplateDocument`) → `cloneDocumentForTemplate` → lưu. Không lưu ảnh hai lần trong APK.
+- Ảnh minh họa: `public/mau/anh/<id>.jpg` (JPEG chất lượng 92, tổng ≈ 2 MB). Nguồn gốc: `nguon-goc-anh-mau.txt`.
+- Ảnh thu nhỏ: `public/mau/thu-nho/<id>.webp`, dựng bằng `apps/web/scripts/anh-thu-nho-mau.mjs` (Vite dev + Playwright + `renderPageImage`, phông thật).
+  CI chạy và tải lên artifact `anh-thu-nho-mau`; Claude xem rồi commit. Chưa có ảnh thu nhỏ thì lưới hiện ảnh minh họa gốc.
+- Bảng hiệu 3000×1000: ảnh 16:9 là một lớp bên phải, nền trang cùng màu với mép trái ảnh. Mẫu khác: ảnh làm nền trang (chạm chữ không kéo nhầm ảnh).
+- Hình nền: mẫu chỉ có ảnh → khi mở đổi khổ theo màn hình máy (Android), ảnh tự phủ lại.
+- Trang chủ: bấm loại có mẫu → bảng "Trang trắng" + các mẫu của loại đó.
+
 ## 7. Rủi ro
 - Xuất nhiều trang khổ lớn trên điện thoại yếu: vẽ từng trang, giải phóng canvas ngay; PDF A4 nhiều trang có thể > 100 MB → báo trước và đề nghị chất lượng Thường.
 - Mẫu làm tăng dung lượng app: giới hạn tổng kho mẫu đợt đầu ≤ 15 MB.

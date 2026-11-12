@@ -3,7 +3,9 @@ import type { Platform, ProjectStore, ProjectSummary } from '@zunva/platform';
 import { useEffect, useMemo, useState } from 'react';
 import { createBlankProject, createPhotoProject, type CreateResult } from './create-project';
 import { thumbAssetId } from './EditorScreen';
-import { PAGE_SIZES, searchStartOptions, type StartOption } from './start-options';
+import { TEMPLATE_KINDS } from './mau/dung-mau';
+import { PAGE_SIZES, type PageSize, searchStartOptions, type StartOption } from './start-options';
+import { TemplatePicker } from './Templates';
 import type { ThemeId } from './theme';
 import { ThemeSwitch } from './ThemeSwitch';
 
@@ -25,6 +27,8 @@ export function Home({ store, platform, theme, onThemeChange, onOpen }: HomeProp
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [askingSize, setAskingSize] = useState<StartOption | null>(null);
+  /** Loại đang chọn mẫu (trang chủ → "Trang trắng" + các mẫu của loại đó). */
+  const [picking, setPicking] = useState<StartOption | null>(null);
   const [thumbs, setThumbs] = useState<Record<Id, string>>({});
 
   useEffect(() => {
@@ -65,11 +69,29 @@ export function Home({ store, platform, theme, onThemeChange, onOpen }: HomeProp
     }
   }
 
+  /** Khổ trang trắng của một loại. Hình nền: đúng kích thước màn hình máy nếu nền tảng cho biết (Android). */
+  function blankSize(option: StartOption & { size: PageSize }): PageSize {
+    const screen = option.kind === 'wallpaper' ? platform.screenSize?.() : null;
+    return screen ? { ...option.size, width: screen.width, height: screen.height } : option.size;
+  }
+
+  function sizeLabel(option: StartOption): string {
+    if (option.size === null) return '';
+    const size = blankSize({ ...option, size: option.size });
+    return `${size.width}×${size.height} px`;
+  }
+
+  function startBlank(option: StartOption) {
+    if (busy) return;
+    if (option.size === null) return setAskingSize(option);
+    void finish(createBlankProject(store, option, blankSize({ ...option, size: option.size })));
+  }
+
   function start(option: StartOption) {
     if (busy) return;
     if (option.kind === 'photo') return void finish(createPhotoProject(store, platform, option));
-    if (option.size === null) return setAskingSize(option);
-    void finish(createBlankProject(store, option, option.size));
+    if (TEMPLATE_KINDS.some((k) => k.kind === option.kind)) return setPicking(option);
+    startBlank(option);
   }
 
   return (
@@ -148,6 +170,24 @@ export function Home({ store, platform, theme, onThemeChange, onOpen }: HomeProp
           </ul>
         )}
       </section>
+
+      {picking && (
+        <TemplatePicker
+          store={store}
+          platform={platform}
+          kind={picking.kind}
+          label={picking.label}
+          blankSize={sizeLabel(picking)}
+          blankDisabled={busy}
+          onBlank={() => {
+            const option = picking;
+            setPicking(null);
+            startBlank(option);
+          }}
+          onClose={() => setPicking(null)}
+          onOpen={onOpen}
+        />
+      )}
 
       {askingSize && (
         <div className="dialog-backdrop" onClick={() => setAskingSize(null)}>

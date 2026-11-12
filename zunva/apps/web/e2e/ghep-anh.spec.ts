@@ -27,6 +27,7 @@ async function centerPixel(page: Page): Promise<number[]> {
 test('ghép ảnh: tẩy một nét, mờ viền, bỏ hết vùng tẩy (G2b)', async ({ page }) => {
   await page.goto('/');
   await page.locator('.starts').getByRole('button', { name: 'Mạng xã hội' }).click();
+  await page.getByRole('dialog', { name: 'Chọn mẫu Mạng xã hội' }).getByRole('button', { name: 'Trang trắng' }).click();
   const stage = page.getByRole('region', { name: /Trang 1080×1080/ });
   await expect(stage).toBeVisible();
 

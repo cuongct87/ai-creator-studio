@@ -158,3 +158,35 @@ describe('xuất và chia sẻ (G3)', () => {
     expect(p.share).toBeUndefined();
   });
 });
+
+describe('hình nền điện thoại (G3 R4)', () => {
+  it('kích thước màn hình từ Java; số lạ → null', async () => {
+    const { parseScreenSize } = await import('./android-platform');
+    expect(parseScreenSize(() => '{"width":1080,"height":2340}')).toEqual({ width: 1080, height: 2340 });
+    expect(parseScreenSize(() => '{"width":0,"height":2340}')).toBeNull();
+    expect(parseScreenSize(() => 'rác')).toBeNull();
+    const win: AndroidBridgeWindow = { AndroidFileSaver: { saveBytes: () => '{"ok":true}' }, AndroidShell: { screenSize: () => '{"width":1440,"height":3120}' } };
+    expect(createAndroidPlatform(win, fakeDoc).screenSize?.()).toEqual({ width: 1440, height: 3120 });
+  });
+
+  it('đặt hình nền: gửi ảnh + nơi đặt sang Java, nhận kết quả', async () => {
+    const sent: string[] = [];
+    const win: AndroidBridgeWindow = {
+      AndroidFileSaver: { saveBytes: () => '{"ok":true}' },
+      AndroidWallpaper: {
+        setWallpaper(id, b64, target) {
+          sent.push(`${b64}|${target}`);
+          setTimeout(() => win.__artioWallpaperDone?.(id, target === 'lock' ? '{"ok":false,"error":"Máy không cho đặt hình nền."}' : '{"ok":true}'), 1);
+        },
+      },
+    };
+    const wp = createAndroidPlatform(win, fakeDoc).wallpaper!;
+    expect(await wp.set(new Uint8Array([1, 2]), 'home')).toEqual({ ok: true, value: undefined });
+    expect(await wp.set(new Uint8Array([1, 2]), 'lock')).toEqual({ ok: false, error: 'Máy không cho đặt hình nền.' });
+    expect(sent).toEqual([`${toBase64(new Uint8Array([1, 2]))}|home`, `${toBase64(new Uint8Array([1, 2]))}|lock`]);
+  });
+
+  it('web / bản app cũ: không có đặt hình nền', () => {
+    expect(createAndroidPlatform(bridge('{"ok":true}').win, fakeDoc).wallpaper).toBeUndefined();
+  });
+});
