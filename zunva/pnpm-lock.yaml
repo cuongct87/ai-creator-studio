@@ -94,6 +94,49 @@ importers:
 
   packages/core: {}
 
+  packages/editor-canvas:
+    dependencies:
+      '@fontsource/be-vietnam-pro':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/dancing-script':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/lora':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/montserrat':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/pacifico':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource/playfair-display':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@zunva/core':
+        specifier: workspace:*
+        version: link:../core
+      konva:
+        specifier: 10.9.1
+        version: 10.9.1
+      react-konva:
+        specifier: 19.3.2
+        version: 19.3.2(@types/react@19.3.0)(konva@10.9.1)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+    devDependencies:
+      '@types/react':
+        specifier: 19.3.0
+        version: 19.3.0
+      '@types/react-dom':
+        specifier: 19.3.0
+        version: 19.3.0(@types/react@19.3.0)
+      react:
+        specifier: 19.3.0
+        version: 19.3.0
+      react-dom:
+        specifier: 19.3.0
+        version: 19.3.0(react@19.3.0)
+
   packages/platform:
     dependencies:
       '@zunva/core':
@@ -391,6 +434,18 @@ packages:
 
   '@fontsource/be-vietnam-pro@5.3.0':
     resolution: {integrity: sha512-xhAQBGHDxP5BF8IJxedy5MoWUmc1DlPCcZbMLhvnPkf8TaYCbbUVs3LjpuJ4BYdTrdiCLaewNaY8z+owq/FqFw==}
+
+  '@fontsource/dancing-script@5.3.0':
+    resolution: {integrity: sha512-/FFbz4ZCNN+eG2a6phkZB41iKmyCC6rq2blA/kG9OFeI3/tpzLNazND1bBdEnogLhpfg7o4NfauTbEEYSpSUGg==}
+
+  '@fontsource/lora@5.3.0':
+    resolution: {integrity: sha512-OK1g1z01rHVPqO5aw/FOIoDqc46KKYZdgL3NOLkxLWDk6QhDHhdr/h2BV1cke6gTvR1tzpDfdKyUkGsC+sQLeQ==}
+
+  '@fontsource/montserrat@5.3.0':
+    resolution: {integrity: sha512-iQPDtZOnmM5ih4JBGaMSXisRap0ixb9bAUw2hDtY7EjVfaqiiNlKtVuJl9XclxUwtwMMHNcWXfQR6zI9x05+Tg==}
+
+  '@fontsource/pacifico@5.3.0':
+    resolution: {integrity: sha512-bWv0fHR1n36p7scRn+maaEaVeQCOq9yvfVfjyAeUzKrK4Y/3qiRAEj4hJgfxj/sjgZZGkeHyKPrbWdDaZtpCVw==}
 
   '@fontsource/playfair-display@5.3.0':
     resolution: {integrity: sha512-uJSABalvdWc10fEPppQjQocamT21LEyRfzzWfRfqbkPz+sRv+kKpYDKyluBUskvJREkJTos9epj1WjQROGu99Q==}
@@ -1669,6 +1724,14 @@ snapshots:
       levn: 0.4.1
 
   '@fontsource/be-vietnam-pro@5.3.0': {}
+
+  '@fontsource/dancing-script@5.3.0': {}
+
+  '@fontsource/lora@5.3.0': {}
+
+  '@fontsource/montserrat@5.3.0': {}
+
+  '@fontsource/pacifico@5.3.0': {}
 
   '@fontsource/playfair-display@5.3.0': {}
 
