@@ -439,10 +439,10 @@ async function main() {
     const text = (await status.textContent())?.trim();
     if (!/Ảnh\/Artio/.test(text ?? '')) throw new Error(`báo lạ: "${text}"`);
     const name = `${(await page.locator('.editor-title').textContent())?.trim()}.png`;
-    const ls = (await device.shell(`ls -l "/sdcard/Pictures/Artio/${name}"`)).toString().trim();
-    if (!ls || /No such file/.test(ls)) throw new Error(`không thấy file trong Ảnh/Artio: ${ls}`);
+    const size = (await device.shell(`stat -c %s "/sdcard/Pictures/Artio/${name}"`)).toString().trim();
+    if (!/^\d+$/.test(size)) throw new Error(`không thấy file trong Ảnh/Artio: ${size}`);
     exported.push(`/sdcard/Pictures/Artio/${name}`);
-    return `${Date.now() - t0} ms — ${text} (${ls.split(/\s+/)[4] ?? '?'} byte)`;
+    return `${Date.now() - t0} ms — ${text} (${Math.round(Number(size) / 1024)} KB)`;
   });
 
   await step('Chia sẻ → mở bảng chia sẻ của máy', async () => {

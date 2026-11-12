@@ -34,6 +34,13 @@ export function ExportSheet({
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
   const working = status.kind === 'working';
 
+  // Đổi định dạng / chất lượng sau khi đã xuất → xuất lại được (không kẹt ở nút "Chia sẻ").
+  function choose(next: { format?: ExportFormat; quality?: ExportQuality }) {
+    if (next.format) setFormat(next.format);
+    if (next.quality) setQuality(next.quality);
+    setStatus({ kind: 'idle' });
+  }
+
   async function start() {
     setStatus({ kind: 'working', done: 0, total: pageIds.length });
     try {
@@ -69,7 +76,7 @@ export function ExportSheet({
 
         <div className="export-formats" role="group" aria-label="Định dạng">
           {FORMATS.map(([id, label, hint]) => (
-            <button key={id} type="button" aria-pressed={format === id} disabled={working} onClick={() => setFormat(id)}>
+            <button key={id} type="button" aria-pressed={format === id} disabled={working} onClick={() => choose({ format: id })}>
               <span>{label}</span>
               <span className="muted small">{hint}</span>
             </button>
@@ -78,10 +85,10 @@ export function ExportSheet({
 
         {format !== 'pdf' && (
           <div className="row" role="group" aria-label="Chất lượng">
-            <button type="button" aria-pressed={quality === 'normal'} disabled={working} onClick={() => setQuality('normal')}>
+            <button type="button" aria-pressed={quality === 'normal'} disabled={working} onClick={() => choose({ quality: 'normal' })}>
               Thường
             </button>
-            <button type="button" aria-pressed={quality === 'high'} disabled={working} onClick={() => setQuality('high')}>
+            <button type="button" aria-pressed={quality === 'high'} disabled={working} onClick={() => choose({ quality: 'high' })}>
               Cao (gấp đôi)
             </button>
           </div>

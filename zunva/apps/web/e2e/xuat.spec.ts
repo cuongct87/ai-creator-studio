@@ -23,7 +23,7 @@ test('xuất ảnh PNG, JPG và PDF để in (G3)', async ({ page }) => {
   await sheet.getByRole('button', { name: /Ảnh JPG/ }).click();
   await sheet.getByRole('button', { name: 'Cao (gấp đôi)' }).click();
   download = page.waitForEvent('download');
-  await sheet.getByRole('button', { name: 'Xuất lại' }).click();
+  await sheet.getByRole('button', { name: 'Xuất', exact: true }).click();
   file = await download;
   expect(file.suggestedFilename()).toBe('Thiệp cưới.jpg');
 
@@ -31,7 +31,7 @@ test('xuất ảnh PNG, JPG và PDF để in (G3)', async ({ page }) => {
   await sheet.getByRole('button', { name: /PDF để in/ }).click();
   await expect(sheet.getByRole('button', { name: 'Cao (gấp đôi)' })).toHaveCount(0);
   download = page.waitForEvent('download');
-  await sheet.getByRole('button', { name: 'Xuất lại' }).click();
+  await sheet.getByRole('button', { name: 'Xuất', exact: true }).click();
   file = await download;
   expect(file.suggestedFilename()).toBe('Thiệp cưới.pdf');
   const stream = await file.createReadStream();
