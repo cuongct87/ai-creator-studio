@@ -108,6 +108,42 @@ describe('ProjectStore (IndexedDB)', () => {
     expect((await store.remove(doc.id)).ok).toBe(true);
   });
 
+  it('dự án lưu trước G2b (dữ liệu v2) vẫn mở được, tự nâng lên v3', async () => {
+    const doc = makeDoc('Thiệp cưới cũ', ['img_old']);
+    await store.putAsset('img_old', 'image/png', new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]));
+    const old = JSON.parse(JSON.stringify(doc)) as Record<string, unknown> & { pages: Array<{ layers: Array<Record<string, unknown>> }> };
+    old['schemaVersion'] = 2;
+    for (const l of old.pages[0]!.layers) {
+      delete l['blendMode'];
+      delete l['feather'];
+      delete l['maskAssetId'];
+    }
+    await new Promise<void>((resolve, reject) => {
+      const open = factory.open('test');
+      open.onupgradeneeded = () => {
+        open.result.createObjectStore('projects', { keyPath: 'id' });
+        open.result.createObjectStore('assets', { keyPath: 'id' });
+      };
+      open.onsuccess = () => {
+        const tx = open.result.transaction('projects', 'readwrite');
+        tx.objectStore('projects').put({ id: doc.id, updatedAt: 1, doc: old });
+        tx.oncomplete = () => {
+          open.result.close();
+          resolve();
+        };
+        tx.onerror = () => reject(tx.error);
+      };
+    });
+    const r = await store.load(doc.id);
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect(r.value.schemaVersion).toBe(3);
+    expect(r.value.pages[0]!.layers.map((l) => l.blendMode)).toEqual(['normal', 'normal']);
+    expect(r.value.pages[0]!.layers[1]).toMatchObject({ type: 'image', feather: 0, maskAssetId: null });
+    // Lưu lại ghi bản v3.
+    expect((await store.save(r.value)).ok).toBe(true);
+  });
+
   it('không giới hạn 12 dự án: lưu được 200 dự án', async () => {
     const ids: string[] = [];
     for (let i = 0; i < 200; i++) {
@@ -149,6 +185,22 @@ describe('ProjectStore (IndexedDB)', () => {
 
     await store.remove(b.id);
     expect((await store.getAsset('asset_shared')).ok).toBe(false);
+  });
+
+  it('dọn ảnh không còn dùng: giữ ảnh, mặt nạ và ảnh thu nhỏ của dự án; xóa mặt nạ cũ', async () => {
+    const doc = makeDoc('Ghép ảnh', ['img_a']);
+    const img = doc.pages[0]!.layers.find((l) => l.type === 'image')!;
+    doc.assets['mask_2'] = { id: 'mask_2', kind: 'image', mimeType: 'image/png', name: null, hash: null, width: 10, height: 10 };
+    if (img.type === 'image') img.maskAssetId = 'mask_2';
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
+    for (const id of ['img_a', 'mask_1', 'mask_2', `thumb_${doc.id}`, 'thumb_da_xoa']) await store.putAsset(id, 'image/png', png);
+    expect((await store.save(doc)).ok).toBe(true);
+    expect(await store.collectUnusedAssets()).toEqual({ ok: true, value: 2 }); // mask_1 (nét tẩy cũ) + thumb của dự án đã xóa
+    expect((await store.getAsset('img_a')).ok).toBe(true);
+    expect((await store.getAsset('mask_2')).ok).toBe(true);
+    expect((await store.getAsset(`thumb_${doc.id}`)).ok).toBe(true);
+    expect((await store.getAsset('mask_1')).ok).toBe(false);
+    expect((await store.getAsset('thumb_da_xoa')).ok).toBe(false);
   });
 
   it('ảnh sai bị từ chối', async () => {

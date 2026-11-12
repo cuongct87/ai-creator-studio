@@ -266,6 +266,7 @@ public class MainActivity extends Activity {
         web.addJavascriptInterface(new ImageSaver(), "AndroidImageSaver");
         web.addJavascriptInterface(new FileSaver(), "AndroidFileSaver");
         web.addJavascriptInterface(new ShellBridge(), "AndroidShell");
+        web.addJavascriptInterface(new SubjectBridge(this, web), "AndroidSubject");
         web.setWebViewClient(new WebViewClient() {
             @Override public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 Uri u = request.getUrl();

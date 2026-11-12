@@ -1,5 +1,5 @@
 import type { DesignDocument } from './model';
-import { SCHEMA_VERSION } from './model';
+import { BLEND_MODES, SCHEMA_VERSION } from './model';
 
 /**
  * Kiểm tra dữ liệu thiết kế trước khi dùng (khi mở file, nhập dự án cũ, nhận kết quả AI).
@@ -95,6 +95,7 @@ function checkLayer(c: Checker, l: unknown, path: string, assetIds: Set<string>,
   c.num(l, 'height', path, { min: 0 });
   c.num(l, 'rotation', path);
   c.num(l, 'opacity', path, { min: 0, max: 1 });
+  c.oneOf(l, 'blendMode', path, BLEND_MODES);
   c.bool(l, 'locked', path);
   c.bool(l, 'hidden', path);
   checkTiming(c, l, path);
@@ -129,6 +130,10 @@ function checkLayer(c: Checker, l: unknown, path: string, assetIds: Set<string>,
       c.num(l, 'cornerRadius', path, { min: 0 });
       c.bool(l, 'flipX', path);
       c.bool(l, 'flipY', path);
+      c.num(l, 'feather', path, { min: 0 });
+      if (l.maskAssetId !== null && (!isStr(l.maskAssetId) || !assetIds.has(l.maskAssetId))) {
+        c.fail(`${path}.maskAssetId`, 'phải là null hoặc ID tài nguyên có thật');
+      }
       break;
     }
     case 'shape':

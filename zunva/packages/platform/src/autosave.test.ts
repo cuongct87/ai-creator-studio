@@ -19,6 +19,7 @@ function fakeStore(failFirst = false): { store: ProjectStore; saved: string[] } 
     putAsset: notUsed,
     getAsset: notUsed,
     storageInfo: notUsed,
+    collectUnusedAssets: notUsed,
     async save(doc) {
       calls++;
       if (failFirst && calls === 1) return { ok: false, error: 'Máy hết chỗ lưu.' };

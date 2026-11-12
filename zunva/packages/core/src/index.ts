@@ -8,6 +8,8 @@ export * from './model';
 export * from './ids';
 export * from './factory';
 export * from './validate';
+export * from './migrate';
+export * from './assets';
 export * from './ops';
 export * from './history';
 export * from './zip';

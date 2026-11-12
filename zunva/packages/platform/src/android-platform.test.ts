@@ -66,3 +66,50 @@ describe('nền tảng Android (cầu nối Java)', () => {
     expect(createAndroidPlatform({}, fakeDoc).name).toBe('web');
   });
 });
+
+describe('tách nền qua cầu nối Java (G2b)', () => {
+  function subjectWindow(reply: (id: string, base64: string, win: AndroidBridgeWindow) => void) {
+    const win: AndroidBridgeWindow = {
+      AndroidFileSaver: { saveBytes: () => '{"ok":true}' },
+      AndroidSubject: {
+        segment(id, base64) {
+          setTimeout(() => reply(id, base64, win), 1);
+        },
+      },
+    };
+    return win;
+  }
+
+  it('không có cầu nối → không có tách nền (app ẩn nút)', () => {
+    expect(createAndroidPlatform(bridge('{"ok":true}').win, fakeDoc).subject).toBeUndefined();
+  });
+
+  it('trả mặt nạ PNG đúng từng byte', async () => {
+    const mask = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 255]);
+    let sent = '';
+    const win = subjectWindow((id, b64, w) => {
+      sent = b64;
+      w.__artioSegmentDone?.(id, JSON.stringify({ ok: true, mask: toBase64(mask) }));
+    });
+    const r = await createAndroidPlatform(win, fakeDoc).subject!.segment(new Uint8Array([1, 2, 3]));
+    expect(sent).toBe(toBase64(new Uint8Array([1, 2, 3])));
+    expect(r).toEqual({ ok: true, value: mask });
+  });
+
+  it('không thấy chủ thể → null; lỗi Java → câu báo tiếng Việt', async () => {
+    const none = subjectWindow((id, _b, w) => w.__artioSegmentDone?.(id, '{"ok":true,"mask":null}'));
+    expect(await createAndroidPlatform(none, fakeDoc).subject!.segment(new Uint8Array([1]))).toEqual({ ok: true, value: null });
+    const err = subjectWindow((id, _b, w) => w.__artioSegmentDone?.(id, '{"ok":false,"error":"Máy đang tải bộ tách nền"}'));
+    expect(await createAndroidPlatform(err, fakeDoc).subject!.segment(new Uint8Array([1]))).toEqual({ ok: false, error: 'Máy đang tải bộ tách nền' });
+    const junk = subjectWindow((id, _b, w) => w.__artioSegmentDone?.(id, 'rác'));
+    const j = await createAndroidPlatform(junk, fakeDoc).subject!.segment(new Uint8Array([1]));
+    expect(j.ok).toBe(false);
+  });
+
+  it('Java không trả lời → hết giờ, báo lỗi', async () => {
+    const win = subjectWindow(() => {});
+    const { createAndroidSegmenter } = await import('./android-platform');
+    const r = await createAndroidSegmenter(win, 20)!.segment(new Uint8Array([1]));
+    expect(r.ok).toBe(false);
+  });
+});
