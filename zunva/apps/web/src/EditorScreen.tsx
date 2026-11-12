@@ -18,11 +18,11 @@ import {
   type Op,
   type TextAlign,
 } from '@zunva/core';
-import { DesignCanvas, FONT_FAMILIES, type BrushSettings, type DesignCanvasHandle } from '@zunva/editor-canvas';
+import { DesignCanvas, FONT_FAMILIES, renderPageImage, type BrushSettings, type DesignCanvasHandle } from '@zunva/editor-canvas';
 import { createAutosave, detectImageType, type AutosaveStatus, type Platform, type ProjectStore } from '@zunva/platform';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useConfirm } from './ConfirmDialog';
-import { pngToJpeg, type RenderPage } from './export-actions';
+import { JPEG_QUALITY, type RenderPage } from './export-actions';
 import { ExportSheet } from './ExportSheet';
 import { imageSize, newId } from './create-project';
 import {
@@ -266,13 +266,11 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
     ]);
   }
 
-  /** Vẽ một trang ra ảnh để xuất (tạm: trang đang mở, qua màn vẽ; đợt K1 sẽ vẽ được mọi trang). */
-  const renderPage: RenderPage = async (pageId, mimeType, pixelRatio) => {
-    const canvas = canvasRef.current;
-    if (!canvas || !page) throw new Error('Trang chưa sẵn sàng, hãy thử lại.');
-    if (pageId !== page.id) throw new Error('Hiện chỉ xuất được trang đang mở.');
-    const png = await canvas.exportPageImage(pixelRatio);
-    return mimeType === 'image/jpeg' ? pngToJpeg(png) : png;
+  /** Vẽ một trang bất kỳ ra ảnh để xuất (cùng mã vẽ với màn hình). */
+  const renderPage: RenderPage = (pageId, mimeType, pixelRatio) => {
+    const current = histRef.current?.doc;
+    if (!current) return Promise.reject(new Error('Thiết kế chưa mở xong, hãy thử lại.'));
+    return renderPageImage(current, pageId, { pixelRatio, mimeType, quality: JPEG_QUALITY, assetUrl });
   };
 
   const segmentSubject = (layer: Layer) =>

@@ -88,18 +88,3 @@ export async function runExport(o: ExportOptions): Promise<PlatformResult<Export
   o.onProgress?.(total, total);
   return { ok: true, value: { message: `Đã lưu ${total > 1 ? `${total} ảnh` : 'ảnh'} vào ${location}`, files } };
 }
-
-/** PNG → JPEG có nền trắng (JPG không có trong suốt). Dùng khi bộ vẽ chỉ trả PNG. */
-export async function pngToJpeg(png: Blob, quality = JPEG_QUALITY): Promise<Blob> {
-  const bitmap = await createImageBitmap(png);
-  const canvas = document.createElement('canvas');
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Trình duyệt không vẽ được ảnh.');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(bitmap, 0, 0);
-  bitmap.close();
-  return new Promise((resolve, reject) => canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('Không tạo được ảnh JPG.'))), 'image/jpeg', quality));
-}

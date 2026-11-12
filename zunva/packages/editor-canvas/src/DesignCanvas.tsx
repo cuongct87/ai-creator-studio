@@ -1,4 +1,4 @@
-import type { DesignDocument, Id, ImageLayer, Layer, Op, ShapeLayer, TextLayer } from '@zunva/core';
+import type { DesignDocument, Id, ImageLayer, Layer, Op, TextLayer } from '@zunva/core';
 import Konva from 'konva';
 import type { KonvaEventObject } from 'konva/lib/Node';
 import {
@@ -16,12 +16,11 @@ import {
   useState,
 } from 'react';
 import { flushSync } from 'react-dom';
-import { Arc, Circle, Ellipse, Group, Image as KImage, Layer as KLayer, Line, Rect, RegularPolygon, Stage, Text, Transformer } from 'react-konva';
+import { Arc, Circle, Group, Layer as KLayer, RegularPolygon, Stage, Transformer } from 'react-konva';
 import { fontsReady } from './fonts';
 import {
   changedFields,
   clamp,
-  coverCrop,
   cropToSource,
   cssFontFamily,
   dragMergeKey,
@@ -51,8 +50,9 @@ import {
 } from './geometry';
 import { alphaMaskFromImage, alphaMaskToPng, createCanvas, fullAlphaMask, paintDab, renderComposite } from './composite';
 import { useImageCache } from './images';
+import { type LayerBinding, PageScene, type TextBinding } from './PageScene';
+import { renderPageImage } from './renderPage';
 import {
-  blendToComposite,
   brushRadiusInMask,
   compositeCanvasSize,
   compositeKey,
@@ -176,8 +176,6 @@ const TOUCH_TARGET = 44;
 /** Corner rotate handle: visible radius in screen pixels. */
 const ROTATE_HANDLE_RADIUS = 12;
 const ACCENT = '#0d8799';
-const PLACEHOLDER_FILL = '#d0d5dd';
-const MAX_EXPORT_SIDE = 16384;
 /** Ignore the canvas "finger down" that closes the text box right after it opened. */
 const EDIT_OPEN_GUARD_MS = 400;
 /** Frames to wait for a just-added text layer to be drawn before opening its text box. */
@@ -275,14 +273,6 @@ function styleAnchor(anchor: Konva.Rect): void {
   });
 }
 
-function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Không xuất được ảnh trang.'))), 'image/png');
-  });
-}
-
-const nextFrame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-
 /**
  * Draws one page of a DesignDocument with Konva. The canvas never keeps its own copy of the
  * document: it draws `document` and reports changes as core `Op`s (the outer frame runs them
@@ -304,8 +294,6 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
 
   const wrapRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<Konva.Stage>(null);
-  const pageLayerRef = useRef<Konva.Layer>(null);
-  const bgRef = useRef<Konva.Rect>(null);
   const trRef = useRef<Konva.Transformer>(null);
   const nodes = useRef(new Map<Id, Konva.Node>());
   const refCallbacks = useRef(new Map<Id, (node: Konva.Node | null) => void>());
@@ -1085,67 +1073,19 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
   };
 
   // ---------- export exactly the page frame ----------
+  // Same contract as before (PNG, page size × pixelRatio), now drawn by renderPageImage (G3 K1).
   const exportPageImage = useCallback(
-    async (pixelRatio: number): Promise<Blob> => {
-      if (!Number.isFinite(pixelRatio) || pixelRatio <= 0) throw new RangeError('pixelRatio phải là số > 0');
-      if (Math.max(pageWidth, pageHeight) * pixelRatio > MAX_EXPORT_SIDE) {
-        throw new RangeError('Ảnh xuất quá lớn. Hãy chọn tỉ lệ nhỏ hơn.');
-      }
-      await fontsReady();
-      const urls: string[] = [];
-      for (const l of layers) {
-        if (l.type !== 'image') continue;
-        const url = assetUrl(l.assetId);
-        if (url) urls.push(url);
-        // Masks too: the export uses the same pictures as the screen.
-        const maskUrl = l.maskAssetId ? assetUrl(l.maskAssetId) : undefined;
-        if (maskUrl) urls.push(maskUrl);
-      }
-      const bgId = page?.background.imageAssetId;
-      const bgUrl = bgId ? assetUrl(bgId) : undefined;
-      if (bgUrl) urls.push(bgUrl);
-      await images.whenLoaded(urls);
-      // Let React draw the images that just finished loading.
-      await nextFrame();
-      await nextFrame();
-
-      const stage = stageRef.current;
-      const layer = pageLayerRef.current;
-      if (!stage || !layer) throw new Error('Trang chưa sẵn sàng để xuất ảnh.');
-      const scale = stage.scaleX();
-      const editingNode = editingRef.current ? nodes.current.get(editingRef.current.id) : undefined;
-      const bg = bgRef.current;
-      editingNode?.show();
-      bg?.strokeEnabled(false);
-      try {
-        const canvas = layer.toCanvas({
-          x: stage.x(),
-          y: stage.y(),
-          width: pageWidth * scale,
-          height: pageHeight * scale,
-          pixelRatio: pixelRatio / scale,
-        });
-        return await canvasToBlob(canvas);
-      } finally {
-        if (editingRef.current) editingNode?.hide();
-        bg?.strokeEnabled(true);
-        layer.batchDraw();
-      }
-    },
-    [pageWidth, pageHeight, layers, page, assetUrl, images],
+    (pixelRatio: number): Promise<Blob> => renderPageImage(doc, currentPageId, { pixelRatio, mimeType: 'image/png', assetUrl }),
+    [doc, currentPageId, assetUrl],
   );
 
   useImperativeHandle(ref, () => ({ fitToScreen, exportPageImage, startTextEdit }), [fitToScreen, exportPageImage, startTextEdit]);
 
   // ---------- drawing ----------
-  const common = (layer: Layer) => ({
+  // Position, size, look and blend are drawn by PageScene (shared with renderPageImage);
+  // the editor only adds the interactive part.
+  const common = (layer: Layer): LayerBinding => ({
     ref: register(layer.id),
-    id: layer.id,
-    x: layer.x,
-    y: layer.y,
-    rotation: layer.rotation,
-    opacity: layer.opacity,
-    visible: !layer.hidden,
     // Eraser mode: layers ignore fingers, the stage gets every touch (paint / zoom).
     listening: !layer.hidden && !readonly && !brushActive,
     draggable: !readonly && !brushActive && !layer.locked && !editing,
@@ -1158,141 +1098,19 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
     onTransformEnd,
   });
 
-  const drawText = (layer: TextLayer) => (
-    <Text
-      // Remount when fonts finish loading so Konva re-measures with the real font.
-      key={`${layer.id}:${fontsTick}`}
-      {...common(layer)}
-      text={layer.text}
-      fontFamily={layer.fontFamily}
-      fontSize={layer.fontSize}
-      fontStyle={konvaFontStyle(layer)}
-      fill={layer.color}
-      globalCompositeOperation={blendToComposite(layer.blendMode)}
-      width={layer.width}
-      align={layer.align}
-      lineHeight={layer.lineHeight}
-      letterSpacing={layer.letterSpacing}
-      wrap="word"
-      perfectDrawEnabled={false}
-      onDblClick={() => startEdit(layer, true)}
-      onDblTap={() => startEdit(layer, true)}
-    />
-  );
+  const bindText = (layer: TextLayer): TextBinding => ({
+    onDblClick: () => startEdit(layer, true),
+    onDblTap: () => startEdit(layer, true),
+  });
 
-  const drawShape = (layer: ShapeLayer) => {
-    // A transparent fill keeps the inside tappable when the shape has no fill.
-    const fill = layer.fill ?? 'rgba(0,0,0,0)';
-    const blend = blendToComposite(layer.blendMode);
-    const outline = layer.stroke && layer.strokeWidth > 0 ? { stroke: layer.stroke, strokeWidth: layer.strokeWidth } : { strokeEnabled: false };
-    switch (layer.shape) {
-      case 'rect':
-        return (
-          <Rect
-            key={layer.id}
-            {...common(layer)}
-            width={layer.width}
-            height={layer.height}
-            fill={fill}
-            cornerRadius={layer.cornerRadius}
-            {...outline}
-            globalCompositeOperation={blend}
-            perfectDrawEnabled={false}
-          />
-        );
-      case 'ellipse':
-        // Offset so (x, y) stays the top-left corner, like every other layer.
-        return (
-          <Ellipse
-            key={layer.id}
-            {...common(layer)}
-            radiusX={layer.width / 2}
-            radiusY={layer.height / 2}
-            offsetX={-layer.width / 2}
-            offsetY={-layer.height / 2}
-            fill={fill}
-            {...outline}
-            globalCompositeOperation={blend}
-            perfectDrawEnabled={false}
-          />
-        );
-      case 'line': {
-        const width = layer.strokeWidth > 0 ? layer.strokeWidth : 4;
-        return (
-          <Line
-            key={layer.id}
-            {...common(layer)}
-            points={[0, layer.height / 2, layer.width, layer.height / 2]}
-            stroke={layer.stroke ?? layer.fill ?? '#0d1422'}
-            strokeWidth={width}
-            hitStrokeWidth={Math.max(24, width)}
-            globalCompositeOperation={blend}
-            lineCap="round"
-            perfectDrawEnabled={false}
-          />
-        );
-      }
-    }
-  };
+  const sceneImage = (assetId: Id) => images.get(assetUrl(assetId));
 
-  const drawImage = (layer: ImageLayer) => {
-    const image = images.get(assetUrl(layer.assetId));
-    const crop = image ? cropToSource(layer.crop, { width: image.naturalWidth, height: image.naturalHeight }) : null;
-    // Blend mode goes on the drawn child: Konva applies it per shape, not per group.
-    const blend = blendToComposite(layer.blendMode);
+  /** Screen picture: masked / feathered images and the live eraser stroke use the offscreen canvas. */
+  const scenePicture = (layer: ImageLayer, image: HTMLImageElement, crop: SourceCrop | null): HTMLCanvasElement | null | undefined => {
     const usesComposite =
       needsComposite(layer) || stroke.current?.layerId === layer.id || strokeHold.current?.layerId === layer.id;
-    const picture = image && usesComposite ? compositeFor(layer, image, crop) : null;
-    const placeholder = (
-      <Rect width={layer.width} height={layer.height} fill={PLACEHOLDER_FILL} cornerRadius={layer.cornerRadius} globalCompositeOperation={blend} perfectDrawEnabled={false} />
-    );
-    let content: JSX.Element;
-    if (!image) {
-      content = placeholder;
-    } else if (usesComposite) {
-      // Flip, mask, rounded corners and soft edge are already inside the offscreen picture.
-      content = picture ? (
-        <KImage image={picture} width={layer.width} height={layer.height} globalCompositeOperation={blend} perfectDrawEnabled={false} />
-      ) : (
-        placeholder
-      );
-    } else {
-      content = (
-        <KImage
-          image={image}
-          width={layer.width}
-          height={layer.height}
-          cornerRadius={layer.cornerRadius}
-          {...(crop ? { crop } : {})}
-          x={layer.flipX ? layer.width : 0}
-          y={layer.flipY ? layer.height : 0}
-          scaleX={layer.flipX ? -1 : 1}
-          scaleY={layer.flipY ? -1 : 1}
-          globalCompositeOperation={blend}
-          perfectDrawEnabled={false}
-        />
-      );
-    }
-    return (
-      <Group key={layer.id} {...common(layer)}>
-        {content}
-      </Group>
-    );
+    return usesComposite ? compositeFor(layer, image, crop) : undefined;
   };
-
-  const drawLayer = (layer: Layer) => {
-    switch (layer.type) {
-      case 'text':
-        return drawText(layer);
-      case 'shape':
-        return drawShape(layer);
-      case 'image':
-        return drawImage(layer);
-    }
-  };
-
-  const bgAssetId = page?.background.imageAssetId ?? null;
-  const bgImage = bgAssetId ? images.get(assetUrl(bgAssetId)) : null;
 
   // Corner rotate handles: only for exactly one selected, movable layer.
   // Hidden in eraser mode.
@@ -1322,35 +1140,18 @@ export function DesignCanvas(props: DesignCanvasProps & { ref?: Ref<DesignCanvas
         onWheel={onWheel}
         onDragEnd={onStageDragEnd}
       >
-        <KLayer ref={pageLayerRef}>
+        <KLayer>
           {page && (
-            <>
-              <Rect
-                ref={bgRef}
-                name="page-bg"
-                width={page.width}
-                height={page.height}
-                fill={page.background.color}
-                stroke="#c9d1dc"
-                strokeWidth={1}
-                strokeScaleEnabled={false}
-                perfectDrawEnabled={false}
-              />
-              {bgImage && (
-                <KImage
-                  image={bgImage}
-                  width={page.width}
-                  height={page.height}
-                  crop={coverCrop({ width: bgImage.naturalWidth, height: bgImage.naturalHeight }, { width: page.width, height: page.height })}
-                  opacity={page.background.imageOpacity}
-                  listening={false}
-                  perfectDrawEnabled={false}
-                />
-              )}
-              <Group clipX={0} clipY={0} clipWidth={page.width} clipHeight={page.height}>
-                {layers.map(drawLayer)}
-              </Group>
-            </>
+            <PageScene
+              page={page}
+              image={sceneImage}
+              picture={scenePicture}
+              bind={common}
+              bindText={bindText}
+              // Remount text when fonts finish loading so Konva re-measures with the real font.
+              textKey={fontsTick}
+              border
+            />
           )}
         </KLayer>
         <KLayer>
