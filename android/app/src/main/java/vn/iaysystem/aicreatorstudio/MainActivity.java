@@ -206,6 +206,8 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        // Chỉ bản kiểm tra (dựng với -PartioWebViewDebug=true) mới cho máy tính điều khiển qua USB.
+        if (BuildConfig.WEBVIEW_DEBUG) WebView.setWebContentsDebuggingEnabled(true);
         web = new WebView(this);
         setContentView(web);
         web.getSettings().setJavaScriptEnabled(true);

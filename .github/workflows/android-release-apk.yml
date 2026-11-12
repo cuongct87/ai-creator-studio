@@ -7,6 +7,11 @@ name: ZUNVA Android release APK (signed)
 # Secrets are passed through environment variables only and are never echoed.
 on:
   workflow_dispatch:
+    inputs:
+      ban_kiem_tra:
+        description: 'Bản kiểm tra: cho máy tính điều khiển app qua USB (chỉ để thử, KHÔNG phát hành)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -65,7 +70,7 @@ jobs:
       # Build runs before the secret check so a build problem is visible even before secrets exist.
       - name: Build unsigned release APK
         working-directory: android
-        run: bash ./gradlew :app:assembleRelease --no-daemon --stacktrace
+        run: bash ./gradlew :app:assembleRelease --no-daemon --stacktrace -PartioWebViewDebug=${{ inputs.ban_kiem_tra && 'true' || 'false' }}
 
       - name: Check that the 4 signing secrets exist (values are not printed)
         env:
@@ -138,7 +143,7 @@ jobs:
       - name: Upload signed APK
         uses: actions/upload-artifact@v4
         with:
-          name: zunva-release-apk
+          name: ${{ inputs.ban_kiem_tra && 'artio-ban-kiem-tra-apk' || 'zunva-release-apk' }}
           path: dist/zunva-release.apk
           if-no-files-found: error
           retention-days: 14
