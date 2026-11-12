@@ -10,7 +10,7 @@ test('chỉnh sửa thiệp cưới: thêm chữ/hình, sửa chữ tiếng Vi�
   // Thêm chữ → bảng thuộc tính chữ hiện ra.
   await page.getByRole('button', { name: 'Chữ', exact: true }).click();
   await expect(stage).toHaveAccessibleName(/1 lớp/);
-  const content = page.getByLabel('Nội dung (hoặc chạm 2 lần vào chữ trên trang)');
+  const content = page.getByLabel('Nội dung (hoặc chạm vào chữ đang chọn trên trang để gõ)');
   await expect(content).toHaveValue('Chữ mới');
   await content.fill('Trân trọng kính mời');
   await page.getByLabel('Phông chữ').selectOption('Dancing Script');

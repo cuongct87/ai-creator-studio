@@ -614,7 +614,7 @@ function TextProps({ layer, onPatch, onDone }: { layer: Extract<Layer, { type: '
   return (
     <>
       <label className="field">
-        <span>Nội dung (hoặc chạm 2 lần vào chữ trên trang)</span>
+        <span>Nội dung (hoặc chạm vào chữ đang chọn trên trang để gõ)</span>
         <textarea
           value={layer.text}
           rows={2}
@@ -637,7 +637,7 @@ function TextProps({ layer, onPatch, onDone }: { layer: Extract<Layer, { type: '
           A−
         </button>
         <span className="font-size" aria-label="Cỡ chữ">
-          {layer.fontSize}
+          {Math.round(layer.fontSize)}
         </span>
         <button type="button" aria-label="Chữ to hơn" onClick={() => onPatch(layer, { fontSize: Math.min(2000, Math.round(layer.fontSize * 1.1) + 1) }, 'Cỡ chữ')}>
           A+
