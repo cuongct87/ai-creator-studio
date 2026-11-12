@@ -187,6 +187,22 @@ describe('ProjectStore (IndexedDB)', () => {
     expect((await store.getAsset('asset_shared')).ok).toBe(false);
   });
 
+  it('dọn ảnh không còn dùng: giữ ảnh, mặt nạ và ảnh thu nhỏ của dự án; xóa mặt nạ cũ', async () => {
+    const doc = makeDoc('Ghép ảnh', ['img_a']);
+    const img = doc.pages[0]!.layers.find((l) => l.type === 'image')!;
+    doc.assets['mask_2'] = { id: 'mask_2', kind: 'image', mimeType: 'image/png', name: null, hash: null, width: 10, height: 10 };
+    if (img.type === 'image') img.maskAssetId = 'mask_2';
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0]);
+    for (const id of ['img_a', 'mask_1', 'mask_2', `thumb_${doc.id}`, 'thumb_da_xoa']) await store.putAsset(id, 'image/png', png);
+    expect((await store.save(doc)).ok).toBe(true);
+    expect(await store.collectUnusedAssets()).toEqual({ ok: true, value: 2 }); // mask_1 (nét tẩy cũ) + thumb của dự án đã xóa
+    expect((await store.getAsset('img_a')).ok).toBe(true);
+    expect((await store.getAsset('mask_2')).ok).toBe(true);
+    expect((await store.getAsset(`thumb_${doc.id}`)).ok).toBe(true);
+    expect((await store.getAsset('mask_1')).ok).toBe(false);
+    expect((await store.getAsset('thumb_da_xoa')).ok).toBe(false);
+  });
+
   it('ảnh sai bị từ chối', async () => {
     const r = await store.putAsset('', 'image/png', new Uint8Array([1]));
     expect(r).toEqual({ ok: false, error: STORE_MESSAGES.badAsset });

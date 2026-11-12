@@ -133,8 +133,9 @@ function assetIdsOf(doc: unknown): Set<string> {
       const bg = page?.background?.imageAssetId;
       if (typeof bg === 'string') ids.add(bg);
       if (Array.isArray(page?.layers)) {
-        for (const layer of page.layers as Array<{ assetId?: unknown }>) {
+        for (const layer of page.layers as Array<{ assetId?: unknown; maskAssetId?: unknown }>) {
           if (typeof layer?.assetId === 'string') ids.add(layer.assetId);
+          if (typeof layer?.maskAssetId === 'string') ids.add(layer.maskAssetId);
         }
       }
     }
@@ -282,6 +283,36 @@ export function createIndexedDbProjectStore(dbName = 'c87', options: IndexedDbSt
           };
         });
         return { ok: true, value: undefined };
+      } catch (e) {
+        return fail(errorText(e, STORE_MESSAGES.removeFailed));
+      }
+    },
+
+    async collectUnusedAssets() {
+      try {
+        const removed = await inTransaction<number>(await db(), [PROJECTS, ASSETS], 'readwrite', (tx, done) => {
+          const allReq = tx.objectStore(PROJECTS).getAll();
+          allReq.onsuccess = () => {
+            const used = new Set<string>();
+            for (const rec of allReq.result as ProjectRecord[]) {
+              used.add(`thumb_${rec.id}`);
+              for (const assetId of assetIdsOf(rec.doc)) used.add(assetId);
+            }
+            const assets = tx.objectStore(ASSETS);
+            const keysReq = assets.getAllKeys();
+            keysReq.onsuccess = () => {
+              let count = 0;
+              for (const key of keysReq.result) {
+                if (typeof key === 'string' && !used.has(key)) {
+                  assets.delete(key);
+                  count++;
+                }
+              }
+              done(count);
+            };
+          };
+        });
+        return { ok: true, value: removed };
       } catch (e) {
         return fail(errorText(e, STORE_MESSAGES.removeFailed));
       }

@@ -102,6 +102,11 @@ export interface ProjectStore {
   getAsset(id: Id): Promise<PlatformResult<StoredAsset>>;
   /** Dung lượng đã dùng / còn được dùng. */
   storageInfo(): Promise<PlatformResult<StorageInfo>>;
+  /**
+   * Xóa ảnh trong kho mà không dự án nào còn dùng (mỗi nét tẩy G2b tạo một ảnh mặt nạ mới).
+   * Gọi lúc mở dự án, trước khi người dùng sửa. Trả số ảnh đã xóa.
+   */
+  collectUnusedAssets(): Promise<PlatformResult<number>>;
 }
 
 export { createIndexedDbProjectStore, STORE_MESSAGES } from './indexeddb-store';

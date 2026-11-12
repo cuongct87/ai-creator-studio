@@ -1,13 +1,16 @@
 import {
+  BLEND_MODES,
   canRedo,
   canUndo,
   closeMerge,
   createHistory,
   execute,
+  pruneUnusedAssets,
   redo,
   undo,
   undoLabel,
   type Asset,
+  type BlendMode,
   type HistoryState,
   type Id,
   type Layer,
@@ -105,10 +108,14 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
   // ---------- mở dự án ----------
   useEffect(() => {
     let alive = true;
-    void store.load(projectId).then((r) => {
+    void store.load(projectId).then(async (r) => {
       if (!alive) return;
-      if (r.ok) setHist(createHistory(r.value));
-      else setLoadError(r.error);
+      if (!r.ok) return setLoadError(r.error);
+      // Bỏ mặt nạ của các nét tẩy cũ (lịch sử hoàn tác không lưu lại), rồi dọn ảnh không dự án nào dùng.
+      const doc = pruneUnusedAssets(r.value);
+      setHist(createHistory(doc));
+      if (doc !== r.value) await store.save(doc);
+      void store.collectUnusedAssets();
     });
     return () => {
       alive = false;
@@ -224,6 +231,51 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
         { op: 'addAsset', asset },
         { op: 'updateLayer', pageId: page.id, layerId: layer.id, set: { assetId: asset.id, crop: null } },
       ]);
+    });
+
+  /** Lưu ảnh mặt nạ mới vào kho rồi gắn cho lớp ảnh: 1 bước hoàn tác (Tách nền, mỗi nét Tẩy). */
+  async function putMask(layer: Layer, bytes: Uint8Array, label: string): Promise<void> {
+    if (!page || layer.type !== 'image') return;
+    const dims = await imageSize(bytes, 'image/png');
+    if (!dims) {
+      setMessage('Không đọc được vùng tẩy. Hãy thử lại.');
+      return;
+    }
+    const id = newId('mask');
+    const put = await store.putAsset(id, 'image/png', bytes);
+    if (!put.ok) {
+      setMessage(put.error);
+      return;
+    }
+    const url = URL.createObjectURL(new Blob([bytes.slice()], { type: 'image/png' }));
+    setUrls((prev) => ({ ...prev, [id]: url }));
+    apply(label, [
+      { op: 'addAsset', asset: { id, kind: 'image', mimeType: 'image/png', name: null, hash: null, width: dims.width, height: dims.height } },
+      { op: 'updateLayer', pageId: page.id, layerId: layer.id, set: { maskAssetId: id } },
+    ]);
+  }
+
+  const segmentSubject = (layer: Layer) =>
+    withBusy(async () => {
+      const segmenter = platform.subject;
+      if (!segmenter || layer.type !== 'image') return;
+      setMessage('Đang tách nền…');
+      const source = await store.getAsset(layer.assetId);
+      if (!source.ok) {
+        setMessage(source.error);
+        return;
+      }
+      const result = await segmenter.segment(source.value.bytes);
+      if (!result.ok) {
+        setMessage(result.error);
+        return;
+      }
+      if (result.value === null) {
+        setMessage('Không tìm thấy người hay vật chính trong ảnh này. Bạn có thể dùng Tẩy để tự xóa nền.');
+        return;
+      }
+      await putMask(layer, result.value, 'Tách nền');
+      setMessage(null);
     });
 
   const setBackgroundImage = () =>
@@ -416,6 +468,7 @@ export function EditorScreen({ store, platform, projectId, onBack }: EditorProps
               onRemove={() => void removeSelected()}
               onReplaceImage={(layer) => void replaceImage(layer)}
               onCoverPage={(layer) => patch(layer, coverPagePatch(layer, page.width, page.height), 'Phủ kín trang')}
+              onSegment={platform.subject ? (layer) => void segmentSubject(layer) : null}
               onClose={() => setSelection([])}
             />
           )}
@@ -529,10 +582,12 @@ interface PropsPanel {
   onRemove(): void;
   onReplaceImage(layer: Layer): void;
   onCoverPage(layer: Layer): void;
+  /** Có khi nền tảng tách nền được (Android). */
+  onSegment: ((layer: Layer) => void) | null;
   onClose(): void;
 }
 
-function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onArrange, onDuplicate, onRemove, onReplaceImage, onCoverPage, onClose }: PropsPanel) {
+function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onArrange, onDuplicate, onRemove, onReplaceImage, onCoverPage, onSegment, onClose }: PropsPanel) {
   const index = single ? layers.findIndex((l) => l.id === single.id) : -1;
   return (
     <div className="props">
@@ -573,6 +628,26 @@ function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onAr
             onChange={(v) => onPatch(single, { cornerRadius: v }, 'Bo góc', `radius:${single.id}`)}
             onDone={onDone}
           />
+          <Slider
+            label="Mờ viền"
+            value={Math.round(single.feather)}
+            min={0}
+            max={Math.round(Math.min(single.width, single.height) / 2)}
+            onChange={(v) => onPatch(single, { feather: v }, 'Mờ viền', `feather:${single.id}`)}
+            onDone={onDone}
+          />
+          <div className="row">
+            {onSegment && (
+              <button type="button" disabled={busy} onClick={() => onSegment(single)}>
+                Tách nền
+              </button>
+            )}
+            {single.maskAssetId !== null && (
+              <button type="button" onClick={() => onPatch(single, { maskAssetId: null }, 'Bỏ hết vùng tẩy')}>
+                Bỏ hết vùng tẩy
+              </button>
+            )}
+          </div>
         </Section>
       )}
 
@@ -586,6 +661,18 @@ function LayerProperties({ layers, selected, single, busy, onPatch, onDone, onAr
           onChange={(v) => onPatch(single, { opacity: v / 100 }, 'Độ rõ', `opacity:${single.id}`)}
           onDone={onDone}
         />
+      )}
+      {single && (
+        <label className="field">
+          <span>Hòa trộn</span>
+          <select value={single.blendMode} onChange={(e) => onPatch(single, { blendMode: e.target.value as BlendMode }, 'Hòa trộn')}>
+            {BLEND_MODES.map((m) => (
+              <option key={m} value={m}>
+                {BLEND_LABELS[m]}
+              </option>
+            ))}
+          </select>
+        </label>
       )}
 
       <div className="row props-actions">
@@ -670,6 +757,20 @@ function TextProps({ layer, onPatch, onDone }: { layer: Extract<Layer, { type: '
     </>
   );
 }
+
+/** Tên kiểu hòa trộn cho người dùng (G2b R1). */
+const BLEND_LABELS: Record<BlendMode, string> = {
+  normal: 'Thường',
+  multiply: 'Nhân (tối đi)',
+  screen: 'Sáng (screen)',
+  overlay: 'Phủ (overlay)',
+  'soft-light': 'Ánh mềm',
+  darken: 'Tối hơn',
+  lighten: 'Sáng hơn',
+  difference: 'Khác biệt',
+  color: 'Màu',
+  luminosity: 'Độ sáng',
+};
 
 function Slider({
   label,
