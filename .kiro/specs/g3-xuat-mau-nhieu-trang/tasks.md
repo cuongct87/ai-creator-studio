@@ -24,4 +24,4 @@ Mở PR **thẳng vào `main`**. Mỗi đợt: CI xanh + kịch bản tự kiể
 - [ ] C9 (Claude) `AndroidShell.screenSize`, loại "Hình nền điện thoại", cầu nối `AndroidWallpaper`, nút "Đặt làm hình nền"; 3 mẫu hình nền; test.
 
 ## Founder duyệt
-- [ ] Duyệt đặc tả G3.
+- [x] Duyệt đặc tả G3 (founder duyệt 12/11).
