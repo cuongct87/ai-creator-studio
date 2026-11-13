@@ -212,6 +212,9 @@ export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex",
     const review = await Promise.all(agents.map((a,i)=>invoke(a,instruction(task,a,initial[1-i].text),2,initial[1-i].text)));
     agents.forEach((a,i)=>{result.review[a]=review[i];});
   }
+  // A missing or failed critique is not a completed two-round Council session.
+  result.complete = agents.every(a => result.initial[a]?.ok === true) &&
+    (rounds === 1 || agents.every(a => result.review[a]?.ok === true));
   result.finishedAt=new Date().toISOString();
   return result;
 }
@@ -219,7 +222,8 @@ export async function runCouncil({ task, mode="demo", rounds=1, agents=["codex",
 export function formatReport(r) {
   const title = "# ZUNVA AI Council — báo cáo thử nghiệm";
   const lines = [title, "", "- Chế độ: **" + (r.mode === "demo" ? "MÔ PHỎNG, KHÔNG GỌI AI" : "LIVE (CLI có đăng nhập)") + "**",
-    "- Thời điểm: " + r.startedAt, "- Trạng thái: **CHỜ FOUNDER DUYỆT**", "", "## Yêu cầu gốc", r.task, "",
+    "- Thời điểm: " + r.startedAt, "- Trạng thái: **CHỜ FOUNDER DUYỆT**",
+    "- Kết quả phiên: **" + (r.complete === true ? "HOÀN TẤT CÁC VÒNG" : "CHƯA HOÀN TẤT / CÓ LỖI") + "**", "", "## Yêu cầu gốc", r.task, "",
     "## Phân tích độc lập"];
   for (const [name,v] of Object.entries(r.initial)) {
     lines.push("### " + name, v.ok ? v.text : "**Không chạy được:** " + v.error, "");
