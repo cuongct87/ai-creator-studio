@@ -1,0 +1,172 @@
+# ZUNVA AI Council — runtime pilot v0.1
+
+**Mục tiêu:** Bộ điều phối riêng ZUNVA theo ý tưởng founder: 2 AI (Codex + Gemini mặc định) đánh giá độc lập → (tùy chọn) phản biện chéo → báo cáo để founder duyệt.
+
+Đây **chưa phải ứng dụng hoàn chỉnh**, chưa có phòng họp web, chưa liên quan Community Bot công khai. Thư mục experiments/ai-council/ hoàn toàn tách biệt; không sửa Android hoặc PR #5, PR #11.
+
+## Quan hệ với MausBot
+
+- Tham khảo kiến trúc local-first, cách điều phối/giới hạn quyền của https://github.com/milind-soni/OpenMausBot, nhất là registry, delegated assignments và cách gọi Codex nền trong thư mục rỗng/sandbox read-only.
+- Đây là **mã ZUNVA viết riêng và đơn giản hóa, phỏng theo cách tổ chức mã nguồn mở**, không phải fork đầy đủ của OpenMausBot.
+- Không sử dụng mã enterprise/, tên/logo/linh vật của OpenMausBot. Nguồn và bản quyền ở THIRD_PARTY_NOTICES.md.
+
+## Điều kiện
+
+- Node.js 20+ để chạy script. **Không cần pnpm, không cần cài MausBot, không cần tắt Smart App Control**.
+- Mặc định DEMO không gọi mạng, không gọi AI, không tốn quota.
+- Chế độ LIVE mặc định sử dụng **Codex CLI đã đăng nhập + Gemini API Free Tier**. Không cần Claude Pro. Dùng hạn mức Codex và Gemini API tùy tài khoản/project, chưa có bộ đo chi phí. Chỉ sử dụng API key thuộc project đã xác nhận **Free Tier** (không liên kết billing). Không lưu key trong repo.
+- LIVE phải thêm --live --confirm-usage. Chưa có cách bảo đảm giới hạn tiền API ở tầng nhà cung cấp, nên dùng tài khoản có hạn mức riêng.
+
+## Chạy thử bằng demo (không dùng AI thật)
+
+Tạo file brief.txt trong thư mục này, nội dung ví dụ:
+
+    Đánh giá ý tưởng ZUNVA: người dùng tạo prompt ảnh dễ dàng, giữ miễn phí và bám sát ý tưởng đã chốt.
+
+Mở PowerShell ở thư mục này, chạy:
+
+    node council.mjs --task=brief.txt --demo --rounds=2 --out=report.md
+
+Mở report.md để xem hai vai trò **giả lập** và biểu mẫu trình duyệt. Mỗi câu trả lời demo có nhãn DEMO ONLY.
+
+Kiểm tra tự động:
+
+    node --test council.test.mjs
+
+## Thử hai AI thật (chỉ khi đã kiểm tra điều kiện)
+
+Sau khi xác minh Codex đã đăng nhập và Gemini API key thuộc **project Free Tier**, chỉ trong cửa sổ PowerShell của mày nhập key vào prompt ẩn (không gửi key qua chat hoặc GitHub):
+
+    $secret = Read-Host "Gemini API key" -AsSecureString
+    $env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new("", $secret).Password
+
+Sau đó có thể thử LIVE với **Codex + Gemini** (tốn hạn mức model):
+
+    node council.mjs --task=brief.txt --live --confirm-usage --agents=codex,gemini --rounds=1 --out=report.md
+
+- rounds=1: tối đa 2 lượt gọi, mỗi AI một lượt.
+- rounds=2: tối đa 4 lượt gọi, vòng 2 phản biện lẫn nhau.
+- Không tự retry khi lỗi hoặc hết quota.
+- Khi kết thúc: `Remove-Item Env:GEMINI_API_KEY` hoặc đóng cửa sổ terminal. Không đưa key vào `brief.txt`, `.env`, issue hay ảnh chụp.
+- Google AI Pro và Gemini API là hai quyền lợi khác nhau; **Free Tier dùng thử có giới hạn và có thể được Google sử dụng để cải thiện sản phẩm**. Không gửi nội dung kinh doanh/mã nguồn riêng hoặc dữ liệu người dùng qua API Free.
+- Nếu `Gemini request failed (HTTP 429)` hoặc hết quota, **dừng**. Không bật billing để thử tiếp.
+- Các lệnh chạy không qua shell, trong thư mục tạm rỗng; Codex dùng sandbox read-only, ignore-user-config và tắt các tool; Claude dùng tools rỗng và permission-mode plan. Các cờ có thể thay đổi theo version của CLI; phải kiểm tra đúng bản. Đây không phải bảo đảm cô lập tuyệt đối.
+- Không cấp quyền GitHub hoặc thư mục ZUNVA cho agents. Không nhập khóa API hoặc thông tin riêng vào brief.txt.
+- Báo cáo chỉ lưu trên máy, không tự đăng GitHub.
+
+## Chưa làm
+
+- Chưa test việc Codex/Gemini trả lời thật trên laptop founder; đã xác nhận Codex CLI qua Node và có tài khoản ChatGPT. Gemini API connector mới được kiểm tra bằng HTTP giả lập, chưa gọi Google thật; Kiro chưa tích hợp.
+- Chưa có UI đa người, quản lý người dùng, hàng đợi, công cụ viết code được duyệt, đo token/chi phí, lịch tự chạy.
+- Báo cáo là ý kiến, không phải bằng chứng code đã chạy hay triển khai.
+
+## Mốc v0.2
+
+1. Kiểm tra demo trên Windows và chạy test tự động.
+2. Test CLI thật trong máy ảo hoặc môi trường riêng, mỗi AI một lượt, kiểm tra quota.
+3. Chỉ bổ sung tác vụ sửa code sau khi có bước duyệt, branch riêng, review và bằng chứng test.
+4. Sau đó mới mở giao diện web local; tuyệt đối không công khai server khi chưa kiểm tra bảo mật.
+
+Founder quyết định cuối cùng. Không tự động merge, deploy hay thanh toán.
+
+## Kiểm tra cài đặt Windows của founder (10/11/2026)
+
+- Đã xác nhận từ PowerShell: `node --version` = 26.13.0, `codex.cmd --version` = 0.167.0, `codex.cmd login status` = Logged in using ChatGPT.
+- `Test-Path "$env:APPDATA\\npm\\node_modules\\@openai\\codex\\bin\\codex.js"` = True.
+- `claude --version` chưa nhận diện, nghĩa là chưa có Claude Code CLI trong PATH.
+- **Bước kiểm tra tiếp theo không tiêu lượt AI:** `node "$env:APPDATA\\npm\\node_modules\\@openai\\codex\\bin\\codex.js" --version`.
+- Chưa chạy thử LIVE hai agent trên laptop. Không chạy LIVE trước khi Claude Code được cài và xác nhận quota.
+
+## Gemini API Free Tier (cập nhật 10/11/2026)
+
+1. Truy cập https://aistudio.google.com/api-keys bằng tài khoản Google của founder.
+2. Tạo một key cho project riêng `ZUNVA-AI-Council` ở tier Free; **không bật billing, không gửi key cho AI hoặc đăng GitHub**.
+3. Bản demo offline hoạt động khi chưa có key. Nếu chưa cấu hình Gemini Free Tier, chưa bật `--live`.
+4. Gemini CLI bằng tài khoản Google AI Pro cá nhân đã bị Google dừng hỗ trợ theo thông báo 18/06/2026; pilot này dùng **Gemini API Key Free Tier**, không dựa vào quota Gemini Pro.
+5. Tài liệu chính thức: https://developers.google.com/gemini-code-assist/docs/deprecations/code-assist-individuals và https://ai.google.dev/gemini-api/docs/billing
+
+
+---
+
+## Bản thử giao diện tiếng Việt — v0.2 (local dashboard)
+
+**Đã thêm mã chạy thử; chưa phải bản phát hành công khai hoặc sản phẩm hoàn chỉnh.**
+
+Mở PowerShell ở thư mục experiments/ai-council trong bản ZIP của nhánh prototype/zunva-council-runtime và nhập:
+
+    node .\local-server.mjs
+
+Mở bằng Chrome hoặc Edge trên **cùng laptop**:
+
+    http://127.0.0.1:8765
+
+- Chọn **Mô phỏng**, điền nhiệm vụ, chọn 1 hoặc 2 vòng rồi bấm Bắt đầu. Mô phỏng không gọi AI và không tốn quota.
+- Chọn bản ghi trong Lịch sử để xem nội dung Codex/Gemini, sao chép báo cáo, lưu Markdown và ghi quyết định **Duyệt đề xuất / Yêu cầu chỉnh sửa**.
+- Quyết định là **biên bản** của founder, không tự động tạo/merge PR hay thay đổi code.
+- Báo cáo lưu local trong %USERPROFILE%\.zunva-council\reports trên Windows; không commit tự động lên GitHub và không truyền cho bên thứ ba.
+- Giao diện chỉ bind loopback 127.0.0.1. Không mở cổng trên router, không chia sẻ máy chủ ra Internet. Đóng cửa sổ PowerShell hoặc Ctrl+C để dừng.
+
+### Chỉ bật Live khi founder chủ động cho phép
+
+Trong **cùng PowerShell** sẽ chạy server, sau khi kiểm tra project Gemini ở Free Tier, có thể nhập key bằng prompt ẩn:
+
+    $secret = Read-Host "Gemini API key" -AsSecureString
+    $env:GEMINI_API_KEY = [System.Net.NetworkCredential]::new("", $secret).Password
+
+Rồi **chủ động** bật LIVE:
+
+    node .\local-server.mjs --enable-live
+
+Trong giao diện, chọn LIVE, xác nhận sử dụng quota, và chỉ thử tác vụ **không chứa dữ liệu riêng**. Mỗi phiên LIVE sử dụng hạn mức Codex và Gemini; **không có trần chi phí cứng được bảo đảm** ở bản này. Đặc biệt, Gemini API Free Tier khác quyền lợi ứng dụng Google AI Pro.
+
+Khi xong, bấm Ctrl+C rồi chạy:
+
+    Remove-Item Env:\GEMINI_API_KEY
+
+**Giới hạn chưa giải quyết:** Chưa có bảng đo token/chi phí, yêu cầu phê duyệt theo từng hành động của agent, kiểm thử Chrome/Windows trên laptop founder, đăng nhập nhiều người, bảo mật triển khai công khai, hỗ trợ Kiro/Claude thật, quản lý nhiệm vụ tự động hoặc lịch chạy liên tục. Chỉ phù hợp chạy local bởi chính founder.
+
+### Kiểm thử
+GitHub Actions chạy bộ unit test và HTTP integration test hoàn toàn offline qua Node 20+:
+
+    node --test *.test.mjs
+
+Test xác nhận báo cáo mô phỏng, API host/origin, khóa LIVE mặc định, từ chối Gemini key trống và lưu quyết định local. Chưa có bằng chứng test LIVE qua UI trên laptop founder.
+
+
+---
+
+## Thành viên Claude và Kiro — 10/11/2026
+
+### Claude Code (adapter tùy chọn)
+
+- Chọn codex+claude hoặc gemini+claude trong DEMO: ghi nhãn mô phỏng.
+- LIVE chỉ khi có quyền Claude Code hợp lệ. Lệnh claude auth status phải xác nhận loggedIn: true. Gói Claude Free hiện không đủ điều kiện; không dùng key API trôi nổi.
+- LIVE bật thủ công: node .\local-server.mjs --enable-live --enable-claude
+- Runtime kiểm tra Claude CLI trước khi gọi AI bất kỳ. Không nhận đủ quyền thì từ chối; không tiêu quota Codex/Gemini.
+- Khi founder được phép, có thể thử CLI: node council.mjs --task=brief.txt --live --confirm-usage --agents=codex,claude --rounds=1 --out=report-claude.md
+- **Chưa kiểm thử Claude LIVE trên máy founder.**
+
+### Kiro (chuyển phiếu native, không route subscription)
+
+- Kiro hỗ trợ IDE và CLI riêng, với tài khoản/credits khác Claude. Theo Kiro FAQ https://kiro.dev/faq/ , không được dùng hạn mức Kiro subscription qua third-party automation harness. Do đó ZUNVA AI Council không được dùng Kiro CLI làm backend trái quy định.
+- Phiếu Kiro: https://github.com/cuongct87/ai-creator-studio/issues/13
+- Giao diện ZUNVA cung cấp nút Sao chép phiếu giao Kiro cho nhiệm vụ đã được founder duyệt. Founder/nhân sự đưa vào Kiro IDE/CLI chính thức; Kiro tạo PR riêng và bằng chứng test theo workflow của Kiro. Nút sao chép không gửi tự động.
+- Khi founder muốn dùng Kiro thực, kiểm tra bằng kiro-cli whoami (không dùng model) và hạn mức còn lại trước. Không dùng --trust-all-tools hoặc cloud session nếu chưa được duyệt.
+- Kiro Free có hạn mức và một số model Claude bên trong Kiro, **không đồng nghĩa** với quyền sử dụng Claude Code hay Anthropic API độc lập.
+
+**Tình trạng:** Codex+Gemini đã qua hai vòng LIVE trên laptop founder. Claude mới có adapter, chưa có Claude Code đăng nhập. Kiro mới có phiếu việc và hướng tích hợp native, chưa tự nhận hoặc xử lý nhiệm vụ. Chưa thể gọi là phòng họp 4 AI tự động hay sản phẩm hoàn chỉnh.
+
+---
+
+## Claude làm trưởng nhóm ngay trong Kiro V3 (không cần Claude Code riêng)
+
+Tệp cấu hình native đã thêm vào PR #12:
+- `.kiro/agents/zunva-council-lead.md`: tạo custom agent **zunva-council-lead**; dùng model hợp lệ của phiên Kiro để lập kế hoạch, phân việc và tổng hợp qua Kiro subagents.
+- `experiments/ai-council/KIRO-LEAD-CONTRACT.md`: vai trò Builder / Reviewer / Tester, quy tắc kiểm thử/duyệt và giới hạn chi phí/quyền.
+- `experiments/ai-council/kiro-native.test.mjs`: test offline xác nhận cấu hình và các ràng buộc cơ bản.
+
+Sau khi Kiro đã clone nhánh `prototype/zunva-council-runtime` vào thư mục repo riêng, **mở phiên Kiro V3 mới tại thư mục gốc của repo** để Kiro nhận cấu hình agent. Trong phiên đó chọn `/agent swap zunva-council-lead` (hoặc bộ chọn Agent); dùng `/model` để xác minh model **thực sự có quyền chạy**. Nếu Opus 5.5 không khả dụng ở Kiro Free, để Auto và **không mua gói hay chuyển API có phí tự động**.
+
+Giao một lần: 'Đọc Issue #13, PR #12 và hợp đồng KIRO-LEAD-CONTRACT; chia việc cho sub-agents nếu quyền phiên cho phép, chạy test và trả báo cáo đầy đủ, không merge/deploy hoặc push chưa duyệt.'
+
+**Giới hạn quan trọng:** Cấu hình custom agent được kiểm tra về nội dung bởi Node unit test; chưa được kiểm chứng đã được Kiro V3 nhận/chạy thật trên Windows. Khi chạy native, agent trưởng nhóm có thể điều phối các subagent trong chính Kiro, nhưng **không có kết nối trực tiếp từ Claude web vào Kiro**, cũng chưa có tự động chuyển task từ dashboard ZUNVA tới Kiro. Không coi việc xuất hiện Opus trong dropdown là bằng chứng tài khoản Free đã được quyền gọi model này.

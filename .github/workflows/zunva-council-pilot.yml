@@ -1,0 +1,25 @@
+name: ZUNVA AI Council pilot (offline)
+on:
+  pull_request:
+    paths:
+      - 'experiments/ai-council/**'
+      - '.github/workflows/zunva-council-pilot.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit and local HTTP integration tests (no model calls)
+        run: node --test experiments/ai-council/*.test.mjs
+      - name: CLI smoke test (demo only)
+        run: |
+          printf 'ZUNVA: test offline Council pilot\n' > /tmp/zunva-council-brief.txt
+          node experiments/ai-council/council.mjs --task=/tmp/zunva-council-brief.txt --demo --rounds=2 --out=/tmp/zunva-council-report.md
+          grep -q 'MÔ PHỎNG' /tmp/zunva-council-report.md
+          grep -q 'CHỜ FOUNDER DUYỆT' /tmp/zunva-council-report.md
