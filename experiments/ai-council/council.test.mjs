@@ -98,3 +98,14 @@ test("Claude option works as clearly marked DEMO without credentials", async()=>
   assert.match(r.initial.claude.text,/DEMO ONLY/);
   assert.equal(r.review.claude.ok,true);
 });
+
+
+test("report distinguishes complete demo from a partial or failed session", async () => {
+  const complete=await runCouncil({task:"Review brief",mode:"demo",rounds:2});
+  assert.equal(complete.complete,true);
+  assert.match(formatReport(complete),/HOÀN TẤT CÁC VÒNG/);
+  const partial={...complete,complete:false,review:{codex:{ok:false,error:"Provider unavailable"}}};
+  assert.match(formatReport(partial),/CHƯA HOÀN TẤT \/ CÓ LỖI/);
+  assert.doesNotMatch(formatReport(partial),/Kết quả phiên: \*\*HOÀN TẤT CÁC VÒNG/);
+  assert.match(formatReport(partial),/Provider unavailable/);
+});
