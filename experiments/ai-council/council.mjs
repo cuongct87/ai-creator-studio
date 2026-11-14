@@ -86,7 +86,7 @@ export { decode };
 export function restrictedChildEnv(env=process.env) {
   const out={};
   for(const [name,value] of Object.entries(env)) {
-    if(/(?:API[_-]?KEY|TOKEN|PASSWORD|SECRET|CREDENTIAL|AUTHORIZATION|PRIVATE[_-]?KEY)/i.test(name)) continue;
+    if(/(?:API[_-]?KEY|TOKEN|PASSWORD|SECRET|CREDENTIAL|AUTHORIZATION|PRIVATE[_-]?KEY|(?:^|[_-])PAT(?:$|[_-]))/i.test(name)) continue;
     if(value!==undefined) out[name]=value;
   }
   out.CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC="1";
