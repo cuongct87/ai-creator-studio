@@ -73,7 +73,7 @@ test("CLI child environment strips sensitive API keys and tokens", () => {
   const env=restrictedChildEnv({
     PATH:"C:/Windows/System32",APPDATA:"C:/Users/demo/AppData/Roaming",
     GEMINI_API_KEY:"DO_NOT_PASS",GOOGLE_API_KEY:"DO_NOT_PASS",
-    OPENAI_API_KEY:"DO_NOT_PASS",GH_TOKEN:"DO_NOT_PASS",
+    OPENAI_API_KEY:"DO_NOT_PASS",GH_TOKEN:"DO_NOT_PASS",GITHUB_PAT:"DO_NOT_PASS",GH_PAT:"DO_NOT_PASS",
     MY_SECRET:"DO_NOT_PASS",USERPROFILE:"C:/Users/demo"
   });
   assert.equal(env.PATH,"C:/Windows/System32");
@@ -82,6 +82,8 @@ test("CLI child environment strips sensitive API keys and tokens", () => {
   assert.equal(env.GOOGLE_API_KEY,undefined);
   assert.equal(env.OPENAI_API_KEY,undefined);
   assert.equal(env.GH_TOKEN,undefined);
+  assert.equal(env.GITHUB_PAT,undefined);
+  assert.equal(env.GH_PAT,undefined);
   assert.equal(env.MY_SECRET,undefined);
 });
 
